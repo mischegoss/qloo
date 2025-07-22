@@ -1,5 +1,5 @@
 """
-Google Vision AI Tools
+Fixed Google Vision AI Tools
 File: backend/multi_tool_agent/tools/vision_ai_tools.py
 
 Provides interface to Google Cloud Vision AI for photo cultural analysis
@@ -10,17 +10,21 @@ import logging
 import base64
 from typing import Dict, Any, Optional, List
 
+# Configure logger
 logger = logging.getLogger(__name__)
 
 class VisionAIAnalyzer:
     """
     Google Cloud Vision AI tool for photo cultural analysis.
     Used by Agent 5: Photo Cultural Analyzer Agent
+    
+    This is the MAIN class that should be imported.
     """
     
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://vision.googleapis.com/v1"
+        logger.info("VisionAIAnalyzer initialized")
         
     async def analyze_photo(self, photo_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -72,112 +76,77 @@ class VisionAIAnalyzer:
         In production, this would be replaced with actual Vision AI calls.
         """
         
-        # Extract era indicators from context
-        era_indicators = self._extract_era_from_context(context)
-        
-        # Generate simulated analysis based on photo type
+        # Simulate different analysis based on photo type
         if photo_type == "family_photo":
             return {
-                "objects": ["people", "clothing", "background_setting", "furniture"],
-                "people": ["family_group", "formal_attire", "posed_arrangement"],
-                "settings": ["indoor_setting", "formal_occasion", "home_environment"],
-                "clothing": era_indicators.get("clothing_style", ["formal_wear", "period_appropriate"]),
-                "activities": ["family_gathering", "celebration", "posed_photography"],
-                "emotions": ["happiness", "formal_composure", "family_connection"],
-                "photo_quality": era_indicators.get("photo_quality", "vintage_quality"),
-                "color_type": era_indicators.get("color_type", "color_photo"),
-                "composition": "formal_family_portrait",
-                "confidence": {
-                    "objects": 0.9,
-                    "people": 0.95,
-                    "settings": 0.85,
-                    "era_analysis": 0.8
-                }
+                "objects": ["people", "furniture", "clothing"],
+                "people": ["family_members"],
+                "settings": ["indoor", "home", "living_room"],
+                "era_indicators": self._extract_era_from_context(context),
+                "activities": ["family_gathering", "celebration"],
+                "photo_quality": "vintage" if "1960" in context else "modern",
+                "cultural_markers": self._extract_cultural_markers(context)
             }
-        
         elif photo_type == "wedding_photo":
             return {
-                "objects": ["wedding_dress", "suit", "flowers", "ceremony_items"],
-                "people": ["bride", "groom", "wedding_party", "formal_attire"],
-                "settings": ["church", "ceremony_venue", "formal_setting"],
-                "clothing": ["wedding_dress", "formal_suit", "period_formal_wear"],
-                "activities": ["wedding_ceremony", "celebration", "formal_photography"],
-                "emotions": ["joy", "celebration", "formal_occasion"],
-                "photo_quality": era_indicators.get("photo_quality", "formal_photography"),
-                "color_type": era_indicators.get("color_type", "black_and_white"),
-                "composition": "wedding_portrait"
+                "objects": ["wedding_dress", "flowers", "ceremony_items"],
+                "people": ["bride", "groom", "wedding_party"],
+                "settings": ["ceremony_venue", "celebration"],
+                "era_indicators": self._extract_era_from_context(context),
+                "activities": ["wedding_ceremony", "celebration"],
+                "photo_quality": "formal",
+                "cultural_markers": ["wedding_traditions", "formal_attire"]
             }
-        
-        elif photo_type == "neighborhood_photo":
-            return {
-                "objects": ["buildings", "streets", "vehicles", "signage"],
-                "people": ["community_members", "period_clothing"],
-                "settings": ["urban_neighborhood", "street_scene", "community_area"],
-                "clothing": era_indicators.get("clothing_style", ["everyday_wear"]),
-                "activities": ["daily_life", "community_interaction", "street_scene"],
-                "emotions": ["community_life", "everyday_moments"],
-                "photo_quality": era_indicators.get("photo_quality", "documentary_style"),
-                "color_type": era_indicators.get("color_type", "vintage_color")
-            }
-        
         else:
-            # Generic photo analysis
             return {
-                "objects": ["various_objects", "contextual_items"],
-                "people": ["individuals", "period_appropriate_dress"],
-                "settings": ["contextual_setting"],
-                "clothing": ["period_clothing"],
-                "activities": ["life_activities"],
-                "emotions": ["contextual_emotions"],
-                "photo_quality": "standard_quality",
-                "color_type": "unknown"
+                "objects": ["various_items"],
+                "people": ["individuals"],
+                "settings": ["unknown_setting"],
+                "era_indicators": [],
+                "activities": ["daily_life"],
+                "photo_quality": "standard",
+                "cultural_markers": []
             }
     
-    def _extract_era_from_context(self, context: str) -> Dict[str, Any]:
+    def _extract_era_from_context(self, context: str) -> List[str]:
         """Extract era indicators from caregiver context."""
         
-        context_lower = context.lower()
-        era_mapping = {}
+        era_indicators = []
         
         # Decade detection
-        if any(decade in context_lower for decade in ["1940s", "1940", "forties"]):
-            era_mapping.update({
-                "clothing_style": ["1940s_formal", "wartime_era", "classic_formal"],
-                "photo_quality": "sepia_or_black_white",
-                "color_type": "black_and_white"
-            })
-        elif any(decade in context_lower for decade in ["1950s", "1950", "fifties"]):
-            era_mapping.update({
-                "clothing_style": ["1950s_style", "post_war_fashion", "conservative_formal"],
-                "photo_quality": "early_color_or_bw",
-                "color_type": "early_color"
-            })
-        elif any(decade in context_lower for decade in ["1960s", "1960", "sixties"]):
-            era_mapping.update({
-                "clothing_style": ["1960s_fashion", "mod_style", "changing_fashion"],
-                "photo_quality": "color_photography",
-                "color_type": "color_photo"
-            })
-        elif any(decade in context_lower for decade in ["1970s", "1970", "seventies"]):
-            era_mapping.update({
-                "clothing_style": ["1970s_style", "casual_revolution", "varied_styles"],
-                "photo_quality": "improved_color",
-                "color_type": "color_photo"
-            })
+        decades = ["1940", "1950", "1960", "1970", "1980", "1990", "2000", "2010"]
+        for decade in decades:
+            if decade in context:
+                era_indicators.append(f"{decade}s")
         
-        # Event type detection
-        if any(event in context_lower for event in ["wedding", "marriage", "ceremony"]):
-            era_mapping["event_type"] = "formal_ceremony"
-        elif any(event in context_lower for event in ["family", "gathering", "reunion"]):
-            era_mapping["event_type"] = "family_gathering"
-        elif any(event in context_lower for event in ["holiday", "celebration", "party"]):
-            era_mapping["event_type"] = "celebration"
+        # Era keywords
+        if any(word in context.lower() for word in ["vintage", "old", "antique"]):
+            era_indicators.append("vintage")
+        if any(word in context.lower() for word in ["modern", "recent", "new"]):
+            era_indicators.append("modern")
+            
+        return era_indicators
+    
+    def _extract_cultural_markers(self, context: str) -> List[str]:
+        """Extract cultural markers from context."""
         
-        return era_mapping
+        markers = []
+        
+        # Cultural keywords
+        cultural_terms = [
+            "traditional", "ceremony", "celebration", "wedding", "festival",
+            "religious", "cultural", "heritage", "family", "gathering"
+        ]
+        
+        for term in cultural_terms:
+            if term in context.lower():
+                markers.append(term)
+                
+        return markers
     
     async def analyze_with_google_vision(self, image_base64: str) -> Optional[Dict[str, Any]]:
         """
-        Perform actual Google Vision AI analysis (for production use).
+        Analyze image using Google Cloud Vision AI.
         
         Args:
             image_base64: Base64-encoded image data
@@ -292,3 +261,10 @@ class VisionAIAnalyzer:
         except Exception as e:
             logger.error(f"Vision AI connection test exception: {str(e)}")
             return False
+
+# Backward compatibility aliases
+GoogleVisionAI = VisionAIAnalyzer
+VisionAITool = VisionAIAnalyzer
+
+# Export the main class
+__all__ = ["VisionAIAnalyzer", "GoogleVisionAI", "VisionAITool"]

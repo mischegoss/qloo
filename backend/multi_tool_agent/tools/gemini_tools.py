@@ -1,337 +1,461 @@
 """
-Enhanced Gemini Tools for Qloo Query Optimization
-Supports intelligent query generation and parameter optimization
+Fixed Google Gemini AI Tools
+File: backend/multi_tool_agent/tools/gemini_tools.py
+
+Provides interface to Google Gemini AI for recipe generation and content creation
 """
 
-import asyncio
 import httpx
-import logging
-from typing import Dict, Any, Optional, List
 import json
+import logging
+import re
+from typing import Dict, Any, Optional
 
+# Configure logger
 logger = logging.getLogger(__name__)
 
-class GeminiAITool:
+class GeminiRecipeGenerator:
     """
-    Enhanced Gemini AI tool specifically optimized for Qloo API interactions.
-    
-    Key Features:
-    - Intelligent query generation for cultural contexts
-    - Parameter optimization for Qloo API calls  
-    - Context-aware search term suggestions
-    - Structured output parsing
+    Google Gemini AI tool for recipe generation and content creation.
+    Used by Agent 4: Sensory Content Generator Agent
     """
     
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str):
         self.api_key = api_key
-        self.model = model
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        logger.info("Gemini AI tool initialized with gemini-2.5-flash model")
         
-        # Specialized prompts for different Qloo optimization tasks
-        self.prompt_templates = {
-            "search_optimization": self._get_search_optimization_template(),
-            "parameter_building": self._get_parameter_building_template(),
-            "cultural_analysis": self._get_cultural_analysis_template()
-        }
+    async def generate_recipe(self, prompt: str) -> Optional[Dict[str, Any]]:
+        """
+        Generate a recipe using Gemini AI.
         
-        logger.info(f"Gemini AI tool initialized with {model} for Qloo optimization")
-    
-    async def generate_content(self, prompt: str, temperature: float = 0.7) -> Dict[str, Any]:
+        Args:
+            prompt: Recipe generation prompt with cultural context and requirements
+            
+        Returns:
+            Generated recipe data or None if failed
         """
-        Generate content using Gemini with error handling and retry logic.
-        """
+        
         try:
+            # Enhance prompt for better recipe generation
+            enhanced_prompt = f"""
+            {prompt}
+            
+            Please provide the response as a JSON object with the following structure:
+            {{
+                "name": "Recipe name",
+                "description": "Brief description of the dish",
+                "prep_time": "Preparation time",
+                "cook_time": "Cooking time", 
+                "total_time": "Total time",
+                "servings": "Number of servings",
+                "difficulty": "easy/medium/hard",
+                "ingredients": [
+                    {{"item": "ingredient name", "amount": "quantity", "notes": "optional notes"}}
+                ],
+                "instructions": [
+                    {{"step": 1, "instruction": "Step description", "time": "time if applicable", "notes": "optional notes"}}
+                ],
+                "caregiver_customization_notes": [
+                    "Adaptation note 1",
+                    "Adaptation note 2"
+                ],
+                "dietary_alternatives": [
+                    {{"dietary_need": "need", "substitution": "alternative ingredient"}}
+                ],
+                "sensory_engagement_tips": [
+                    "Sensory tip 1",
+                    "Sensory tip 2"
+                ],
+                "cultural_context": "Why this recipe connects to the cultural elements mentioned",
+                "memory_connection_potential": "How this recipe might trigger positive memories"
+            }}
+            
+            Focus on:
+            - Simple, accessible ingredients
+            - Clear, step-by-step instructions
+            - Opportunities for caregiver-patient interaction
+            - Sensory engagement (smells, textures, tastes)
+            - Safety considerations for dementia care
+            - Adaptability based on current abilities
+            """
+            
+            # Use gemini-2.5-flash model
+            url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+            
             payload = {
                 "contents": [{
-                    "parts": [{"text": prompt}]
+                    "parts": [{
+                        "text": enhanced_prompt
+                    }]
                 }],
                 "generationConfig": {
-                    "temperature": temperature,
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
                     "maxOutputTokens": 2048,
-                    "topP": 0.8
+                },
+                "safetySettings": [
+                    {
+                        "category": "HARM_CATEGORY_HARASSMENT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_HATE_SPEECH", 
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                    }
+                ]
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            
+            logger.info(f"Generating recipe with Gemini 2.5 Flash")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.info("Gemini recipe generation successful")
+                    return self._process_gemini_response(data)
+                elif response.status_code == 400:
+                    logger.error(f"Gemini API bad request: {response.text}")
+                    return None
+                elif response.status_code == 403:
+                    logger.error("Gemini API forbidden - check API key")
+                    return None
+                elif response.status_code == 404:
+                    logger.error("Gemini model not found - check model name")
+                    return None
+                else:
+                    logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+                    return None
+                    
+        except httpx.TimeoutException:
+            logger.error("Gemini API timeout")
+            return None
+        except Exception as e:
+            logger.error(f"Gemini API exception: {str(e)}")
+            return None
+    
+    async def generate_content(self, prompt: str, content_type: str = "general") -> Optional[str]:
+        """
+        Generate general content using Gemini AI.
+        
+        Args:
+            prompt: Content generation prompt
+            content_type: Type of content to generate
+            
+        Returns:
+            Generated content string or None if failed
+        """
+        
+        try:
+            # Use gemini-2.5-flash model
+            url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+            
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": prompt
+                    }]
+                }],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
                 }
             }
             
-            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
-                response = await client.post(
-                    f"{self.base_url}/models/{self.model}:generateContent",
-                    params={"key": self.api_key},
-                    headers={"Content-Type": "application/json"},
-                    json=payload
-                )
+            headers = {"Content-Type": "application/json"}
+            
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
                 
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # Extract text from response
-                    candidates = data.get("candidates", [])
-                    if candidates and len(candidates) > 0:
-                        content = candidates[0].get("content", {})
-                        parts = content.get("parts", [])
-                        if parts and len(parts) > 0:
-                            text = parts[0].get("text", "")
-                            if text:
-                                logger.info("✅ Gemini content generation successful")
-                                return {"success": True, "text": text}
-                    
-                    logger.error("❌ No content parts in Gemini response")
-                    return {"success": False, "error": "no_content"}
-                
+                    if data.get("candidates") and data["candidates"][0].get("content"):
+                        content = data["candidates"][0]["content"]["parts"][0].get("text", "")
+                        logger.info(f"Gemini content generation successful ({content_type})")
+                        return content
+                    else:
+                        logger.error("No content in Gemini response")
+                        return None
                 else:
-                    logger.error(f"❌ Gemini API error: {response.status_code}")
-                    return {"success": False, "error": f"http_{response.status_code}"}
-        
+                    logger.error(f"Gemini content generation error: {response.status_code}")
+                    return None
+                    
         except Exception as e:
-            logger.error(f"💥 Gemini content generation exception: {e}")
-            return {"success": False, "error": "exception"}
-    
-    async def optimize_qloo_searches(self, 
-                                   cultural_keywords: List[str],
-                                   demographic_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Specialized method for optimizing Qloo search queries.
-        """
-        try:
-            prompt = self._build_search_optimization_prompt(cultural_keywords, demographic_context)
-            
-            logger.info("🤖 Gemini: Optimizing Qloo search queries...")
-            result = await self.generate_content(prompt, temperature=0.5)
-            
-            if result.get("success"):
-                return self._parse_search_optimization_response(result["text"])
-            else:
-                logger.error("Gemini search optimization failed")
-                return {"success": False, "error": "gemini_failed"}
-                
-        except Exception as e:
-            logger.error(f"Search optimization exception: {e}")
-            return {"success": False, "error": "exception"}
-    
-    async def build_qloo_parameters(self, 
-                                  entity_type: str,
-                                  entity_id: str, 
-                                  demographic_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Specialized method for building optimal Qloo API parameters.
-        """
-        try:
-            prompt = self._build_parameter_optimization_prompt(entity_type, entity_id, demographic_context)
-            
-            logger.info("🤖 Gemini: Building optimal Qloo parameters...")
-            result = await self.generate_content(prompt, temperature=0.3)
-            
-            if result.get("success"):
-                return self._parse_parameter_response(result["text"])
-            else:
-                logger.error("Gemini parameter building failed")
-                return {"success": False, "error": "gemini_failed"}
-                
-        except Exception as e:
-            logger.error(f"Parameter building exception: {e}")
-            return {"success": False, "error": "exception"}
-    
-    def _build_search_optimization_prompt(self, 
-                                        cultural_keywords: List[str],
-                                        demographic_context: Dict[str, Any]) -> str:
-        """
-        Build specialized prompt for search optimization.
-        """
-        age_context = demographic_context.get("age_range", "unknown")
-        location_context = demographic_context.get("general_location", {})
-        city = location_context.get("city_region", "")
-        
-        prompt = f"""
-You are an expert at generating precise search queries for the Qloo cultural recommendation API.
-
-CONTEXT:
-- Cultural Keywords: {', '.join(cultural_keywords)}
-- Age Group: {age_context}
-- Location: {city}
-
-TASK:
-Generate specific, searchable terms that will find relevant cultural entities in these 4 categories:
-
-1. PLACES (restaurants, venues, cultural locations)
-2. ARTISTS (musicians, performers, cultural figures)
-3. MOVIES (films, documentaries, shows)
-4. BOOKS (literature, cookbooks, cultural texts)
-
-RULES:
-✅ Use specific terms, not generic words
-✅ Consider cultural context (e.g., "italian" → "italian restaurants", "traditional italian music")
-✅ Make searches likely to find real, existing entities
-✅ Include location context when relevant for places
-✅ Focus on 2-3 high-quality searches per category
-✅ Prioritize terms that would return popular, well-known entities
-
-❌ Avoid overly broad terms like "food" or "music"
-❌ Don't use abstract concepts that won't match real entities
-❌ Don't include location for non-place categories
-
-OUTPUT FORMAT (exactly as shown):
-```json
-{{
-    "places": ["search term 1", "search term 2"],
-    "artists": ["search term 1", "search term 2"],
-    "movies": ["search term 1", "search term 2"],
-    "books": ["search term 1", "search term 2"]
-}}
-```
-
-EXAMPLE for Italian-American context:
-```json
-{{
-    "places": ["italian restaurants", "family dining restaurants"],
-    "artists": ["Frank Sinatra", "traditional italian music"],
-    "movies": ["italian family movies", "classic italian cinema"],
-    "books": ["italian cookbook", "italian american authors"]
-}}
-```
-
-Generate optimized search queries now:
-"""
-        return prompt
-    
-    def _build_parameter_optimization_prompt(self, 
-                                           entity_type: str,
-                                           entity_id: str,
-                                           demographic_context: Dict[str, Any]) -> str:
-        """
-        Build specialized prompt for parameter optimization.
-        """
-        age_range = demographic_context.get("age_range", "")
-        location = demographic_context.get("general_location", {})
-        
-        prompt = f"""
-You are an expert at building optimal parameters for the Qloo Insights API.
-
-CONTEXT:
-- Entity Type: {entity_type}
-- Entity ID: {entity_id}
-- Age Range: {age_range}
-- Location: {location}
-
-TASK:
-Build the optimal parameter set for a Qloo /v2/insights API call.
-
-REQUIRED PARAMETERS:
-- filter.type: Must be exactly "{entity_type}"
-- signal.interests.entities: Must be exactly "{entity_id}"
-- take: Should be "5" for good results
-
-OPTIONAL PARAMETERS (add only if context supports):
-- signal.demographics.age: Use "18_to_34", "35_to_54", or "55_and_older" based on age_range
-- signal.location.query: For places only, use city name if available
-
-RULES:
-✅ Always include the 3 required parameters
-✅ Only add demographics if age_range is clear
-✅ Only add location for urn:entity:place
-✅ Use exact age group values: "18_to_34", "35_to_54", "55_and_older"
-✅ Keep location queries short (city name only)
-
-OUTPUT FORMAT (exactly as JSON):
-```json
-{{
-    "filter.type": "{entity_type}",
-    "signal.interests.entities": "{entity_id}",
-    "take": "5"
-}}
-```
-
-Generate optimal parameters now:
-"""
-        return prompt
-    
-    def _parse_search_optimization_response(self, response_text: str) -> Dict[str, Any]:
-        """
-        Parse search optimization response from Gemini.
-        """
-        try:
-            # Extract JSON from response
-            start_idx = response_text.find('{')
-            end_idx = response_text.rfind('}') + 1
-            
-            if start_idx == -1 or end_idx == 0:
-                logger.error("No JSON found in Gemini search response")
-                return {"success": False, "error": "no_json"}
-            
-            json_str = response_text[start_idx:end_idx]
-            search_queries = json.loads(json_str)
-            
-            # Validate structure
-            required_keys = ["places", "artists", "movies", "books"]
-            if not all(key in search_queries for key in required_keys):
-                logger.error(f"Missing required keys in search response: {list(search_queries.keys())}")
-                return {"success": False, "error": "invalid_structure"}
-            
-            # Validate each category has queries
-            for key in required_keys:
-                if not isinstance(search_queries[key], list) or len(search_queries[key]) == 0:
-                    logger.warning(f"Empty or invalid queries for {key}")
-                    search_queries[key] = [f"{key.rstrip('s')} recommendations"]  # Simple fallback
-            
-            logger.info(f"✅ Parsed search queries: {[f'{k}:{len(v)}' for k, v in search_queries.items()]}")
-            return {"success": True, "search_queries": search_queries}
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing failed: {e}")
-            logger.error(f"Raw response: {response_text[:200]}...")
-            return {"success": False, "error": "json_parse_failed"}
-        except Exception as e:
-            logger.error(f"Search response parsing failed: {e}")
-            return {"success": False, "error": "parse_failed"}
-    
-    def _parse_parameter_response(self, response_text: str) -> Dict[str, Any]:
-        """
-        Parse parameter optimization response from Gemini.
-        """
-        try:
-            # Extract JSON from response
-            start_idx = response_text.find('{')
-            end_idx = response_text.rfind('}') + 1
-            
-            if start_idx == -1 or end_idx == 0:
-                logger.error("No JSON found in Gemini parameter response")
-                return {"success": False, "error": "no_json"}
-            
-            json_str = response_text[start_idx:end_idx]
-            params = json.loads(json_str)
-            
-            # Validate required parameters
-            required = ["filter.type", "signal.interests.entities", "take"]
-            if not all(key in params for key in required):
-                logger.error(f"Missing required parameters: {[k for k in required if k not in params]}")
-                return {"success": False, "error": "missing_required_params"}
-            
-            logger.info(f"✅ Parsed parameters: {list(params.keys())}")
-            return {"success": True, "parameters": params}
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Parameter JSON parsing failed: {e}")
-            logger.error(f"Raw response: {response_text[:200]}...")
-            return {"success": False, "error": "json_parse_failed"}
-        except Exception as e:
-            logger.error(f"Parameter response parsing failed: {e}")
-            return {"success": False, "error": "parse_failed"}
-    
-    def _get_search_optimization_template(self) -> str:
-        """Template for search optimization prompts."""
-        return "Search optimization template"
-    
-    def _get_parameter_building_template(self) -> str:
-        """Template for parameter building prompts."""
-        return "Parameter building template"
-    
-    def _get_cultural_analysis_template(self) -> str:
-        """Template for cultural analysis prompts."""
-        return "Cultural analysis template"
+            logger.error(f"Gemini content generation exception: {str(e)}")
+            return None
     
     async def test_connection(self) -> bool:
-        """Test Gemini API connection."""
+        """
+        Test connection to Gemini API with gemini-2.5-flash model.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        
         try:
-            result = await self.generate_content("Test connection", temperature=0.1)
-            return result.get("success", False)
+            logger.info("Testing Gemini API connection with gemini-2.5-flash...")
+            
+            test_prompt = "Generate a simple test response to verify the API connection is working."
+            result = await self.generate_content(test_prompt, "test")
+            
+            if result and len(result.strip()) > 0:
+                logger.info("Gemini AI connection test successful")
+                return True
+            else:
+                logger.error("Gemini AI connection test failed - no response")
+                return False
+                
         except Exception as e:
-            logger.error(f"Gemini connection test failed: {e}")
+            logger.error(f"Gemini AI connection test exception: {str(e)}")
             return False
+    
+    def _process_gemini_response(self, response_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Process Gemini response and extract recipe data."""
+        
+        try:
+            if not response_data.get("candidates"):
+                logger.error("No candidates in Gemini response")
+                return None
+            
+            candidate = response_data["candidates"][0]
+            if not candidate.get("content", {}).get("parts"):
+                logger.error("No content parts in Gemini response")
+                return None
+            
+            # Extract text content
+            text_content = candidate["content"]["parts"][0].get("text", "")
+            
+            if not text_content:
+                logger.error("No text content in Gemini response")
+                return None
+            
+            # Try to extract JSON from the response
+            recipe_data = self._extract_json_from_text(text_content)
+            
+            if recipe_data:
+                logger.info(f"Recipe generated successfully: {recipe_data.get('name', 'Unknown')}")
+                return recipe_data
+            else:
+                # Fallback: create structured data from text
+                return self._create_fallback_recipe(text_content)
+                
+        except Exception as e:
+            logger.error(f"Error processing Gemini response: {str(e)}")
+            return None
+    
+    def _extract_json_from_text(self, text: str) -> Optional[Dict[str, Any]]:
+        """Extract JSON object from Gemini response text with improved parsing."""
+        
+        try:
+            logger.debug(f"Attempting to extract JSON from text: {text[:200]}...")
+            
+            # Method 1: Try to find JSON between code blocks
+            json_pattern = r'```json\s*(.*?)\s*```'
+            match = re.search(json_pattern, text, re.DOTALL | re.IGNORECASE)
+            
+            if match:
+                json_str = match.group(1).strip()
+                logger.debug(f"Found JSON in code block: {json_str[:100]}...")
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Code block JSON parse failed: {e}")
+            
+            # Method 2: Try to find JSON in the text (greedy match)
+            json_pattern = r'\{.*\}'
+            match = re.search(json_pattern, text, re.DOTALL)
+            
+            if match:
+                json_str = match.group(0).strip()
+                logger.debug(f"Found JSON pattern: {json_str[:100]}...")
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Pattern JSON parse failed: {e}")
+            
+            # Method 3: Try to find balanced braces
+            start_idx = text.find('{')
+            if start_idx != -1:
+                brace_count = 0
+                end_idx = start_idx
+                
+                for i, char in enumerate(text[start_idx:], start_idx):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+                
+                if brace_count == 0:
+                    json_str = text[start_idx:end_idx].strip()
+                    logger.debug(f"Found balanced JSON: {json_str[:100]}...")
+                    try:
+                        return json.loads(json_str)
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Balanced JSON parse failed: {e}")
+            
+            # Method 4: Look for specific recipe structure indicators
+            if any(indicator in text.lower() for indicator in ["name", "ingredients", "instructions"]):
+                logger.info("Text contains recipe indicators but no valid JSON - using fallback parser")
+                return self._parse_recipe_from_text(text)
+            
+            logger.warning("No valid JSON found in Gemini response")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error extracting JSON: {str(e)}")
+            return None
+    
+    def _parse_recipe_from_text(self, text: str) -> Optional[Dict[str, Any]]:
+        """Parse recipe information from plain text when JSON extraction fails."""
+        
+        try:
+            lines = text.split('\n')
+            recipe_data = {
+                "name": "Generated Recipe",
+                "description": "Recipe generated by AI",
+                "prep_time": "15 minutes",
+                "cook_time": "30 minutes",
+                "total_time": "45 minutes",
+                "servings": "4",
+                "difficulty": "easy",
+                "ingredients": [],
+                "instructions": [],
+                "caregiver_customization_notes": ["Adjust ingredients based on dietary needs"],
+                "dietary_alternatives": [],
+                "sensory_engagement_tips": ["Encourage participation in safe preparation"],
+                "cultural_context": "Traditional comfort food",
+                "memory_connection_potential": "May evoke positive food memories"
+            }
+            
+            current_section = None
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                # Look for section headers
+                line_lower = line.lower()
+                if any(word in line_lower for word in ["recipe", "name"]) and ":" in line:
+                    recipe_data["name"] = line.split(":", 1)[1].strip()
+                elif "ingredients" in line_lower:
+                    current_section = "ingredients"
+                elif any(word in line_lower for word in ["instructions", "directions", "steps"]):
+                    current_section = "instructions"
+                elif line.startswith(('-', '•', '*')) or line[0].isdigit():
+                    # This is a list item
+                    clean_line = re.sub(r'^[-•*\d.)\s]+', '', line).strip()
+                    
+                    if current_section == "ingredients" and clean_line:
+                        recipe_data["ingredients"].append({
+                            "item": clean_line,
+                            "amount": "",
+                            "notes": ""
+                        })
+                    elif current_section == "instructions" and clean_line:
+                        recipe_data["instructions"].append({
+                            "step": len(recipe_data["instructions"]) + 1,
+                            "instruction": clean_line,
+                            "time": "",
+                            "notes": ""
+                        })
+            
+            # Ensure we have at least some content
+            if not recipe_data["ingredients"]:
+                recipe_data["ingredients"].append({
+                    "item": "Comfort food ingredients",
+                    "amount": "As needed",
+                    "notes": "Based on cultural preferences"
+                })
+            
+            if not recipe_data["instructions"]:
+                recipe_data["instructions"].append({
+                    "step": 1,
+                    "instruction": "Follow traditional preparation methods",
+                    "time": "",
+                    "notes": ""
+                })
+            
+            logger.info(f"Successfully parsed recipe from text: {recipe_data['name']}")
+            return recipe_data
+            
+        except Exception as e:
+            logger.error(f"Failed to parse recipe from text: {e}")
+            return None
+    
+    def _create_fallback_recipe(self, text_content: str) -> Dict[str, Any]:
+        """Create fallback recipe structure from text content."""
+        
+        lines = text_content.split('\n')
+        name = "Comfort Food Recipe"
+        ingredients = []
+        instructions = []
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            if 'ingredients' in line.lower():
+                current_section = "ingredients"
+            elif 'instructions' in line.lower() or 'directions' in line.lower():
+                current_section = "instructions"
+            elif line.startswith('-') or line.startswith('•'):
+                if current_section == "ingredients":
+                    ingredients.append({"item": line[1:].strip(), "amount": "", "notes": ""})
+                elif current_section == "instructions":
+                    instructions.append({
+                        "step": len(instructions) + 1,
+                        "instruction": line[1:].strip(),
+                        "time": "",
+                        "notes": ""
+                    })
+        
+        return {
+            "name": name,
+            "description": "A comforting recipe generated by AI",
+            "prep_time": "15 minutes",
+            "cook_time": "30 minutes",
+            "total_time": "45 minutes",
+            "servings": "4",
+            "difficulty": "easy",
+            "ingredients": ingredients if ingredients else [
+                {"item": "Comfort food ingredients", "amount": "As needed", "notes": "Based on preferences"}
+            ],
+            "instructions": instructions if instructions else [
+                {"step": 1, "instruction": "Follow traditional preparation methods", "time": "", "notes": ""}
+            ],
+            "caregiver_customization_notes": [
+                "Adjust ingredients based on dietary needs",
+                "Simplify steps as needed for current abilities"
+            ],
+            "dietary_alternatives": [],
+            "sensory_engagement_tips": [
+                "Encourage participation in safe preparation steps",
+                "Focus on familiar aromas and textures"
+            ],
+            "cultural_context": "Recipe designed for comfort and familiarity",
+            "memory_connection_potential": "May evoke positive food memories"
+        }
+
+# Export the main class
+__all__ = ["GeminiRecipeGenerator"]
