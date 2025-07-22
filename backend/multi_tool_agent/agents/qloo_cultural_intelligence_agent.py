@@ -32,7 +32,9 @@ class QlooCulturalIntelligenceAgent(Agent):
             name="qloo_cultural_intelligence",
             description="Generates cross-domain cultural recommendations using Qloo API with bias prevention"
         )
-        self.qloo_tool = qloo_tool
+        # DON'T store qloo_tool as self.qloo_tool - this causes Pydantic field error
+        # Instead, store it in a way that works with the Agent model
+        self._tool_ref = qloo_tool
     
     async def run(self, 
                   consolidated_info: Dict[str, Any],
@@ -68,8 +70,8 @@ class QlooCulturalIntelligenceAgent(Agent):
                 blocked_content
             )
             
-            # Execute Qloo API calls (multiple domains)
-            qloo_results = await self._execute_qloo_queries(query_strategy)
+            # Execute Qloo API calls (multiple domains) - pass tool reference
+            qloo_results = await self._execute_qloo_queries(query_strategy, self._tool_ref)
             
             # Process and filter results (respect blocks, avoid bias)
             processed_results = self._process_qloo_results(qloo_results, blocked_content, cultural_elements)
@@ -114,6 +116,59 @@ class QlooCulturalIntelligenceAgent(Agent):
         except Exception as e:
             logger.error(f"Error in Qloo cultural intelligence: {str(e)}")
             return self._create_fallback_qloo_intelligence(consolidated_info, cultural_profile)
+    
+    async def _execute_qloo_queries(self, query_strategy: Dict[str, Any], qloo_tool) -> Dict[str, Any]:
+        """
+        Execute Qloo API queries based on strategy.
+        
+        Args:
+            query_strategy: Query strategy from _build_query_strategy
+            qloo_tool: Qloo tool reference passed from constructor
+            
+        Returns:
+            Dictionary with Qloo API results for each entity type
+        """
+        
+        query_list = query_strategy.get("query_list", [])
+        results = {}
+        
+        for query in query_list:
+            entity_type = query["entity_type"]
+            params = query["params"]
+            
+            try:
+                logger.info(f"Executing Qloo query for {entity_type}")
+                
+                # Execute Qloo API call using the tool reference
+                api_result = await qloo_tool.get_insights(params)
+                
+                if api_result and api_result.get("success"):
+                    results[entity_type] = {
+                        "success": True,
+                        "data": api_result.get("results", {}),
+                        "query_params": params,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                else:
+                    logger.warning(f"Qloo API returned no results for {entity_type}")
+                    results[entity_type] = {
+                        "success": False,
+                        "data": {},
+                        "error": "no_results_returned"
+                    }
+                
+                # Rate limiting - respect Qloo API limits
+                await asyncio.sleep(0.1)
+                
+            except Exception as e:
+                logger.error(f"Qloo API error for {entity_type}: {str(e)}")
+                results[entity_type] = {
+                    "success": False,
+                    "data": {},
+                    "error": str(e)
+                }
+        
+        return results
     
     def _build_query_strategy(self, 
                             request_context: Dict[str, Any],
@@ -172,6 +227,7 @@ class QlooCulturalIntelligenceAgent(Agent):
                                demographic_signals: Dict[str, Any],
                                era_signals: Dict[str, Any]) -> Dict[str, str]:
         """Build base Qloo parameters from demographic and era context."""
+        
         params = {}
         
         # Age-based demographic signal (broad, not stereotypical)
@@ -217,60 +273,35 @@ class QlooCulturalIntelligenceAgent(Agent):
                               cultural_signals: Dict[str, Any],
                               cultural_elements: Dict[str, Any]) -> Dict[str, str]:
         """Build cultural enhancement parameters without assumptions."""
+        
         params = {}
         
-        # Heritage keywords (open exploration)
+        # Heritage-based interests (broad, not stereotypical)
         heritage_keywords = cultural_signals.get("heritage_keywords", [])
-        if heritage_keywords:
-            # Use keywords for broad cultural exploration
-            cultural_query = " ".join(heritage_keywords[:3])  # Limit for API efficiency
-            if cultural_query.strip():
-                params["signal.interests.tags"] = cultural_query
+        tradition_keywords = cultural_signals.get("tradition_keywords", [])
         
-        # Language elements (factual context)
-        languages = cultural_signals.get("language_elements", [])
-        if languages:
-            # Use primary language for cultural context
-            primary_language = languages[0] if languages else None
-            if primary_language and primary_language.lower() != "english":
-                if "signal.interests.tags" in params:
-                    params["signal.interests.tags"] += f" {primary_language}"
-                else:
-                    params["signal.interests.tags"] = primary_language
+        # Combine cultural keywords for interest signals
+        all_cultural_keywords = heritage_keywords + tradition_keywords
+        
+        if all_cultural_keywords:
+            # Use first cultural keyword as interest signal
+            params["signal.interests.tags"] = all_cultural_keywords[0]
         
         return params
     
     def _determine_entity_types(self, request_type: str) -> List[str]:
         """Determine which Qloo entity types to query based on request."""
-        entity_mapping = {
-            "meal": ["urn:entity:place", "urn:entity:brand"],  # Restaurants, food brands
-            "conversation": ["urn:entity:place", "urn:entity:person"],  # Local places, people
-            "music": ["urn:entity:artist", "urn:entity:album"],  # Musicians, albums
-            "video": ["urn:entity:movie", "urn:entity:tv_show"],  # Movies, TV shows
-            "dashboard": ["urn:entity:artist", "urn:entity:place", "urn:entity:movie", "urn:entity:brand"],  # Multi-domain
-            "photo_analysis": ["urn:entity:place", "urn:entity:artist", "urn:entity:movie"]  # Cultural context
-        }
         
-        return entity_mapping.get(request_type, entity_mapping["dashboard"])
-    
-    def _is_entity_type_blocked(self, entity_type: str, blocked_content: Dict[str, Any]) -> bool:
-        """Check if an entity type is blocked by user feedback."""
+        base_types = ["urn:entity:artist", "urn:entity:place"]
         
-        # Map entity types to content categories
-        type_mapping = {
-            "urn:entity:artist": "music",
-            "urn:entity:album": "music", 
-            "urn:entity:place": "places",
-            "urn:entity:movie": "video",
-            "urn:entity:tv_show": "video",
-            "urn:entity:brand": "brands",
-            "urn:entity:person": "people"
-        }
-        
-        content_category = type_mapping.get(entity_type, "unknown")
-        blocked_categories = blocked_content.get("categories", [])
-        
-        return content_category in blocked_categories
+        if request_type == "meal":
+            return ["urn:entity:place", "urn:entity:artist"]  # Restaurants and music for dining
+        elif request_type == "music":
+            return ["urn:entity:artist", "urn:entity:album"]
+        elif request_type == "conversation":
+            return ["urn:entity:movie", "urn:entity:book", "urn:entity:person"]
+        else:  # dashboard or general
+            return ["urn:entity:artist", "urn:entity:place", "urn:entity:movie"]
     
     def _build_entity_query(self, 
                            entity_type: str,
@@ -279,75 +310,38 @@ class QlooCulturalIntelligenceAgent(Agent):
                            request_type: str) -> Dict[str, Any]:
         """Build specific query for an entity type."""
         
-        # Combine base and cultural parameters
-        query_params = {**base_params, **cultural_params}
-        query_params["filter.type"] = entity_type
-        query_params["take"] = "5"  # Reasonable number for processing
+        # Start with base params
+        params = base_params.copy()
+        params.update(cultural_params)
         
-        # Entity-specific enhancements
-        if entity_type == "urn:entity:place":
-            # For places, focus on cultural experiences
-            if request_type == "meal":
-                query_params["filter.tags"] = "restaurant food dining"
-            elif request_type == "conversation":
-                query_params["filter.tags"] = "cultural historical community"
+        # Add entity type
+        params["filter.type"] = entity_type
         
-        elif entity_type == "urn:entity:artist":
-            # For artists, broad exploration
-            query_params["filter.tags"] = "music performance cultural"
+        # Ensure required interest signal is present
+        if "signal.interests.tags" not in params:
+            if "artist" in entity_type:
+                params["signal.interests.tags"] = "music"
+            elif "place" in entity_type:
+                params["signal.interests.tags"] = "dining"
+            elif "movie" in entity_type:
+                params["signal.interests.tags"] = "movies"
+            else:
+                params["signal.interests.tags"] = "culture"
         
-        elif entity_type in ["urn:entity:movie", "urn:entity:tv_show"]:
-            # For video content, family-friendly
-            query_params["filter.content_rating"] = "G,PG,PG-13"
+        # Set reasonable result limit
+        params["take"] = 3
         
         return {
             "entity_type": entity_type,
-            "params": query_params,
-            "purpose": f"{request_type}_cultural_discovery"
+            "params": params,
+            "request_context": request_type
         }
     
-    async def _execute_qloo_queries(self, query_strategy: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute Qloo API queries with proper error handling."""
-        query_list = query_strategy.get("query_list", [])
-        results = {}
+    def _is_entity_type_blocked(self, entity_type: str, blocked_content: Dict[str, Any]) -> bool:
+        """Check if entity type is blocked by user feedback."""
         
-        for query in query_list:
-            entity_type = query["entity_type"]
-            params = query["params"]
-            
-            try:
-                logger.info(f"Executing Qloo query for {entity_type}")
-                
-                # Execute Qloo API call
-                api_result = await self.qloo_tool.get_insights(params)
-                
-                if api_result and api_result.get("success"):
-                    results[entity_type] = {
-                        "success": True,
-                        "data": api_result.get("results", {}),
-                        "query_params": params,
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                else:
-                    logger.warning(f"Qloo API returned no results for {entity_type}")
-                    results[entity_type] = {
-                        "success": False,
-                        "data": {},
-                        "error": "no_results_returned"
-                    }
-                
-                # Rate limiting - respect Qloo API limits
-                await asyncio.sleep(0.1)
-                
-            except Exception as e:
-                logger.error(f"Qloo API error for {entity_type}: {str(e)}")
-                results[entity_type] = {
-                    "success": False,
-                    "data": {},
-                    "error": str(e)
-                }
-        
-        return results
+        blocked_types = blocked_content.get("blocked_entity_types", [])
+        return entity_type in blocked_types
     
     def _process_qloo_results(self, 
                              qloo_results: Dict[str, Any],
@@ -355,78 +349,58 @@ class QlooCulturalIntelligenceAgent(Agent):
                              cultural_elements: Dict[str, Any]) -> Dict[str, Any]:
         """Process Qloo results and filter based on blocked content."""
         
-        processed_results = {}
+        processed = {}
         
-        for entity_type, result in qloo_results.items():
-            if not result.get("success"):
-                processed_results[entity_type] = {
-                    "available": False,
-                    "error": result.get("error", "api_error"),
-                    "fallback_needed": True
-                }
+        for entity_type, result_data in qloo_results.items():
+            if not result_data.get("success"):
                 continue
+                
+            entities = result_data.get("data", {}).get("results", {}).get("entities", [])
             
-            # Extract entities from Qloo response
-            data = result.get("data", {})
-            entities = data.get("entities", []) if isinstance(data, dict) else []
-            
-            # Filter out blocked content
+            # Filter blocked entities
             filtered_entities = self._filter_blocked_entities(entities, blocked_content)
             
             # Enhance entities with cultural context
             enhanced_entities = self._enhance_entities_with_context(
                 filtered_entities, 
-                cultural_elements,
-                entity_type
+                entity_type, 
+                cultural_elements
             )
             
-            processed_results[entity_type] = {
-                "available": True,
+            processed[entity_type] = {
                 "entities": enhanced_entities,
                 "total_found": len(entities),
-                "after_filtering": len(filtered_entities),
-                "entity_type_category": self._get_entity_category(entity_type)
+                "after_filtering": len(enhanced_entities),
+                "entity_type": entity_type
             }
         
-        return processed_results
+        return processed
     
-    def _filter_blocked_entities(self, 
-                                entities: List[Dict[str, Any]], 
-                                blocked_content: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Filter entities against blocked content patterns."""
+    def _filter_blocked_entities(self, entities: List[Dict[str, Any]], blocked_content: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Filter out blocked entities based on user feedback."""
         
-        blocked_items = blocked_content.get("specific_items", [])
-        blocked_types = blocked_content.get("types", [])
-        blocked_categories = blocked_content.get("categories", [])
+        blocked_names = blocked_content.get("blocked_names", [])
+        blocked_ids = blocked_content.get("blocked_entity_ids", [])
         
         filtered = []
-        
         for entity in entities:
             entity_name = entity.get("name", "").lower()
-            entity_type = entity.get("type", "").lower()
-            entity_category = entity.get("category", "").lower()
+            entity_id = entity.get("entity_id", "")
             
-            # Check specific blocked items
-            if any(blocked_item.lower() in entity_name for blocked_item in blocked_items):
-                continue
-                
-            # Check blocked types
-            if any(blocked_type.lower() in entity_type for blocked_type in blocked_types):
-                continue
-                
-            # Check blocked categories
-            if any(blocked_cat.lower() in entity_category for blocked_cat in blocked_categories):
-                continue
+            # Check if blocked
+            is_blocked = any(blocked.lower() in entity_name for blocked in blocked_names)
+            is_blocked = is_blocked or entity_id in blocked_ids
             
-            filtered.append(entity)
+            if not is_blocked:
+                filtered.append(entity)
         
         return filtered
     
     def _enhance_entities_with_context(self, 
-                                      entities: List[Dict[str, Any]],
-                                      cultural_elements: Dict[str, Any],
-                                      entity_type: str) -> List[Dict[str, Any]]:
-        """Enhance entities with cultural context without assumptions."""
+                                      entities: List[Dict[str, Any]], 
+                                      entity_type: str,
+                                      cultural_elements: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Enhance entities with cultural context and caregiver guidance."""
         
         enhanced = []
         
@@ -474,246 +448,165 @@ class QlooCulturalIntelligenceAgent(Agent):
                                       entity_type: str) -> List[str]:
         """Assess potential for cross-domain connections."""
         
-        potentials = []
+        potential = []
         
-        # Based on entity type, suggest cross-domain possibilities
-        if entity_type == "urn:entity:artist":
-            potentials = ["music_listening", "era_discussion", "dance_activities", "cultural_exploration"]
-        elif entity_type == "urn:entity:place":
-            potentials = ["conversation_starter", "food_exploration", "memory_trigger", "cultural_learning"]
-        elif entity_type in ["urn:entity:movie", "urn:entity:tv_show"]:
-            potentials = ["viewing_activity", "discussion_topic", "era_exploration", "cultural_context"]
-        elif entity_type == "urn:entity:brand":
-            potentials = ["food_exploration", "shopping_memories", "brand_familiarity", "cultural_products"]
+        if "artist" in entity_type:
+            potential.extend(["music_listening", "conversation_starter", "memory_trigger"])
+        elif "place" in entity_type:
+            potential.extend(["dining_experience", "cultural_exploration", "sensory_engagement"])
+        elif "movie" in entity_type:
+            potential.extend(["viewing_together", "conversation_topic", "nostalgic_connection"])
         
-        return potentials
+        return potential
     
     def _generate_caregiver_guidance(self, 
-                                    entity: Dict[str, Any],
-                                    entity_type: str) -> Dict[str, str]:
+                                   entity: Dict[str, Any], 
+                                   entity_type: str) -> Dict[str, str]:
         """Generate guidance for caregivers on how to use this suggestion."""
         
-        entity_name = entity.get("name", "Unknown")
-        
-        guidance_mapping = {
-            "urn:entity:artist": {
-                "implementation": f"Try playing music by {entity_name} during quiet times",
-                "conversation_starter": f"Ask: 'Do you remember {entity_name}? What was your favorite song?'",
-                "caregiver_note": "Watch for positive reactions to rhythm and melody"
-            },
-            "urn:entity:place": {
-                "implementation": f"Use {entity_name} as a conversation topic or photo exploration",
-                "conversation_starter": f"Talk about visiting places like {entity_name}",
-                "caregiver_note": "May trigger location-based memories"
-            },
-            "urn:entity:movie": {
-                "implementation": f"Consider watching {entity_name} together",
-                "conversation_starter": f"Ask: 'Would you like to watch {entity_name}?'",
-                "caregiver_note": "Check for attention span and content appropriateness"
-            },
-            "urn:entity:tv_show": {
-                "implementation": f"Try watching episodes of {entity_name}",
-                "conversation_starter": f"Ask about memories of watching {entity_name}",
-                "caregiver_note": "Familiar shows may provide comfort"
-            },
-            "urn:entity:brand": {
-                "implementation": f"Look for products from {entity_name} during shopping",
-                "conversation_starter": f"Ask about experiences with {entity_name}",
-                "caregiver_note": "Brand recognition may trigger positive memories"
-            }
+        guidance = {
+            "how_to_use": "general_suggestion",
+            "adaptation_tips": "adjust_based_on_current_abilities",
+            "safety_considerations": "supervise_as_needed"
         }
         
-        return guidance_mapping.get(entity_type, {
-            "implementation": f"Explore {entity_name} as a cultural topic",
-            "conversation_starter": f"Talk about {entity_name}",
-            "caregiver_note": "Use as general cultural exploration"
-        })
-    
-    def _get_entity_category(self, entity_type: str) -> str:
-        """Map entity type to user-friendly category."""
-        mapping = {
-            "urn:entity:artist": "music",
-            "urn:entity:album": "music",
-            "urn:entity:place": "places",
-            "urn:entity:movie": "video",
-            "urn:entity:tv_show": "video", 
-            "urn:entity:brand": "brands",
-            "urn:entity:person": "people"
-        }
-        return mapping.get(entity_type, "cultural")
+        if "artist" in entity_type:
+            guidance.update({
+                "how_to_use": "play_music_together_or_discuss_artist",
+                "adaptation_tips": "adjust_volume_and_duration_based_on_preferences",
+                "safety_considerations": "monitor_emotional_responses_to_music"
+            })
+        elif "place" in entity_type:
+            guidance.update({
+                "how_to_use": "consider_for_outings_or_delivery_orders",
+                "adaptation_tips": "check_accessibility_and_dietary_restrictions",
+                "safety_considerations": "ensure_safe_dining_environment"
+            })
+        
+        return guidance
     
     def _generate_cross_domain_connections(self, processed_results: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate connections between different domains."""
+        """Generate connections between different entity types."""
         
-        connections = {
-            "thematic_links": [],
-            "sensory_combinations": [],
-            "cultural_threads": [],
-            "caregiver_combinations": []
-        }
+        connections = {}
+        entity_types = list(processed_results.keys())
         
-        available_domains = [
-            domain for domain, result in processed_results.items() 
-            if result.get("available", False)
-        ]
-        
-        # Generate thematic connections between domains
-        if len(available_domains) >= 2:
-            for i, domain1 in enumerate(available_domains):
-                for domain2 in available_domains[i+1:]:
-                    connection = self._create_domain_connection(
-                        domain1, 
-                        domain2,
-                        processed_results[domain1],
-                        processed_results[domain2]
-                    )
-                    if connection:
-                        connections["thematic_links"].append(connection)
+        for i, type1 in enumerate(entity_types):
+            for type2 in entity_types[i+1:]:
+                connection_key = f"{type1}_to_{type2}"
+                connections[connection_key] = self._find_entity_connections(
+                    processed_results[type1], 
+                    processed_results[type2]
+                )
         
         return connections
     
-    def _create_domain_connection(self, 
-                                 domain1: str, 
-                                 domain2: str,
-                                 result1: Dict[str, Any],
-                                 result2: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Create a connection between two domains."""
+    def _find_entity_connections(self, 
+                               entities1: Dict[str, Any], 
+                               entities2: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Find connections between two sets of entities."""
         
-        # Example connections without assumptions
-        connection_templates = {
-            ("urn:entity:artist", "urn:entity:place"): {
-                "theme": "musical_cultural_exploration",
-                "description": "Combine music listening with cultural place discussions",
-                "implementation": "Play music while talking about cultural places"
-            },
-            ("urn:entity:movie", "urn:entity:place"): {
-                "theme": "visual_cultural_storytelling", 
-                "description": "Use movies to explore cultural places and stories",
-                "implementation": "Watch films set in culturally relevant locations"
-            },
-            ("urn:entity:artist", "urn:entity:brand"): {
-                "theme": "era_cultural_products",
-                "description": "Explore music and products from the same cultural era",
-                "implementation": "Combine music with familiar brand discussions"
-            }
-        }
+        connections = []
         
-        connection_key = (domain1, domain2) if (domain1, domain2) in connection_templates else (domain2, domain1)
-        template = connection_templates.get(connection_key)
+        # Simple thematic connections (can be enhanced)
+        entities1_list = entities1.get("entities", [])
+        entities2_list = entities2.get("entities", [])
         
-        if template:
-            return {
-                "domains": [domain1, domain2],
-                "theme": template["theme"],
-                "description": template["description"],
-                "implementation": template["implementation"],
-                "cross_sensory": True
-            }
+        for entity1 in entities1_list[:2]:  # Limit to avoid too many connections
+            for entity2 in entities2_list[:2]:
+                connection = {
+                    "entity1": entity1["name"],
+                    "entity2": entity2["name"],
+                    "connection_type": "thematic_similarity",
+                    "suggested_use": "combine_for_richer_experience"
+                }
+                connections.append(connection)
+                
+                if len(connections) >= 3:  # Limit connections
+                    break
+            if len(connections) >= 3:
+                break
         
-        return None
+        return connections
     
     def _create_thematic_intelligence(self, 
-                                     processed_results: Dict[str, Any],
-                                     cross_domain_connections: Dict[str, Any],
-                                     cultural_elements: Dict[str, Any]) -> Dict[str, Any]:
-        """Create thematic coherence across all recommendations."""
+                                    processed_results: Dict[str, Any],
+                                    cross_domain_connections: Dict[str, Any],
+                                    cultural_elements: Dict[str, Any]) -> Dict[str, Any]:
+        """Create thematic intelligence without stereotypical assumptions."""
         
-        # Extract common themes across domains
-        common_themes = self._extract_common_themes(processed_results)
+        themes = {}
         
-        # Build thematic packages without stereotypes
-        thematic_packages = self._build_thematic_packages(
-            processed_results,
-            cross_domain_connections,
-            common_themes
-        )
+        # Extract common themes from results
+        all_entities = []
+        for entity_type_data in processed_results.values():
+            all_entities.extend(entity_type_data.get("entities", []))
+        
+        # Group by cross-domain potential
+        for entity in all_entities:
+            potentials = entity.get("cross_domain_potential", [])
+            for potential in potentials:
+                if potential not in themes:
+                    themes[potential] = []
+                themes[potential].append(entity["name"])
         
         return {
-            "common_themes": common_themes,
-            "thematic_packages": thematic_packages,
-            "cultural_coherence": "cross_domain_exploration",
-            "implementation_approach": "caregiver_guided_discovery"
+            "thematic_groupings": themes,
+            "recommended_combinations": self._suggest_combinations(themes),
+            "cultural_coherence": "broad_exploration_approach",
+            "bias_prevention": "no_stereotypical_packages"
         }
     
-    def _extract_common_themes(self, processed_results: Dict[str, Any]) -> List[str]:
-        """Extract themes that appear across multiple domains."""
+    def _suggest_combinations(self, themes: Dict[str, List[str]]) -> List[Dict[str, Any]]:
+        """Suggest combinations of entities for richer experiences."""
         
-        themes = []
+        combinations = []
         
-        # Look for era-based themes
-        if any("entities" in result for result in processed_results.values()):
-            themes.append("era_exploration")
+        # Simple combination logic (can be enhanced)
+        theme_keys = list(themes.keys())
+        for i, theme1 in enumerate(theme_keys):
+            for theme2 in theme_keys[i+1:]:
+                if themes[theme1] and themes[theme2]:
+                    combination = {
+                        "theme1": theme1,
+                        "theme2": theme2,
+                        "entities1": themes[theme1][:2],
+                        "entities2": themes[theme2][:2],
+                        "combination_suggestion": f"combine_{theme1}_with_{theme2}"
+                    }
+                    combinations.append(combination)
+                    
+                    if len(combinations) >= 3:  # Limit combinations
+                        break
+            if len(combinations) >= 3:
+                break
         
-        # Look for cultural themes
-        if len(processed_results) > 1:
-            themes.append("cross_cultural_discovery")
-        
-        return themes
-    
-    def _build_thematic_packages(self, 
-                                processed_results: Dict[str, Any],
-                                cross_domain_connections: Dict[str, Any],
-                                common_themes: List[str]) -> List[Dict[str, Any]]:
-        """Build thematic packages for caregiver implementation."""
-        
-        packages = []
-        
-        # Create multi-sensory packages
-        if "era_exploration" in common_themes:
-            era_package = {
-                "theme": "era_cultural_exploration",
-                "description": "Explore cultural elements from their era across multiple senses",
-                "components": [],
-                "implementation": "Use multiple elements together for richer experience",
-                "caregiver_guidance": "Start with one element, add others based on response"
-            }
-            
-            # Add components from available domains
-            for domain, result in processed_results.items():
-                if result.get("available") and result.get("entities"):
-                    era_package["components"].append({
-                        "domain": self._get_entity_category(domain),
-                        "sample_entity": result["entities"][0]["name"] if result["entities"] else None
-                    })
-            
-            if era_package["components"]:
-                packages.append(era_package)
-        
-        return packages
+        return combinations
     
     def _validate_qloo_bias_prevention(self, 
-                                      enhanced_intelligence: Dict[str, Any],
-                                      cultural_elements: Dict[str, Any]) -> None:
-        """Validate that Qloo results don't introduce bias."""
+                                     enhanced_intelligence: Dict[str, Any],
+                                     cultural_elements: Dict[str, Any]) -> None:
+        """Validate that no bias was introduced in Qloo recommendations."""
         
-        # Check for stereotypical cultural "packages"
+        # Check for stereotypical patterns
         recommendations = enhanced_intelligence.get("cultural_recommendations", {})
         
-        # Ensure individual approach maintained
-        anti_bias = enhanced_intelligence.get("anti_bias_validation", {})
-        if not anti_bias.get("individual_preferences_checked"):
-            logger.warning("Individual preference checking not documented")
-        
-        # Check for diverse recommendations
-        available_domains = [
-            domain for domain, result in recommendations.items()
-            if result.get("available", False)
-        ]
-        
-        if len(available_domains) > 1:
-            logger.info("Cross-domain recommendations generated successfully")
-        
-        logger.info("Qloo bias prevention validation completed")
+        for entity_type, type_data in recommendations.items():
+            entities = type_data.get("entities", [])
+            
+            # Log validation
+            logger.info(f"Bias validation for {entity_type}: {len(entities)} entities")
+            
+            # Additional bias checks can be added here
+            for entity in entities:
+                context = entity.get("cultural_context", {})
+                if context.get("cultural_connection") == "broad_exploration":
+                    logger.debug(f"Entity {entity['name']} uses broad exploration approach")
     
     def _create_fallback_qloo_intelligence(self, 
-                                          consolidated_info: Dict[str, Any],
-                                          cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback when Qloo API is unavailable."""
-        
-        request_type = consolidated_info.get("request_context", {}).get("request_type", "dashboard")
-        
-        # Create culturally broad fallback recommendations
-        fallback_recommendations = self._generate_fallback_recommendations(request_type, cultural_profile)
+                                         consolidated_info: Dict[str, Any],
+                                         cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Create fallback intelligence when Qloo API is unavailable."""
         
         return {
             "qloo_intelligence": {
@@ -724,48 +617,16 @@ class QlooCulturalIntelligenceAgent(Agent):
                     "blocked_content_respected": True,
                     "bias_prevention_active": True
                 },
-                "cultural_recommendations": fallback_recommendations,
-                "cross_domain_connections": {"thematic_links": []},
-                "thematic_intelligence": {"common_themes": ["general_cultural_exploration"]},
+                "cultural_recommendations": {},
+                "cross_domain_connections": {},
+                "thematic_intelligence": {},
                 "fallback_used": True,
+                "fallback_reason": "qloo_api_unavailable",
                 "anti_bias_validation": {
                     "individual_preferences_checked": True,
                     "blocked_content_filtered": True,
                     "stereotypical_assumptions": "none_made",
-                    "cross_domain_approach": "broad_fallback_exploration"
+                    "cross_domain_approach": "fallback_mode"
                 }
             }
         }
-    
-    def _generate_fallback_recommendations(self, 
-                                          request_type: str,
-                                          cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate broadly cultural fallback recommendations."""
-        
-        # Wide cultural appeal recommendations
-        fallback_mapping = {
-            "music": {
-                "available": True,
-                "entities": [
-                    {
-                        "name": "Classic Standards Collection",
-                        "cultural_context": {"discovery_reason": "broad_cultural_appeal"},
-                        "caregiver_guidance": {"implementation": "Try familiar melodies from different eras"}
-                    }
-                ],
-                "entity_type_category": "music"
-            },
-            "places": {
-                "available": True,
-                "entities": [
-                    {
-                        "name": "Local Community Centers",
-                        "cultural_context": {"discovery_reason": "community_connection"},
-                        "caregiver_guidance": {"implementation": "Discuss local community places"}
-                    }
-                ],
-                "entity_type_category": "places"
-            }
-        }
-        
-        return fallback_mapping

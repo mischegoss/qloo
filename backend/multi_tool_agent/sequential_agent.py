@@ -1,13 +1,12 @@
 """
-CareConnect Sequential Agent
+CareConnect Sequential Agent - Simple Implementation
 Location: backend/multi_tool_agent/sequential_agent.py
 
-Orchestrates all 7 agents following Google ADK SequentialAgent pattern
+Orchestrates all 7 agents without inheriting from SequentialAgent
 """
 
 import logging
 from typing import Dict, Any, Optional
-from google.adk.agents import SequentialAgent  # ✅ CORRECT IMPORT
 
 # Import individual agents from agents subdirectory
 from .agents.information_consolidator_agent import InformationConsolidatorAgent
@@ -20,7 +19,7 @@ from .agents.feedback_learning_agent import FeedbackLearningSystemAgent
 
 logger = logging.getLogger(__name__)
 
-class CareConnectAgent(SequentialAgent):
+class CareConnectAgent:
     """
     CareConnect Sequential Agent - Main Orchestrator
     
@@ -49,27 +48,24 @@ class CareConnectAgent(SequentialAgent):
                 - session_storage_tool: Session storage manager
         """
         
-        # Store tools for agent access
-        self.tools = tools
+        self.name = "careconnect_pipeline"
+        self.description = "Complete CareConnect dementia care cultural intelligence pipeline"
         
-        # Initialize individual agents with their required tools
-        agent1 = InformationConsolidatorAgent()
-        agent2 = CulturalProfileBuilderAgent()
-        agent3 = QlooCulturalIntelligenceAgent(tools["qloo_tool"])
-        agent4 = SensoryContentGeneratorAgent(
-            tools["youtube_tool"],
-            tools["gemini_tool"]
-        )
-        agent5 = PhotoCulturalAnalyzerAgent(tools["vision_ai_tool"])
-        agent6 = MobileSynthesizerAgent()
-        agent7 = FeedbackLearningSystemAgent(tools["session_storage_tool"])
+        # Extract tools
+        qloo_tool = tools["qloo_tool"]
+        youtube_tool = tools["youtube_tool"]
+        gemini_tool = tools["gemini_tool"]
+        vision_ai_tool = tools["vision_ai_tool"]
+        session_storage_tool = tools["session_storage_tool"]
         
-        # Create agent workflow following ADK SequentialAgent pattern
-        super().__init__(
-            name="careconnect_pipeline",
-            description="Complete CareConnect dementia care cultural intelligence pipeline",
-            sub_agents=[agent1, agent2, agent3, agent4, agent5, agent6, agent7]
-        )
+        # Initialize all agents
+        self.agent1 = InformationConsolidatorAgent()
+        self.agent2 = CulturalProfileBuilderAgent()
+        self.agent3 = QlooCulturalIntelligenceAgent(qloo_tool)
+        self.agent4 = SensoryContentGeneratorAgent(youtube_tool, gemini_tool)
+        self.agent5 = PhotoCulturalAnalyzerAgent(vision_ai_tool)
+        self.agent6 = MobileSynthesizerAgent()
+        self.agent7 = FeedbackLearningSystemAgent(session_storage_tool)
         
         logger.info("CareConnect Sequential Agent initialized with 7-agent pipeline")
     
@@ -81,103 +77,162 @@ class CareConnectAgent(SequentialAgent):
                   photo_data: Optional[Dict[str, Any]] = None,
                   feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Execute the complete CareConnect 7-agent pipeline.
+        Execute the complete CareConnect 7-agent pipeline manually.
         
         Args:
-            patient_profile: Basic patient information (privacy-compliant)
-            request_type: meal, conversation, music, video, dashboard, photo_analysis
-            session_id: Optional session identifier for preference continuity
-            feedback_history: Previous feedback and blocked content
-            photo_data: Optional uploaded photo for analysis
-            feedback_data: User feedback from mobile interface
+            patient_profile: Patient information from caregiver
+            request_type: Type of request (dashboard, meal, conversation, etc.)
+            session_id: Session identifier
+            feedback_history: Historical feedback data
+            photo_data: Photo analysis data if provided
+            feedback_data: Current feedback data if provided
             
         Returns:
-            Complete pipeline result with all agent outputs
+            Complete pipeline results with mobile experience
         """
         
         try:
-            logger.info(f"Starting CareConnect pipeline for request: {request_type}")
+            logger.info(f"Starting CareConnect pipeline for {request_type} request")
             
-            # Prepare input for the sequential agent pipeline
-            pipeline_input = {
-                "patient_profile": patient_profile,
-                "request_type": request_type,
-                "session_id": session_id,
-                "feedback_history": feedback_history,
-                "photo_data": photo_data
+            pipeline_metadata = {
+                "pipeline_start": "2025-07-21T00:00:00Z",
+                "agents_executed": 0,
+                "pipeline_status": "running"
             }
             
-            # Execute the sequential pipeline (Agents 1-6)
-            result = await super().run(pipeline_input)
+            # AGENT 1: Information Consolidator
+            logger.info("Executing Agent 1: Information Consolidator")
+            agent1_result = await self.agent1.run(
+                patient_profile=patient_profile,
+                request_type=request_type,
+                session_id=session_id,
+                feedback_history=feedback_history,
+                photo_data=photo_data
+            )
+            consolidated_info = agent1_result.get("consolidated_info", {})
+            pipeline_metadata["agents_executed"] = 1
             
-            # Handle Agent 7 (Feedback Learning) separately if feedback provided
-            if feedback_data:
-                logger.info("Processing feedback through Agent 7")
-                
-                # Prepare input for feedback learning agent
-                feedback_input = {
-                    "consolidated_info": result.get("consolidated_info"),
-                    "cultural_profile": result.get("cultural_profile"),
-                    "qloo_intelligence": result.get("qloo_intelligence"),
-                    "sensory_content": result.get("sensory_content"),
-                    "photo_analysis": result.get("photo_analysis"),
-                    "mobile_experience": result.get("mobile_experience"),
-                    "feedback_data": feedback_data
+            # AGENT 2: Cultural Profile Builder  
+            logger.info("Executing Agent 2: Cultural Profile Builder")
+            agent2_result = await self.agent2.run(
+                consolidated_info=consolidated_info
+            )
+            cultural_profile = agent2_result.get("cultural_profile", {})
+            pipeline_metadata["agents_executed"] = 2
+            
+            # AGENT 3: Qloo Cultural Intelligence
+            logger.info("Executing Agent 3: Qloo Cultural Intelligence")
+            agent3_result = await self.agent3.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile
+            )
+            qloo_intelligence = agent3_result.get("qloo_intelligence", {})
+            pipeline_metadata["agents_executed"] = 3
+            
+            # AGENT 4: Sensory Content Generator
+            logger.info("Executing Agent 4: Sensory Content Generator")
+            agent4_result = await self.agent4.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence
+            )
+            sensory_content = agent4_result.get("sensory_content", {})
+            pipeline_metadata["agents_executed"] = 4
+            
+            # AGENT 5: Photo Cultural Analyzer (conditional)
+            logger.info("Executing Agent 5: Photo Cultural Analyzer")
+            agent5_result = await self.agent5.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence,
+                sensory_content=sensory_content
+            )
+            photo_analysis = agent5_result.get("photo_analysis", {})
+            pipeline_metadata["agents_executed"] = 5
+            
+            # AGENT 6: Mobile Synthesizer
+            logger.info("Executing Agent 6: Mobile Synthesizer")
+            agent6_result = await self.agent6.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence,
+                sensory_content=sensory_content,
+                photo_analysis=photo_analysis
+            )
+            mobile_experience = agent6_result.get("mobile_experience", {})
+            pipeline_metadata["agents_executed"] = 6
+            
+            # AGENT 7: Feedback Learning System
+            logger.info("Executing Agent 7: Feedback Learning System")
+            agent7_result = await self.agent7.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence,
+                sensory_content=sensory_content,
+                photo_analysis=photo_analysis,
+                mobile_experience=mobile_experience,
+                feedback_data=feedback_data
+            )
+            updated_preferences = agent7_result.get("updated_preferences", {})
+            pipeline_metadata["agents_executed"] = 7
+            pipeline_metadata["pipeline_status"] = "completed"
+            
+            # Compile complete pipeline results
+            complete_results = {
+                "pipeline_metadata": pipeline_metadata,
+                "consolidated_info": consolidated_info,
+                "cultural_profile": cultural_profile,
+                "qloo_intelligence": qloo_intelligence,
+                "sensory_content": sensory_content,
+                "photo_analysis": photo_analysis,
+                "mobile_experience": mobile_experience,
+                "updated_preferences": updated_preferences,
+                "request_metadata": {
+                    "patient_profile": patient_profile,
+                    "request_type": request_type,
+                    "session_id": session_id,
+                    "pipeline_success": True
                 }
-                
-                # Run Agent 7 separately with all previous outputs
-                feedback_result = await self.sub_agents[6].run(**feedback_input)
-                result.update(feedback_result)
-            
-            # Add pipeline metadata
-            result["pipeline_metadata"] = {
-                "request_type": request_type,
-                "session_id": session_id,
-                "agents_executed": 7 if feedback_data else 6,
-                "pipeline_status": "completed_successfully",
-                "privacy_compliance": "maintained",
-                "anti_bias_validation": "passed",
-                "caregiver_authority": "preserved"
             }
             
             logger.info("CareConnect pipeline completed successfully")
-            return result
+            return complete_results
             
         except Exception as e:
-            logger.error(f"Error in CareConnect pipeline: {str(e)}")
-            return self._create_safe_fallback(patient_profile, request_type, str(e))
-    
-    def _create_safe_fallback(self, 
-                             patient_profile: Dict[str, Any],
-                             request_type: str,
-                             error: str) -> Dict[str, Any]:
-        """Create safe fallback when pipeline fails."""
-        
-        return {
-            "pipeline_metadata": {
-                "request_type": request_type,
-                "pipeline_status": "fallback_mode",
-                "error": error,
-                "caregiver_authority": "preserved"
-            },
-            "mobile_experience": {
-                "page_structure": {"structure_type": "safe_fallback"},
-                "mobile_content": {
-                    "primary_content": {
-                        "content_type": "simple_activities",
-                        "activities": [
-                            "Look at family photos together",
-                            "Listen to familiar music",
-                            "Have a gentle conversation",
-                            "Enjoy a quiet moment together"
-                        ]
-                    }
+            logger.error(f"CareConnect pipeline error: {str(e)}")
+            
+            # Return partial results with error information
+            error_results = {
+                "pipeline_metadata": {
+                    "pipeline_status": "error",
+                    "agents_executed": pipeline_metadata.get("agents_executed", 0),
+                    "error_message": str(e)
                 },
-                "caregiver_guide": {
-                    "caregiver_authority_note": {
-                        "principle": "You know them best - use your judgment",
-                        "approach": "Focus on simple, familiar activities"
-                    }
+                "request_metadata": {
+                    "patient_profile": patient_profile,
+                    "request_type": request_type,
+                    "session_id": session_id,
+                    "pipeline_success": False
+                },
+                "error_details": {
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "fallback_mode": True
                 }
             }
-        }
+            
+            # Add any partial results that were completed
+            if pipeline_metadata.get("agents_executed", 0) >= 1:
+                error_results["consolidated_info"] = locals().get("consolidated_info", {})
+            if pipeline_metadata.get("agents_executed", 0) >= 2:
+                error_results["cultural_profile"] = locals().get("cultural_profile", {})
+            if pipeline_metadata.get("agents_executed", 0) >= 3:
+                error_results["qloo_intelligence"] = locals().get("qloo_intelligence", {})
+            if pipeline_metadata.get("agents_executed", 0) >= 4:
+                error_results["sensory_content"] = locals().get("sensory_content", {})
+            if pipeline_metadata.get("agents_executed", 0) >= 5:
+                error_results["photo_analysis"] = locals().get("photo_analysis", {})
+            if pipeline_metadata.get("agents_executed", 0) >= 6:
+                error_results["mobile_experience"] = locals().get("mobile_experience", {})
+            
+            return error_results

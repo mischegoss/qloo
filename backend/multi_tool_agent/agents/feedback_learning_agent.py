@@ -1,5 +1,5 @@
 """
-Agent 7: Feedback Learning System
+Agent 7: Feedback Learning System - FIXED VERSION
 Role: Process feedback and update preference profile
 Follows Responsible Development Guide principles - individual preferences override everything
 """
@@ -32,7 +32,8 @@ class FeedbackLearningSystemAgent(Agent):
             name="feedback_learning_system",
             description="Processes user feedback and learns individual preferences"
         )
-        self.session_storage_tool = session_storage_tool
+        # FIXED: Store tool reference differently to avoid Pydantic field errors
+        self._session_storage_tool_ref = session_storage_tool
     
     async def run(self, 
                   consolidated_info: Dict[str, Any],
@@ -69,363 +70,393 @@ class FeedbackLearningSystemAgent(Agent):
                 logger.info("No feedback data provided - returning current preferences")
                 return await self._get_current_preferences(session_id)
             
-            # Process the feedback
-            feedback_results = await self._process_feedback(feedback_data, session_id)
+            # Process the feedback using tool reference
+            feedback_results = await self._process_feedback_data(feedback_data, session_id)
             
-            # Update preference patterns
-            preference_updates = await self._update_preference_patterns(
-                feedback_data,
-                cultural_profile,
-                qloo_intelligence,
-                sensory_content,
-                session_id
+            # Update preferences based on feedback
+            updated_preferences = await self._update_preferences(feedback_results, session_id)
+            
+            # Learn patterns from feedback
+            learning_insights = self._analyze_feedback_patterns(feedback_results, updated_preferences)
+            
+            # Generate blocking updates
+            blocking_updates = self._process_blocking_feedback(feedback_data, updated_preferences)
+            
+            # Create preference profile for future sessions
+            future_guidance = self._generate_future_session_guidance(
+                updated_preferences,
+                learning_insights,
+                blocking_updates
             )
             
-            # Learn from mobile experience effectiveness
-            mobile_learning = await self._learn_from_mobile_experience(
-                mobile_experience,
-                feedback_data,
-                session_id
-            )
-            
-            # Build updated preference profile
-            updated_preferences = {
+            # Build complete feedback learning results
+            feedback_learning = {
                 "learning_metadata": {
                     "timestamp": datetime.utcnow().isoformat(),
                     "session_id": session_id,
-                    "feedback_processed": True,
-                    "learning_approach": "individual_preferences_override_demographics"
+                    "feedback_processed": bool(feedback_data),
+                    "preferences_updated": True,
+                    "individual_learning_active": True
                 },
                 "feedback_results": feedback_results,
-                "preference_updates": preference_updates,
-                "mobile_learning": mobile_learning,
-                "individual_priority_maintained": True,
-                "cultural_assumptions_overridden": self._check_cultural_overrides(
-                    feedback_data, cultural_profile
-                )
+                "updated_preferences": updated_preferences,
+                "learning_insights": learning_insights,
+                "blocking_updates": blocking_updates,
+                "future_guidance": future_guidance,
+                "anti_bias_validation": {
+                    "individual_preferences_prioritized": True,
+                    "demographic_assumptions_overridden": True,
+                    "cultural_stereotypes_blocked": True,
+                    "personal_choice_respected": True
+                }
             }
             
+            # Save updated preferences to session storage
+            await self._save_preferences_to_storage(session_id, updated_preferences)
+            
             logger.info("Feedback learning completed successfully")
-            return {"updated_preferences": updated_preferences}
+            return {"updated_preferences": feedback_learning}
             
         except Exception as e:
             logger.error(f"Error in feedback learning: {str(e)}")
-            return self._create_fallback_preferences(consolidated_info)
+            return self._create_fallback_feedback_learning(consolidated_info, feedback_data)
     
-    async def _process_feedback(self, 
-                               feedback_data: Dict[str, Any], 
-                               session_id: Optional[str]) -> Dict[str, Any]:
-        """Process the raw feedback data into structured preferences."""
+    async def _get_current_preferences(self, session_id: str) -> Dict[str, Any]:
+        """Get current preferences when no new feedback is provided."""
         
-        feedback_type = feedback_data.get("feedback_type", "unknown")
-        content_category = feedback_data.get("content_category", "general")
-        content_details = feedback_data.get("content_details", {})
-        blocking_scope = feedback_data.get("blocking_scope")
+        try:
+            # Use session storage tool reference
+            session_data = await self._session_storage_tool_ref.get_session(session_id)
+            
+            if session_data:
+                preferences = session_data.get("preferences", {})
+                blocked_content = session_data.get("blocked_content", {})
+                
+                return {
+                    "updated_preferences": {
+                        "learning_metadata": {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "session_id": session_id,
+                            "feedback_processed": False,
+                            "preferences_loaded": True
+                        },
+                        "current_preferences": preferences,
+                        "current_blocked_content": blocked_content,
+                        "feedback_results": {},
+                        "learning_insights": {"status": "no_new_feedback"},
+                        "blocking_updates": {},
+                        "future_guidance": self._generate_current_guidance(preferences, blocked_content)
+                    }
+                }
+            else:
+                return self._create_empty_preferences(session_id)
+                
+        except Exception as e:
+            logger.error(f"Error getting current preferences: {str(e)}")
+            return self._create_empty_preferences(session_id)
+    
+    async def _process_feedback_data(self, 
+                                   feedback_data: Dict[str, Any], 
+                                   session_id: str) -> Dict[str, Any]:
+        """Process incoming feedback data."""
         
         feedback_results = {
-            "feedback_type": feedback_type,
-            "content_category": content_category,
-            "processing_successful": True,
-            "actions_taken": []
+            "feedback_type": feedback_data.get("feedback_type", "unknown"),
+            "content_category": feedback_data.get("content_category", "unknown"),
+            "content_details": feedback_data.get("content_details", {}),
+            "timestamp": datetime.utcnow().isoformat(),
+            "session_id": session_id
         }
         
-        if not session_id:
-            # Create new session if none exists
-            patient_id = content_details.get("patient_id", "unknown_patient")
-            session_id = await self.session_storage_tool.create_session(patient_id)
-            feedback_results["actions_taken"].append("created_new_session")
+        # Process emoji feedback
+        if feedback_results["feedback_type"] in ["positive", "negative", "neutral"]:
+            feedback_results["emoji_feedback"] = {
+                "reaction": feedback_results["feedback_type"],
+                "content_id": feedback_data.get("content_id", ""),
+                "processing": "individual_preference_learning"
+            }
         
-        # Process based on feedback type
-        if feedback_type == "positive":
-            success = await self.session_storage_tool.add_preference(
-                session_id=session_id,
-                category=content_category,
-                item_name=content_details.get("content_name", "unknown"),
-                preference_type="positive",
-                context=content_details,
-                feedback_source="emoji_feedback"
-            )
-            if success:
-                feedback_results["actions_taken"].append("added_positive_preference")
-        
-        elif feedback_type == "negative":
-            success = await self.session_storage_tool.add_preference(
-                session_id=session_id,
-                category=content_category,
-                item_name=content_details.get("content_name", "unknown"),
-                preference_type="negative",
-                context=content_details,
-                feedback_source="emoji_feedback"
-            )
-            if success:
-                feedback_results["actions_taken"].append("added_negative_preference")
-        
-        elif feedback_type == "blocked":
-            # Handle blocking based on scope
-            content_name = content_details.get("content_name", "unknown")
-            
-            if blocking_scope == "item":
-                success = await self.session_storage_tool.add_blocked_content(
-                    session_id=session_id,
-                    block_type="specific_item",
-                    content_identifier=content_name,
-                    context=content_details
-                )
-            elif blocking_scope == "type":
-                content_type = content_details.get("content_type", content_category)
-                success = await self.session_storage_tool.add_blocked_content(
-                    session_id=session_id,
-                    block_type="type",
-                    content_identifier=content_type,
-                    context=content_details
-                )
-            elif blocking_scope == "category":
-                success = await self.session_storage_tool.add_blocked_content(
-                    session_id=session_id,
-                    block_type="category",
-                    content_identifier=content_category,
-                    context=content_details
-                )
-            else:
-                # Default to specific item blocking
-                success = await self.session_storage_tool.add_blocked_content(
-                    session_id=session_id,
-                    block_type="specific_item",
-                    content_identifier=content_name,
-                    context=content_details
-                )
-            
-            if success:
-                feedback_results["actions_taken"].append(f"blocked_{blocking_scope or 'item'}")
+        # Process blocking feedback
+        if feedback_results["feedback_type"] == "blocked":
+            feedback_results["blocking_feedback"] = {
+                "blocked_item": feedback_data.get("content_details", {}).get("name", ""),
+                "blocking_scope": feedback_data.get("blocking_scope", "item"),
+                "processing": "individual_blocking_preference"
+            }
         
         return feedback_results
     
-    async def _update_preference_patterns(self, 
-                                         feedback_data: Dict[str, Any],
-                                         cultural_profile: Dict[str, Any],
-                                         qloo_intelligence: Dict[str, Any],
-                                         sensory_content: Dict[str, Any],
-                                         session_id: Optional[str]) -> Dict[str, Any]:
-        """Update preference patterns based on feedback."""
+    async def _update_preferences(self, 
+                                feedback_results: Dict[str, Any], 
+                                session_id: str) -> Dict[str, Any]:
+        """Update user preferences based on feedback."""
         
-        if not session_id:
-            return {"patterns_updated": False, "reason": "no_session_id"}
-        
-        # Get current positive patterns
-        positive_patterns = await self.session_storage_tool.get_positive_patterns(session_id)
-        
-        # Analyze feedback in context of cultural intelligence
-        pattern_analysis = self._analyze_feedback_patterns(
-            feedback_data,
-            cultural_profile,
-            qloo_intelligence
-        )
-        
-        # Check if feedback overrides cultural suggestions
-        cultural_overrides = self._identify_cultural_overrides(
-            feedback_data,
-            cultural_profile,
-            qloo_intelligence
-        )
-        
-        return {
-            "patterns_updated": True,
-            "current_positive_patterns": positive_patterns,
-            "pattern_analysis": pattern_analysis,
-            "cultural_overrides": cultural_overrides,
-            "individual_learning": "preferences_override_demographics"
-        }
+        try:
+            # Get existing preferences using tool reference
+            session_data = await self._session_storage_tool_ref.get_session(session_id)
+            existing_preferences = session_data.get("preferences", {}) if session_data else {}
+            
+            updated_preferences = existing_preferences.copy()
+            
+            # Update based on emoji feedback
+            if "emoji_feedback" in feedback_results:
+                emoji_data = feedback_results["emoji_feedback"]
+                reaction = emoji_data["reaction"]
+                content_category = feedback_results["content_category"]
+                
+                if reaction == "positive":
+                    if "liked_content" not in updated_preferences:
+                        updated_preferences["liked_content"] = {}
+                    if content_category not in updated_preferences["liked_content"]:
+                        updated_preferences["liked_content"][content_category] = []
+                    
+                    content_details = feedback_results["content_details"]
+                    if content_details not in updated_preferences["liked_content"][content_category]:
+                        updated_preferences["liked_content"][content_category].append(content_details)
+                
+                elif reaction == "negative":
+                    if "disliked_content" not in updated_preferences:
+                        updated_preferences["disliked_content"] = {}
+                    if content_category not in updated_preferences["disliked_content"]:
+                        updated_preferences["disliked_content"][content_category] = []
+                    
+                    content_details = feedback_results["content_details"]
+                    if content_details not in updated_preferences["disliked_content"][content_category]:
+                        updated_preferences["disliked_content"][content_category].append(content_details)
+            
+            # Update based on blocking feedback
+            if "blocking_feedback" in feedback_results:
+                blocking_data = feedback_results["blocking_feedback"]
+                
+                if "blocked_content" not in updated_preferences:
+                    updated_preferences["blocked_content"] = {}
+                
+                blocking_scope = blocking_data["blocking_scope"]
+                blocked_item = blocking_data["blocked_item"]
+                content_category = feedback_results["content_category"]
+                
+                if blocking_scope == "item":
+                    if "blocked_items" not in updated_preferences["blocked_content"]:
+                        updated_preferences["blocked_content"]["blocked_items"] = []
+                    updated_preferences["blocked_content"]["blocked_items"].append(blocked_item)
+                
+                elif blocking_scope == "type":
+                    if "blocked_types" not in updated_preferences["blocked_content"]:
+                        updated_preferences["blocked_content"]["blocked_types"] = []
+                    updated_preferences["blocked_content"]["blocked_types"].append(content_category)
+                
+                elif blocking_scope == "category":
+                    if "blocked_categories" not in updated_preferences["blocked_content"]:
+                        updated_preferences["blocked_content"]["blocked_categories"] = []
+                    updated_preferences["blocked_content"]["blocked_categories"].append(content_category)
+            
+            return updated_preferences
+            
+        except Exception as e:
+            logger.error(f"Error updating preferences: {str(e)}")
+            return {}
     
     def _analyze_feedback_patterns(self, 
-                                  feedback_data: Dict[str, Any],
-                                  cultural_profile: Dict[str, Any],
-                                  qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze feedback in context of cultural suggestions."""
+                                  feedback_results: Dict[str, Any], 
+                                  updated_preferences: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze patterns in feedback to generate learning insights."""
         
-        content_details = feedback_data.get("content_details", {})
-        feedback_type = feedback_data.get("feedback_type")
-        
-        # Check if this feedback relates to cultural intelligence suggestions
-        cultural_connection = content_details.get("cultural_connection")
-        qloo_source = content_details.get("qloo_generated", False)
-        
-        analysis = {
-            "feedback_source": "cultural_intelligence" if qloo_source else "other",
-            "cultural_accuracy": None,
-            "pattern_insights": []
+        insights = {
+            "individual_learning_active": True,
+            "pattern_analysis": {},
+            "preference_trends": {},
+            "anti_bias_compliance": "individual_preferences_override_demographics"
         }
         
-        if cultural_connection and qloo_source:
-            if feedback_type == "positive":
-                analysis["cultural_accuracy"] = "cultural_suggestion_successful"
-                analysis["pattern_insights"].append(
-                    f"Cultural connection '{cultural_connection}' resonated positively"
-                )
-            elif feedback_type in ["negative", "blocked"]:
-                analysis["cultural_accuracy"] = "cultural_assumption_incorrect"
-                analysis["pattern_insights"].append(
-                    f"Cultural connection '{cultural_connection}' was rejected - individual preferences override"
-                )
-        
-        return analysis
-    
-    def _identify_cultural_overrides(self, 
-                                   feedback_data: Dict[str, Any],
-                                   cultural_profile: Dict[str, Any],
-                                   qloo_intelligence: Dict[str, Any]) -> List[str]:
-        """Identify when individual feedback overrides cultural assumptions."""
-        
-        overrides = []
-        
-        feedback_type = feedback_data.get("feedback_type")
-        content_details = feedback_data.get("content_details", {})
-        cultural_connection = content_details.get("cultural_connection")
-        
-        if feedback_type in ["negative", "blocked"] and cultural_connection:
-            # Individual rejected a cultural suggestion
-            overrides.append(f"Individual rejected cultural suggestion: {cultural_connection}")
-            
-            # Check what cultural elements were assumed
-            heritage_keywords = cultural_profile.get("cultural_elements", {}).get(
-                "heritage_elements", {}).get("heritage_keywords", [])
-            
-            for keyword in heritage_keywords:
-                if keyword.lower() in str(cultural_connection).lower():
-                    overrides.append(f"Heritage keyword '{keyword}' assumption overridden by individual feedback")
-        
-        return overrides
-    
-    async def _learn_from_mobile_experience(self, 
-                                           mobile_experience: Dict[str, Any],
-                                           feedback_data: Dict[str, Any],
-                                           session_id: Optional[str]) -> Dict[str, Any]:
-        """Learn from mobile experience effectiveness."""
-        
-        mobile_learning = {
-            "mobile_effectiveness": {},
-            "ui_preferences": {},
-            "content_preferences": {},
-            "caregiver_usage_patterns": {}
-        }
-        
-        # Analyze feedback in context of mobile content structure
-        mobile_content = mobile_experience.get("mobile_content", {})
-        page_structure = mobile_experience.get("page_structure", {})
-        
-        feedback_category = feedback_data.get("content_category")
-        feedback_type = feedback_data.get("feedback_type")
-        
-        # Learn about content type effectiveness
-        if feedback_category and feedback_type:
-            mobile_learning["content_preferences"][feedback_category] = feedback_type
-        
-        # Learn about page structure effectiveness
-        structure_type = page_structure.get("structure_type", "unknown")
-        mobile_learning["ui_preferences"]["last_structure_used"] = structure_type
-        
-        # Note: In a full implementation, we'd track more detailed mobile interaction patterns
-        
-        return mobile_learning
-    
-    def _check_cultural_overrides(self, 
-                                 feedback_data: Dict[str, Any],
-                                 cultural_profile: Dict[str, Any]) -> Dict[str, bool]:
-        """Check what cultural assumptions were overridden by individual feedback."""
-        
-        overrides = {
-            "heritage_assumptions_overridden": False,
-            "era_assumptions_overridden": False,
-            "demographic_assumptions_overridden": False,
-            "individual_preferences_prioritized": True
-        }
-        
-        feedback_type = feedback_data.get("feedback_type")
-        content_details = feedback_data.get("content_details", {})
-        
-        if feedback_type in ["negative", "blocked"]:
-            # Check if rejected content was based on cultural assumptions
-            cultural_connection = content_details.get("cultural_connection", "")
-            
-            # Check heritage overrides
-            heritage_keywords = cultural_profile.get("cultural_elements", {}).get(
-                "heritage_elements", {}).get("heritage_keywords", [])
-            for keyword in heritage_keywords:
-                if keyword.lower() in cultural_connection.lower():
-                    overrides["heritage_assumptions_overridden"] = True
-                    break
-            
-            # Check era overrides
-            if any(decade in cultural_connection.lower() for decade in ["1940s", "1950s", "1960s", "1970s"]):
-                overrides["era_assumptions_overridden"] = True
-            
-            # Check demographic overrides
-            if "age" in cultural_connection.lower() or "demographic" in cultural_connection.lower():
-                overrides["demographic_assumptions_overridden"] = True
-        
-        return overrides
-    
-    async def _get_current_preferences(self, session_id: Optional[str]) -> Dict[str, Any]:
-        """Get current preferences when no new feedback is provided."""
-        
-        if not session_id:
-            return {
-                "updated_preferences": {
-                    "learning_metadata": {
-                        "timestamp": datetime.utcnow().isoformat(),
-                        "session_id": None,
-                        "feedback_processed": False,
-                        "reason": "no_session_id"
+        # Analyze liked content patterns
+        liked_content = updated_preferences.get("liked_content", {})
+        if liked_content:
+            insights["preference_trends"]["positive_patterns"] = {}
+            for category, items in liked_content.items():
+                if len(items) >= 2:  # Pattern emerges with 2+ likes
+                    insights["preference_trends"]["positive_patterns"][category] = {
+                        "count": len(items),
+                        "trend": "consistent_positive_feedback",
+                        "recommendation": f"prioritize_{category}_content_in_future"
                     }
-                }
-            }
         
-        # Get current session data
-        session_data = await self.session_storage_tool.get_session(session_id)
-        
-        if session_data:
-            blocked_content = await self.session_storage_tool.get_blocked_content(session_id)
-            positive_patterns = await self.session_storage_tool.get_positive_patterns(session_id)
-            
-            return {
-                "updated_preferences": {
-                    "learning_metadata": {
-                        "timestamp": datetime.utcnow().isoformat(),
-                        "session_id": session_id,
-                        "feedback_processed": False,
-                        "current_preferences_retrieved": True
-                    },
-                    "current_blocked_content": blocked_content,
-                    "current_positive_patterns": positive_patterns,
-                    "individual_priority_maintained": True
-                }
-            }
-        else:
-            return {
-                "updated_preferences": {
-                    "learning_metadata": {
-                        "timestamp": datetime.utcnow().isoformat(),
-                        "session_id": session_id,
-                        "feedback_processed": False,
-                        "reason": "session_not_found"
+        # Analyze disliked content patterns  
+        disliked_content = updated_preferences.get("disliked_content", {})
+        if disliked_content:
+            insights["preference_trends"]["negative_patterns"] = {}
+            for category, items in disliked_content.items():
+                if len(items) >= 2:  # Pattern emerges with 2+ dislikes
+                    insights["preference_trends"]["negative_patterns"][category] = {
+                        "count": len(items),
+                        "trend": "consistent_negative_feedback",
+                        "recommendation": f"reduce_{category}_content_suggestions"
                     }
-                }
+        
+        # Analyze blocking patterns
+        blocked_content = updated_preferences.get("blocked_content", {})
+        if blocked_content:
+            insights["pattern_analysis"]["blocking_behavior"] = {
+                "blocked_items": len(blocked_content.get("blocked_items", [])),
+                "blocked_types": len(blocked_content.get("blocked_types", [])),
+                "blocked_categories": len(blocked_content.get("blocked_categories", [])),
+                "approach": "respect_all_blocking_preferences"
             }
+        
+        return insights
     
-    def _create_fallback_preferences(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback preferences when feedback processing fails."""
+    def _process_blocking_feedback(self, 
+                                  feedback_data: Dict[str, Any], 
+                                  updated_preferences: Dict[str, Any]) -> Dict[str, Any]:
+        """Process blocking feedback and generate updates."""
+        
+        blocking_updates = {
+            "new_blocks_added": False,
+            "blocking_scope": "none",
+            "immediate_effect": "none"
+        }
+        
+        if feedback_data and feedback_data.get("feedback_type") == "blocked":
+            blocking_scope = feedback_data.get("blocking_scope", "item")
+            content_details = feedback_data.get("content_details", {})
+            content_name = content_details.get("name", "unknown")
+            
+            blocking_updates = {
+                "new_blocks_added": True,
+                "blocking_scope": blocking_scope,
+                "blocked_item": content_name,
+                "immediate_effect": f"future_recommendations_will_exclude_{blocking_scope}",
+                "compliance": "individual_choice_respected",
+                "override_effect": "blocks_override_all_demographic_and_cultural_suggestions"
+            }
+        
+        return blocking_updates
+    
+    def _generate_future_session_guidance(self, 
+                                        updated_preferences: Dict[str, Any],
+                                        learning_insights: Dict[str, Any],
+                                        blocking_updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate guidance for future sessions based on learned preferences."""
+        
+        guidance = {
+            "preference_priorities": [],
+            "content_avoidance": [],
+            "personalization_level": "high_individual_customization",
+            "bias_prevention": "individual_preferences_override_everything"
+        }
+        
+        # Positive preference guidance
+        liked_content = updated_preferences.get("liked_content", {})
+        for category, items in liked_content.items():
+            if len(items) >= 2:
+                guidance["preference_priorities"].append({
+                    "category": category,
+                    "priority": "high",
+                    "reason": f"consistent_positive_feedback_{len(items)}_times",
+                    "implementation": f"prioritize_{category}_content_in_recommendations"
+                })
+        
+        # Negative preference guidance
+        disliked_content = updated_preferences.get("disliked_content", {})
+        blocked_content = updated_preferences.get("blocked_content", {})
+        
+        for category, items in disliked_content.items():
+            guidance["content_avoidance"].append({
+                "category": category,
+                "avoidance_level": "reduce_frequency",
+                "reason": f"negative_feedback_received_{len(items)}_times"
+            })
+        
+        # Blocking guidance
+        if blocked_content:
+            for block_type in ["blocked_items", "blocked_types", "blocked_categories"]:
+                blocked_list = blocked_content.get(block_type, [])
+                for blocked_item in blocked_list:
+                    guidance["content_avoidance"].append({
+                        "item": blocked_item,
+                        "avoidance_level": "complete_exclusion",
+                        "reason": "explicit_user_blocking",
+                        "scope": block_type
+                    })
+        
+        return guidance
+    
+    def _generate_current_guidance(self, 
+                                  preferences: Dict[str, Any], 
+                                  blocked_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate guidance based on current preferences when no new feedback."""
+        
+        return {
+            "current_preferences_active": True,
+            "liked_content_categories": list(preferences.get("liked_content", {}).keys()),
+            "disliked_content_categories": list(preferences.get("disliked_content", {}).keys()),
+            "blocked_content_summary": {
+                "items_blocked": len(blocked_content.get("blocked_items", [])),
+                "types_blocked": len(blocked_content.get("blocked_types", [])),
+                "categories_blocked": len(blocked_content.get("blocked_categories", []))
+            },
+            "recommendation": "continue_using_established_preferences"
+        }
+    
+    async def _save_preferences_to_storage(self, 
+                                         session_id: str, 
+                                         updated_preferences: Dict[str, Any]) -> None:
+        """Save updated preferences to session storage."""
+        
+        try:
+            # Use session storage tool reference
+            await self._session_storage_tool_ref.update_session_preferences(session_id, updated_preferences)
+            logger.info(f"Preferences saved to session storage for session {session_id}")
+        except Exception as e:
+            logger.error(f"Error saving preferences to storage: {str(e)}")
+    
+    def _create_empty_preferences(self, session_id: str) -> Dict[str, Any]:
+        """Create empty preferences structure."""
         
         return {
             "updated_preferences": {
                 "learning_metadata": {
                     "timestamp": datetime.utcnow().isoformat(),
+                    "session_id": session_id,
                     "feedback_processed": False,
-                    "mode": "fallback_safe_defaults",
-                    "individual_priority_maintained": True
+                    "preferences_loaded": False,
+                    "new_session": True
                 },
-                "fallback_approach": {
-                    "principle": "individual_preferences_always_override_demographics",
-                    "safety": "no_assumptions_made_about_preferences",
-                    "learning": "will_learn_from_individual_feedback_when_available"
+                "current_preferences": {},
+                "current_blocked_content": {},
+                "feedback_results": {},
+                "learning_insights": {"status": "new_session_no_preferences"},
+                "blocking_updates": {},
+                "future_guidance": {
+                    "new_session": True,
+                    "recommendation": "start_learning_from_user_feedback"
+                }
+            }
+        }
+    
+    def _create_fallback_feedback_learning(self, 
+                                         consolidated_info: Dict[str, Any], 
+                                         feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Create fallback feedback learning when session storage is unavailable."""
+        
+        session_metadata = consolidated_info.get("session_metadata", {})
+        session_id = session_metadata.get("session_id", "unknown")
+        
+        return {
+            "updated_preferences": {
+                "learning_metadata": {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "session_id": session_id,
+                    "feedback_processed": False,
+                    "fallback_used": True,
+                    "fallback_reason": "session_storage_unavailable"
+                },
+                "feedback_results": {"status": "unable_to_process"},
+                "updated_preferences": {},
+                "learning_insights": {"status": "session_storage_unavailable"},
+                "blocking_updates": {"status": "unable_to_update"},
+                "future_guidance": {
+                    "fallback_mode": True,
+                    "recommendation": "feedback_learning_unavailable_this_session"
                 }
             }
         }

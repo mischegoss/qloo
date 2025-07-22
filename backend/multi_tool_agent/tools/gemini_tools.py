@@ -1,5 +1,5 @@
 """
-Google Gemini AI Tools - Fixed Version
+Google Gemini AI Tools - Fixed with gemini-2.5-flash
 File: backend/multi_tool_agent/tools/gemini_tools.py
 
 Provides interface to Google Gemini AI for recipe generation and content creation
@@ -21,6 +21,7 @@ class GeminiRecipeGenerator:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        logger.info("Gemini AI tool initialized with gemini-2.5-flash model")
         
     async def generate_recipe(self, prompt: str) -> Optional[Dict[str, Any]]:
         """
@@ -77,7 +78,8 @@ class GeminiRecipeGenerator:
             - Adaptability based on current abilities
             """
             
-            url = f"{self.base_url}/models/gemini-pro:generateContent?key={self.api_key}"
+            # FIXED: Use gemini-2.5-flash instead of gemini-pro
+            url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
             
             payload = {
                 "contents": [{
@@ -113,17 +115,23 @@ class GeminiRecipeGenerator:
             
             headers = {"Content-Type": "application/json"}
             
+            logger.info(f"Generating recipe with Gemini 2.5 Flash")
+            
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json=payload, headers=headers)
                 
                 if response.status_code == 200:
                     data = response.json()
+                    logger.info("Gemini recipe generation successful")
                     return self._process_gemini_response(data)
                 elif response.status_code == 400:
                     logger.error(f"Gemini API bad request: {response.text}")
                     return None
                 elif response.status_code == 403:
                     logger.error("Gemini API forbidden - check API key")
+                    return None
+                elif response.status_code == 404:
+                    logger.error("Gemini model not found - check model name")
                     return None
                 else:
                     logger.error(f"Gemini API error: {response.status_code} - {response.text}")
@@ -135,6 +143,84 @@ class GeminiRecipeGenerator:
         except Exception as e:
             logger.error(f"Gemini API exception: {str(e)}")
             return None
+    
+    async def generate_content(self, prompt: str, content_type: str = "general") -> Optional[str]:
+        """
+        Generate general content using Gemini AI.
+        
+        Args:
+            prompt: Content generation prompt
+            content_type: Type of content to generate
+            
+        Returns:
+            Generated content string or None if failed
+        """
+        
+        try:
+            # FIXED: Use gemini-2.5-flash instead of gemini-pro
+            url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+            
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": prompt
+                    }]
+                }],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
+                }
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if data.get("candidates") and data["candidates"][0].get("content"):
+                        content = data["candidates"][0]["content"]["parts"][0].get("text", "")
+                        logger.info(f"Gemini content generation successful ({content_type})")
+                        return content
+                    else:
+                        logger.error("No content in Gemini response")
+                        return None
+                else:
+                    logger.error(f"Gemini content generation error: {response.status_code}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Gemini content generation exception: {str(e)}")
+            return None
+    
+    async def test_connection(self) -> bool:
+        """
+        Test connection to Gemini API with gemini-2.5-flash model.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        
+        try:
+            logger.info("Testing Gemini API connection with gemini-2.5-flash...")
+            
+            test_prompt = "Generate a simple test response to verify the API connection is working."
+            result = await self.generate_content(test_prompt, "test")
+            
+            if result and len(result.strip()) > 0:
+                logger.info("Gemini AI connection test successful")
+                return True
+            else:
+                logger.error("Gemini AI connection test failed - no response")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Gemini AI connection test exception: {str(e)}")
+            return False
     
     def _process_gemini_response(self, response_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Process Gemini response and extract recipe data."""
@@ -174,74 +260,62 @@ class GeminiRecipeGenerator:
         """Extract JSON object from Gemini response text."""
         
         try:
-            # Look for JSON blocks in the text
-            start_markers = ["{", "```json", "```"]
-            end_markers = ["}", "```"]
+            # Look for JSON block in the response
+            import re
             
-            for start_marker in start_markers:
-                start_idx = text.find(start_marker)
-                if start_idx != -1:
-                    # Find the corresponding end marker
-                    if start_marker == "{":
-                        # Find matching closing brace
-                        brace_count = 0
-                        for i, char in enumerate(text[start_idx:], start_idx):
-                            if char == "{":
-                                brace_count += 1
-                            elif char == "}":
-                                brace_count -= 1
-                                if brace_count == 0:
-                                    json_text = text[start_idx:i+1]
-                                    return json.loads(json_text)
-                    else:
-                        # Look for end marker
-                        for end_marker in end_markers:
-                            end_idx = text.find(end_marker, start_idx + len(start_marker))
-                            if end_idx != -1:
-                                json_text = text[start_idx + len(start_marker):end_idx]
-                                if json_text.strip().startswith("{"):
-                                    return json.loads(json_text.strip())
+            # Try to find JSON between code blocks
+            json_pattern = r'```json\s*(.*?)\s*```'
+            match = re.search(json_pattern, text, re.DOTALL)
+            
+            if match:
+                json_str = match.group(1)
+                return json.loads(json_str)
+            
+            # Try to find JSON in the text
+            json_pattern = r'\{.*\}'
+            match = re.search(json_pattern, text, re.DOTALL)
+            
+            if match:
+                json_str = match.group(0)
+                return json.loads(json_str)
             
             return None
             
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error: {str(e)}")
+        except json.JSONDecodeError:
+            logger.warning("Could not parse JSON from Gemini response")
             return None
         except Exception as e:
             logger.error(f"Error extracting JSON: {str(e)}")
             return None
     
     def _create_fallback_recipe(self, text_content: str) -> Dict[str, Any]:
-        """Create fallback recipe structure from unstructured text."""
+        """Create fallback recipe structure from text content."""
         
         lines = text_content.split('\n')
-        
-        # Try to extract basic information
-        name = "Generated Comfort Food Recipe"
+        name = "Comfort Food Recipe"
         ingredients = []
         instructions = []
-        
-        # Simple parsing logic
         current_section = None
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
                 
-            # Look for section headers
-            if any(keyword in line.lower() for keyword in ["ingredient", "what you need"]):
+            if 'ingredients' in line.lower():
                 current_section = "ingredients"
-                continue
-            elif any(keyword in line.lower() for keyword in ["instruction", "steps", "method", "how to"]):
+            elif 'instructions' in line.lower() or 'directions' in line.lower():
                 current_section = "instructions"
-                continue
-            elif any(keyword in line.lower() for keyword in ["recipe", "dish"]) and len(line) < 100:
-                name = line
-                continue
-            
-            # Add content to appropriate section
-            if current_section == "ingredients" and line:
-                ingredients.append({"item": line, "amount": "", "notes": ""})
+            elif line.startswith('-') or line.startswith('•'):
+                if current_section == "ingredients":
+                    ingredients.append({"item": line[1:].strip(), "amount": "", "notes": ""})
+                elif current_section == "instructions":
+                    instructions.append({
+                        "step": len(instructions) + 1,
+                        "instruction": line[1:].strip(),
+                        "time": "",
+                        "notes": ""
+                    })
             elif current_section == "instructions" and line:
                 instructions.append({
                     "step": len(instructions) + 1,
@@ -281,80 +355,3 @@ class GeminiRecipeGenerator:
             "cultural_context": "This recipe provides opportunities for shared cooking and cultural food memories",
             "memory_connection_potential": "Cooking together can trigger positive memories of family meals and kitchen experiences"
         }
-    
-    async def generate_content(self, prompt: str, content_type: str = "general") -> Optional[str]:
-        """
-        Generate general content using Gemini AI.
-        
-        Args:
-            prompt: Content generation prompt
-            content_type: Type of content (recipe, conversation, description)
-            
-        Returns:
-            Generated content text or None if failed
-        """
-        
-        try:
-            url = f"{self.base_url}/models/gemini-pro:generateContent?key={self.api_key}"
-            
-            payload = {
-                "contents": [{
-                    "parts": [{
-                        "text": prompt
-                    }]
-                }],
-                "generationConfig": {
-                    "temperature": 0.8,
-                    "topK": 40,
-                    "topP": 0.95,
-                    "maxOutputTokens": 1024,
-                }
-            }
-            
-            headers = {"Content-Type": "application/json"}
-            
-            async with httpx.AsyncClient(timeout=20.0) as client:
-                response = await client.post(url, json=payload, headers=headers)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("candidates") and data["candidates"][0].get("content"):
-                        content = data["candidates"][0]["content"]["parts"][0].get("text", "")
-                        logger.info(f"Gemini content generation successful for {content_type}")
-                        return content
-                    else:
-                        logger.error("No content in Gemini response")
-                        return None
-                else:
-                    logger.error(f"Gemini content generation error: {response.status_code} - {response.text}")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"Gemini content generation exception: {str(e)}")
-            return None
-    
-    async def test_connection(self) -> bool:
-        """
-        Test connection to Gemini AI.
-        
-        Returns:
-            True if connection successful, False otherwise
-        """
-        
-        try:
-            # Simple test prompt
-            test_content = await self.generate_content(
-                "Say 'API test successful' if you can respond to this.",
-                "test"
-            )
-            
-            if test_content and len(test_content.strip()) > 0:
-                logger.info("Gemini AI connection test successful")
-                return True
-            else:
-                logger.error("Gemini AI connection test failed - no response")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Gemini AI connection test exception: {str(e)}")
-            return False
