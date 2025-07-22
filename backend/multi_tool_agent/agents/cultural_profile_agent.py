@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, List, Set
 import re
 import logging
 from datetime import datetime
-from google.genai.adk import Agent
+from google.adk.agents import Agent
 
 logger = logging.getLogger(__name__)
 

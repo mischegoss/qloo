@@ -1,5 +1,5 @@
 """
-Qloo API Tools
+Qloo API Tools - Fixed Version
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
 Provides interface to Qloo Taste AI™ API for cultural intelligence
@@ -53,7 +53,7 @@ class QlooInsightsAPI:
                 if response.status_code == 200:
                     data = response.json()
                     logger.info(f"Qloo insights API success: {len(data.get('results', {}).get('entities', []))} entities returned")
-                    return data
+                    return {"success": True, "results": data}
                 elif response.status_code == 401:
                     logger.error("Qloo API authentication failed - check API key")
                     return None
@@ -117,9 +117,10 @@ class QlooInsightsAPI:
         """
         
         try:
-            # Simple test query
+            # Fixed test query with required signal
             test_params = {
                 "filter.type": "urn:entity:artist",
+                "signal.demographics.age": "55_and_older",  # Required signal
                 "take": "1"
             }
             

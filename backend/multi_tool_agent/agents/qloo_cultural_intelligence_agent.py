@@ -1,5 +1,5 @@
 """
-Agent 3: Qloo Cultural Intelligence
+Agent 3: Qloo Cultural Intelligence - Fixed Constructor
 Role: Query Qloo API for cross-domain cultural recommendations
 Follows Responsible Development Guide principles - individual preferences override demographics
 """
@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, List, Set
 import asyncio
 import logging
 from datetime import datetime
-from google.genai.adk import Agent
+from google.adk.agents import Agent
 
 logger = logging.getLogger(__name__)
 

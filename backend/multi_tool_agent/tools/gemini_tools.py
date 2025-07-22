@@ -1,5 +1,5 @@
 """
-Google Gemini AI Tools
+Google Gemini AI Tools - Fixed Version
 File: backend/multi_tool_agent/tools/gemini_tools.py
 
 Provides interface to Google Gemini AI for recipe generation and content creation
@@ -120,7 +120,7 @@ class GeminiRecipeGenerator:
                     data = response.json()
                     return self._process_gemini_response(data)
                 elif response.status_code == 400:
-                    logger.error("Gemini API bad request - check prompt format")
+                    logger.error(f"Gemini API bad request: {response.text}")
                     return None
                 elif response.status_code == 403:
                     logger.error("Gemini API forbidden - check API key")
@@ -326,7 +326,7 @@ class GeminiRecipeGenerator:
                         logger.error("No content in Gemini response")
                         return None
                 else:
-                    logger.error(f"Gemini content generation error: {response.status_code}")
+                    logger.error(f"Gemini content generation error: {response.status_code} - {response.text}")
                     return None
                     
         except Exception as e:
@@ -344,7 +344,7 @@ class GeminiRecipeGenerator:
         try:
             # Simple test prompt
             test_content = await self.generate_content(
-                "Generate a one-sentence response confirming the API is working.",
+                "Say 'API test successful' if you can respond to this.",
                 "test"
             )
             
@@ -352,7 +352,7 @@ class GeminiRecipeGenerator:
                 logger.info("Gemini AI connection test successful")
                 return True
             else:
-                logger.error("Gemini AI connection test failed")
+                logger.error("Gemini AI connection test failed - no response")
                 return False
                 
         except Exception as e:

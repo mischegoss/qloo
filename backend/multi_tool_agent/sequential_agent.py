@@ -7,7 +7,7 @@ Orchestrates all 7 agents following Google ADK SequentialAgent pattern
 
 import logging
 from typing import Dict, Any, Optional
-from google.genai.adk import SequentialAgent
+from google.adk.agents import SequentialAgent  # ✅ CORRECT IMPORT
 
 # Import individual agents from agents subdirectory
 from .agents.information_consolidator_agent import InformationConsolidatorAgent
@@ -49,72 +49,26 @@ class CareConnectAgent(SequentialAgent):
                 - session_storage_tool: Session storage manager
         """
         
+        # Store tools for agent access
+        self.tools = tools
+        
         # Initialize individual agents with their required tools
         agent1 = InformationConsolidatorAgent()
         agent2 = CulturalProfileBuilderAgent()
-        agent3 = QlooCulturalIntelligenceAgent(qloo_tool=tools["qloo_tool"])
+        agent3 = QlooCulturalIntelligenceAgent(tools["qloo_tool"])
         agent4 = SensoryContentGeneratorAgent(
-            youtube_tool=tools["youtube_tool"],
-            gemini_tool=tools["gemini_tool"]
+            tools["youtube_tool"],
+            tools["gemini_tool"]
         )
-        agent5 = PhotoCulturalAnalyzerAgent(vision_ai_tool=tools["vision_ai_tool"])
+        agent5 = PhotoCulturalAnalyzerAgent(tools["vision_ai_tool"])
         agent6 = MobileSynthesizerAgent()
-        agent7 = FeedbackLearningSystemAgent(session_storage_tool=tools["session_storage_tool"])
+        agent7 = FeedbackLearningSystemAgent(tools["session_storage_tool"])
         
         # Create agent workflow following ADK SequentialAgent pattern
         super().__init__(
             name="careconnect_pipeline",
             description="Complete CareConnect dementia care cultural intelligence pipeline",
-            agents=[
-                # Agent 1: Information Consolidator (receives direct input)
-                {
-                    "agent": agent1,
-                    "input_key": None,  # First agent gets direct input
-                    "output_key": "consolidated_info"
-                },
-                
-                # Agent 2: Cultural Profile Builder
-                {
-                    "agent": agent2,
-                    "input_key": "consolidated_info",
-                    "output_key": "cultural_profile"
-                },
-                
-                # Agent 3: Qloo Cultural Intelligence
-                {
-                    "agent": agent3,
-                    "input_key": ["consolidated_info", "cultural_profile"],
-                    "output_key": "qloo_intelligence"
-                },
-                
-                # Agent 4: Sensory Content Generator
-                {
-                    "agent": agent4,
-                    "input_key": ["consolidated_info", "cultural_profile", "qloo_intelligence"],
-                    "output_key": "sensory_content"
-                },
-                
-                # Agent 5: Photo Cultural Analyzer (conditional execution)
-                {
-                    "agent": agent5,
-                    "input_key": ["consolidated_info", "cultural_profile", "qloo_intelligence", "sensory_content"],
-                    "output_key": "photo_analysis"
-                },
-                
-                # Agent 6: Mobile Synthesizer
-                {
-                    "agent": agent6,
-                    "input_key": ["consolidated_info", "cultural_profile", "qloo_intelligence", "sensory_content", "photo_analysis"],
-                    "output_key": "mobile_experience"
-                },
-                
-                # Agent 7: Feedback Learning System
-                {
-                    "agent": agent7,
-                    "input_key": ["consolidated_info", "cultural_profile", "qloo_intelligence", "sensory_content", "photo_analysis", "mobile_experience"],
-                    "output_key": "updated_preferences"
-                }
-            ]
+            sub_agents=[agent1, agent2, agent3, agent4, agent5, agent6, agent7]
         )
         
         logger.info("CareConnect Sequential Agent initialized with 7-agent pipeline")
@@ -172,7 +126,7 @@ class CareConnectAgent(SequentialAgent):
                 }
                 
                 # Run Agent 7 separately with all previous outputs
-                feedback_result = await self.agents[6]["agent"].run(**feedback_input)
+                feedback_result = await self.sub_agents[6].run(**feedback_input)
                 result.update(feedback_result)
             
             # Add pipeline metadata
