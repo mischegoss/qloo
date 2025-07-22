@@ -1,5 +1,5 @@
 """
-Agent 1: Information Consolidator
+Agent 1: Information Consolidator - FIXED VERSION
 Role: Package all session data for cultural intelligence processing
 Follows Responsible Development Guide principles
 """
@@ -31,6 +31,24 @@ class InformationConsolidatorAgent(Agent):
             name="information_consolidator",
             description="Consolidates session data while respecting privacy and caregiver authority"
         )
+    
+    def _safe_string(self, value: Any, max_length: Optional[int] = None) -> str:
+        """
+        Safely convert value to string and handle None values.
+        
+        Args:
+            value: Any value that might be None
+            max_length: Optional maximum length to truncate to
+            
+        Returns:
+            Safe string value, never None
+        """
+        if value is None:
+            return ""
+        str_value = str(value).strip()
+        if max_length:
+            return str_value[:max_length]
+        return str_value
     
     async def run(self, 
                   patient_profile: Dict[str, Any],
@@ -102,25 +120,25 @@ class InformationConsolidatorAgent(Agent):
         Extract only essential, non-PII information.
         Follows Responsible Development Guide privacy principles.
         """
-        # Only extract minimal, privacy-safe information
+        # Only extract minimal, privacy-safe information using safe string conversion
         basic_info = {
-            "first_name_or_nickname": patient_profile.get("first_name", "").strip()[:20],  # Limit length
+            "first_name_or_nickname": self._safe_string(patient_profile.get("first_name"), 20),
             "birth_context": {
                 "birth_year": self._validate_birth_year(patient_profile.get("birth_year")),
                 "birth_month": self._validate_birth_month(patient_profile.get("birth_month")),
                 "age_range": self._calculate_age_range(patient_profile.get("birth_year"))
             },
             "general_location": {
-                "city_region": patient_profile.get("city", "").strip()[:50],  # General location only
-                "state_region": patient_profile.get("state", "").strip()[:30]
+                "city_region": self._safe_string(patient_profile.get("city"), 50),
+                "state_region": self._safe_string(patient_profile.get("state"), 30)
             },
             "cultural_sharing": {
-                "heritage_info": patient_profile.get("cultural_heritage", "").strip()[:500],  # Open text
-                "languages": patient_profile.get("languages", "").strip()[:200],
-                "spiritual_traditions": patient_profile.get("spiritual_traditions", "").strip()[:300],
-                "additional_context": patient_profile.get("additional_context", "").strip()[:1000]
+                "heritage_info": self._safe_string(patient_profile.get("cultural_heritage"), 500),
+                "languages": self._safe_string(patient_profile.get("languages"), 200),
+                "spiritual_traditions": self._safe_string(patient_profile.get("spiritual_traditions"), 300),
+                "additional_context": self._safe_string(patient_profile.get("additional_context"), 1000)
             },
-            "caregiver_notes": patient_profile.get("caregiver_notes", "").strip()[:500]
+            "caregiver_notes": self._safe_string(patient_profile.get("caregiver_notes"), 500)
         }
         
         return basic_info
@@ -344,7 +362,7 @@ class InformationConsolidatorAgent(Agent):
             "photo_metadata": {
                 "upload_timestamp": photo_data.get("timestamp", datetime.utcnow().isoformat()),
                 "photo_type": photo_data.get("type", "family_photo"),
-                "caregiver_description": photo_data.get("description", "").strip()[:200]
+                "caregiver_description": self._safe_string(photo_data.get("description"), 200)
             },
             "photo_processing_ready": True
         }

@@ -1,5 +1,5 @@
 """
-Agent 6: Mobile Synthesizer
+Agent 6: Mobile Synthesizer - FIXED VERSION
 Role: Package all content for mobile caregiver experience
 Follows Responsible Development Guide principles - caregiver authority and individual focus
 """
@@ -82,7 +82,7 @@ class MobileSynthesizerAgent(Agent):
                 feedback_patterns
             )
             
-            # Create cultural context explanations
+            # Create cultural context explanations - FIXED: Added missing method
             cultural_context_explanations = self._create_cultural_context_explanations(
                 cultural_profile,
                 qloo_intelligence,
@@ -136,6 +136,137 @@ class MobileSynthesizerAgent(Agent):
         except Exception as e:
             logger.error(f"Error synthesizing mobile experience: {str(e)}")
             return self._create_fallback_mobile_experience(consolidated_info)
+    
+    def _create_cultural_context_explanations(self, 
+                                            cultural_profile: Dict[str, Any],
+                                            qloo_intelligence: Dict[str, Any],
+                                            photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        FIXED: Create cultural context explanations for caregiver understanding.
+        
+        Args:
+            cultural_profile: Cultural profile from Agent 2
+            qloo_intelligence: Qloo intelligence from Agent 3  
+            photo_analysis: Photo analysis from Agent 5
+            
+        Returns:
+            Cultural context explanations with caregiver guidance
+        """
+        
+        explanations = {
+            "approach_explanation": {
+                "title": "How Cultural Intelligence Works",
+                "description": "These suggestions use cultural data to enhance possibilities, not to make assumptions about individual preferences",
+                "key_principles": [
+                    "Cultural background provides starting points, not predetermined preferences",
+                    "Individual responses always override cultural suggestions", 
+                    "Heritage information enhances exploration opportunities",
+                    "Era context provides conversation topics, not assumptions about taste"
+                ]
+            },
+            "data_sources_explained": {
+                "heritage_sharing": self._explain_heritage_usage(cultural_profile),
+                "qloo_intelligence": self._explain_qloo_usage(qloo_intelligence),
+                "photo_analysis": self._explain_photo_usage(photo_analysis),
+                "era_context": self._explain_era_usage(cultural_profile)
+            },
+            "how_to_use_suggestions": {
+                "starting_points": "Use all suggestions as conversation starters and activity ideas",
+                "individual_focus": "Pay attention to their actual responses and preferences",
+                "customization": "Modify everything based on what they actually enjoy",
+                "flexibility": "Feel free to ignore suggestions that don't seem right for them"
+            },
+            "bias_prevention_note": {
+                "cultural_assumptions": "We never assume someone likes something because of their heritage",
+                "individual_priority": "Their personal interests and reactions are most important",
+                "stereotype_avoidance": "Cultural information is used for exploration, not prescription",
+                "caregiver_authority": "You know them best - trust your judgment over any suggestion"
+            },
+            "practical_guidance": {
+                "try_suggestions": "Start with one or two activities that seem most appropriate",
+                "watch_responses": "Notice what generates positive reactions",
+                "build_on_success": "Do more of what works, less of what doesn't",
+                "document_preferences": "Keep notes about what they enjoy for future reference"
+            }
+        }
+        
+        return explanations
+    
+    def _explain_heritage_usage(self, cultural_profile: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how heritage information is used."""
+        
+        cultural_elements = cultural_profile.get("cultural_elements", {})
+        has_heritage = cultural_elements.get("has_cultural_info", False)
+        
+        if not has_heritage:
+            return {
+                "usage": "No specific heritage information provided",
+                "approach": "Using general cultural exploration activities"
+            }
+        
+        return {
+            "usage": "Heritage information used to find conversation topics and activity ideas",
+            "approach": "Broad exploration of cultural themes without assumptions about preferences",
+            "note": "Heritage provides starting points - their individual interests matter most"
+        }
+    
+    def _explain_qloo_usage(self, qloo_intelligence: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how Qloo cultural intelligence is used."""
+        
+        qloo_meta = qloo_intelligence.get("qloo_metadata", {})
+        api_calls = qloo_meta.get("api_calls_made", 0)
+        
+        if api_calls == 0:
+            return {
+                "usage": "Qloo cultural intelligence not available for this session",
+                "fallback": "Using general activity suggestions instead"
+            }
+        
+        return {
+            "usage": f"Qloo made {api_calls} cultural intelligence queries to find diverse suggestions",
+            "approach": "Cross-domain cultural discovery without stereotypical assumptions",
+            "note": "Qloo suggestions are starting points for exploration - customize based on individual response"
+        }
+    
+    def _explain_photo_usage(self, photo_analysis: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how photo analysis is used."""
+        
+        analysis_meta = photo_analysis.get("analysis_metadata", {})
+        photo_analyzed = analysis_meta.get("photo_analyzed", False)
+        
+        if not photo_analyzed:
+            return {
+                "usage": "No photo analysis performed",
+                "note": "Photo-based suggestions not available"
+            }
+        
+        return {
+            "usage": "Photo analyzed for visible elements and potential conversation topics",
+            "approach": "Factual observation of photo contents, not cultural assumptions",
+            "note": "Photo analysis provides conversation starters based on what's actually visible"
+        }
+    
+    def _explain_era_usage(self, cultural_profile: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how era information is used."""
+        
+        era_context = cultural_profile.get("era_context", {})
+        has_era = era_context.get("has_era_context", False)
+        
+        if not has_era:
+            return {
+                "usage": "No specific era information available",
+                "approach": "Using general activities suitable for all ages"
+            }
+        
+        birth_year = era_context.get("birth_year")
+        decades_lived = era_context.get("decades_lived", [])
+        
+        return {
+            "usage": f"Era context from {birth_year} provides historical and cultural background",
+            "decades_lived": f"Lived through: {', '.join(decades_lived[-4:])}",  # Recent decades
+            "approach": "Era used for conversation topics and content discovery, not taste assumptions",
+            "note": "Individual experiences within any era vary greatly - follow their specific interests"
+        }
     
     def _determine_page_structure(self, request_type: str) -> Dict[str, Any]:
         """Determine appropriate mobile page structure based on request type."""
@@ -234,7 +365,7 @@ class MobileSynthesizerAgent(Agent):
         # Extract key content from each agent
         cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
         sensory_content_data = sensory_content.get("sensory_content", {})
-        cross_sensory_experiences = sensory_content.get("cross_sensory_experiences", [])
+        cross_sensory_experiences = sensory_content.get("connected_experience", {})
         photo_suggestions = photo_analysis.get("conversation_suggestions", [])
         
         # Create unified content structure
@@ -275,7 +406,7 @@ class MobileSynthesizerAgent(Agent):
                                   request_type: str,
                                   cultural_recommendations: Dict[str, Any],
                                   sensory_content_data: Dict[str, Any],
-                                  cross_sensory_experiences: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                  cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
         """Structure primary content based on request type."""
         
         if request_type == "dashboard":
@@ -298,7 +429,7 @@ class MobileSynthesizerAgent(Agent):
     def _create_dashboard_primary_content(self, 
                                          cultural_recommendations: Dict[str, Any],
                                          sensory_content_data: Dict[str, Any],
-                                         cross_sensory_experiences: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                         cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
         """Create dashboard-specific primary content."""
         
         dashboard_content = {
@@ -310,27 +441,28 @@ class MobileSynthesizerAgent(Agent):
         }
         
         # Extract highlights from each sensory domain
-        for sense, content in sensory_content_data.items():
-            if content.get("available") and content.get("elements"):
-                # Take top 2 elements from each sense for dashboard
-                top_elements = content["elements"][:2]
-                for element in top_elements:
-                    dashboard_content["today_highlights"].append({
-                        "sensory_domain": sense,
-                        "activity": element.get("content_subtype", f"{sense}_activity"),
-                        "title": element.get("activity", element.get("title", f"{sense.capitalize()} Experience")),
-                        "quick_description": self._create_quick_description(element, sense),
-                        "implementation_time": self._estimate_implementation_time(element),
-                        "caregiver_preparation": self._extract_preparation_steps(element),
-                        "individual_customization": "Adapt based on their response and preferences"
-                    })
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    # Take top 2 elements from each sense for dashboard
+                    top_elements = content["elements"][:2]
+                    for element in top_elements:
+                        dashboard_content["today_highlights"].append({
+                            "sensory_domain": sense,
+                            "activity": element.get("content_subtype", f"{sense}_activity"),
+                            "title": element.get("activity", element.get("title", f"{sense.capitalize()} Experience")),
+                            "quick_description": self._create_quick_description(element, sense),
+                            "implementation_time": self._estimate_implementation_time(element),
+                            "caregiver_preparation": self._extract_preparation_steps(element),
+                            "individual_customization": "Adapt based on their response and preferences"
+                        })
         
         # Create quick activities (5-15 minute activities)
         dashboard_content["quick_activities"] = self._extract_quick_activities(sensory_content_data)
         
         # Extract cultural discoveries from Qloo recommendations
         for entity_type, recommendations in cultural_recommendations.items():
-            if recommendations.get("available") and recommendations.get("entities"):
+            if isinstance(recommendations, dict) and recommendations.get("available") and recommendations.get("entities"):
                 entity = recommendations["entities"][0]  # Top recommendation
                 dashboard_content["cultural_discoveries"].append({
                     "discovery_type": recommendations.get("entity_type_category", "cultural"),
@@ -357,8 +489,9 @@ class MobileSynthesizerAgent(Agent):
             }
         
         # Extract recipe content
-        recipes = [elem for elem in gustatory_content.get("elements", []) 
-                  if elem.get("content_subtype") in ["heritage_inspired_recipe", "era_comfort_food", "universal_comfort_recipe"]]
+        elements = gustatory_content.get("elements", [])
+        recipes = [elem for elem in elements 
+                  if elem.get("content_subtype") in ["heritage_inspired_recipe", "era_comfort_food", "universal_comfort_recipe", "recipe"]]
         
         meal_content = {
             "content_type": "meal_experience",
@@ -388,7 +521,8 @@ class MobileSynthesizerAgent(Agent):
         
         # Extract conversation elements
         if auditory_content.get("available"):
-            conversation_elements = [elem for elem in auditory_content.get("elements", [])
+            elements = auditory_content.get("elements", [])
+            conversation_elements = [elem for elem in elements
                                    if elem.get("content_subtype") in ["conversation_starter", "era_conversation"]]
             
             for element in conversation_elements:
@@ -418,7 +552,8 @@ class MobileSynthesizerAgent(Agent):
         
         # Extract music elements
         if auditory_content.get("available"):
-            music_elements = [elem for elem in auditory_content.get("elements", [])
+            elements = auditory_content.get("elements", [])
+            music_elements = [elem for elem in elements
                             if elem.get("content_subtype") == "youtube_music"]
             
             for element in music_elements:
@@ -448,7 +583,8 @@ class MobileSynthesizerAgent(Agent):
         
         # Extract video elements
         if visual_content.get("available"):
-            video_elements = [elem for elem in visual_content.get("elements", [])
+            elements = visual_content.get("elements", [])
+            video_elements = [elem for elem in elements
                             if elem.get("content_subtype") == "youtube_video"]
             
             for element in video_elements:
@@ -490,8 +626,9 @@ class MobileSynthesizerAgent(Agent):
         # Extract Qloo-powered enhancements
         cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
         for entity_type, recommendations in cultural_recommendations.items():
-            if recommendations.get("available"):
-                for entity in recommendations.get("entities", [])[:2]:  # Top 2 per domain
+            if isinstance(recommendations, dict) and recommendations.get("available"):
+                entities = recommendations.get("entities", [])
+                for entity in entities[:2]:  # Top 2 per domain
                     enhancement_content["cultural_intelligence_enhancements"].append({
                         "enhancement_type": recommendations.get("entity_type_category", "cultural"),
                         "suggestion": entity.get("name", "Cultural Enhancement"),
@@ -503,9 +640,44 @@ class MobileSynthesizerAgent(Agent):
         
         return enhancement_content
     
+    def _extract_era_enhancements(self, cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """FIXED: Extract era-based enhancements."""
+        
+        era_context = cultural_profile.get("era_context", {})
+        
+        if not era_context.get("has_era_context"):
+            return {"available": False}
+        
+        return {
+            "available": True,
+            "birth_decade": era_context.get("birth_year", 0) // 10 * 10 if era_context.get("birth_year") else None,
+            "formative_decades": era_context.get("decades_lived", [])[-3:],  # Recent decades
+            "cultural_eras": era_context.get("cultural_eras", {}),
+            "usage_note": "Use era context as conversation starters, not assumptions about preferences"
+        }
+    
+    def _extract_customization_suggestions(self, cultural_profile: Dict[str, Any]) -> List[str]:
+        """FIXED: Extract customization suggestions from cultural profile."""
+        
+        cultural_elements = cultural_profile.get("cultural_elements", {})
+        
+        suggestions = [
+            "Adapt all activities based on their individual responses",
+            "Use cultural elements as starting points for exploration",
+            "Focus on what generates positive reactions"
+        ]
+        
+        if cultural_elements.get("has_cultural_info"):
+            suggestions.append("Use their heritage sharing for conversation topics")
+            
+        if cultural_elements.get("language_elements", {}).get("multilingual"):
+            suggestions.append("Consider incorporating their languages if they respond positively")
+        
+        return suggestions
+    
     def _structure_implementation_content(self, 
                                         sensory_content_data: Dict[str, Any],
-                                        cross_sensory_experiences: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                        cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
         """Structure implementation guidance for caregivers."""
         
         implementation_content = {
@@ -540,23 +712,26 @@ class MobileSynthesizerAgent(Agent):
         }
         
         # Create implementation guides for each sensory domain
-        for sense, content in sensory_content_data.items():
-            if content.get("available"):
-                implementation_content["sensory_implementation_guides"][sense] = {
-                    "preparation": self._extract_preparation_requirements(content),
-                    "implementation_steps": self._extract_implementation_steps(content),
-                    "safety_considerations": self._extract_safety_considerations(content),
-                    "customization_options": self._extract_customization_options(content)
-                }
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available"):
+                    implementation_content["sensory_implementation_guides"][sense] = {
+                        "preparation": self._extract_preparation_requirements(content),
+                        "implementation_steps": self._extract_implementation_steps(content),
+                        "safety_considerations": self._extract_safety_considerations(content),
+                        "customization_options": self._extract_customization_options(content)
+                    }
         
         # Add multi-sensory implementation guidance
-        for experience in cross_sensory_experiences:
-            implementation_content["multi_sensory_implementation"].append({
-                "experience_name": experience.get("experience_name", "Multi-sensory Experience"),
-                "preparation": experience.get("implementation_guide", {}),
-                "caregiver_guidance": experience.get("caregiver_guidance", {}),
-                "individual_adaptation": "Modify based on their response to each sensory element"
-            })
+        if isinstance(cross_sensory_experiences, dict):
+            connection_details = cross_sensory_experiences.get("connection_details", [])
+            for experience in connection_details:
+                implementation_content["multi_sensory_implementation"].append({
+                    "experience_name": experience.get("name", "Multi-sensory Experience"),
+                    "preparation": experience.get("implementation_guide", {}),
+                    "caregiver_guidance": experience.get("implementation_guide", {}),
+                    "individual_adaptation": "Modify based on their response to each sensory element"
+                })
         
         return implementation_content
     
@@ -1033,7 +1208,11 @@ class MobileSynthesizerAgent(Agent):
                     "simple_feedback": "Note what works and what doesn't for future reference"
                 },
                 "accessibility_features": self._generate_accessibility_features({}),
-                "emergency_options": self._create_emergency_fallback_options(request_type)
+                "emergency_options": self._create_emergency_fallback_options(request_type),
+                "cultural_context_explanations": {
+                    "fallback_mode": True,
+                    "note": "Cultural intelligence unavailable - using general activities"
+                }
             }
         }
     
@@ -1059,6 +1238,7 @@ class MobileSynthesizerAgent(Agent):
             "youtube_music": "5-15 minutes",
             "youtube_video": "5-20 minutes",
             "heritage_inspired_recipe": "30-60 minutes",
+            "recipe": "30-60 minutes",
             "conversation_starter": "10-30 minutes",
             "cultural_scent": "5-10 minutes",
             "tactile_exploration": "10-20 minutes"
@@ -1089,22 +1269,157 @@ class MobileSynthesizerAgent(Agent):
         
         quick_activities = []
         
-        for sense, content in sensory_content_data.items():
-            if content.get("available") and content.get("elements"):
-                for element in content["elements"][:1]:  # One per sense for quick activities
-                    if element.get("content_subtype") in ["ambient_sound", "cultural_scent", "texture_exploration", "spice_exploration"]:
-                        quick_activities.append({
-                            "title": element.get("activity", f"{sense.capitalize()} Activity"),
-                            "duration": "5-15 minutes",
-                            "preparation": "Minimal setup required",
-                            "description": f"Quick {sense} experience"
-                        })
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    elements = content["elements"]
+                    for element in elements[:1]:  # One per sense for quick activities
+                        if element.get("content_subtype") in ["ambient_sound", "cultural_scent", "texture_exploration", "spice_exploration"]:
+                            quick_activities.append({
+                                "title": element.get("activity", f"{sense.capitalize()} Activity"),
+                                "duration": "5-15 minutes",
+                                "preparation": "Minimal setup required",
+                                "description": f"Quick {sense} experience"
+                            })
         
         return quick_activities
     
-    # Additional helper methods would continue here for extracting and organizing content...
-    # (Implementation details for remaining helper methods would follow similar patterns)
+    def _extract_all_activities(self, sensory_content_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Extract all available activities from sensory content."""
+        
+        activities = []
+        
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    elements = content["elements"]
+                    for element in elements:
+                        activities.append({
+                            "sensory_domain": sense,
+                            "activity_type": element.get("content_subtype", f"{sense}_activity"),
+                            "title": element.get("activity", element.get("title", f"{sense.capitalize()} Activity")),
+                            "implementation": element.get("implementation", {}).get("approach", "Follow individual guidance"),
+                            "duration": self._estimate_implementation_time(element)
+                        })
+        
+        return activities
     
+    def _create_cooking_together_guide(self, recipe: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Create cooking together guide from recipe."""
+        
+        if not recipe:
+            return {"available": False, "note": "No recipe available"}
+        
+        return {
+            "available": True,
+            "recipe_name": recipe.get("recipe_data", {}).get("name", recipe.get("name", "Comfort Food Recipe")),
+            "preparation_steps": "Prepare ingredients and workspace together",
+            "cooking_engagement": "Involve them in simple, safe tasks",
+            "sensory_focus": "Emphasize smells, textures, and tastes",
+            "safety_considerations": recipe.get("safety_considerations", {}),
+            "adaptation_notes": recipe.get("caregiver_guidance", {}).get("customization", "Adapt based on abilities")
+        }
+    
+    def _extract_cooking_sensory_elements(self, gustatory_content: Dict[str, Any]) -> List[str]:
+        """Extract sensory elements from cooking content."""
+        
+        sensory_elements = [
+            "Enjoy cooking aromas together",
+            "Touch and feel ingredients", 
+            "Taste small samples during cooking",
+            "Listen to cooking sounds (sizzling, bubbling)",
+            "Appreciate visual presentation of food"
+        ]
+        
+        return sensory_elements
+    
+    def _extract_food_memory_conversations(self, gustatory_content: Dict[str, Any]) -> List[str]:
+        """Extract food memory conversation starters."""
+        
+        conversations = [
+            "What was your favorite family recipe?",
+            "Who did the cooking in your family?",
+            "What foods remind you of special occasions?",
+            "Tell me about meals you enjoyed growing up",
+            "What was your favorite restaurant or special meal?"
+        ]
+        
+        return conversations
+    
+    def _extract_cooking_safety_considerations(self, gustatory_content: Dict[str, Any]) -> List[str]:
+        """Extract cooking safety considerations."""
+        
+        safety_considerations = [
+            "Supervise all knife and heat use",
+            "Check for food allergies and dietary restrictions",
+            "Ensure safe kitchen environment",
+            "Break cooking into simple, manageable steps",
+            "Be prepared to simplify or modify recipe"
+        ]
+        
+        return safety_considerations
+    
+    def _extract_preparation_requirements(self, content: Dict[str, Any]) -> List[str]:
+        """Extract preparation requirements from content."""
+        
+        requirements = ["Minimal preparation needed"]
+        
+        elements = content.get("elements", [])
+        for element in elements:
+            implementation = element.get("implementation", {})
+            if implementation.get("setup"):
+                requirements.append(implementation["setup"])
+        
+        return requirements
+    
+    def _extract_implementation_steps(self, content: Dict[str, Any]) -> List[str]:
+        """Extract implementation steps from content."""
+        
+        steps = ["Follow individual guidance and preferences"]
+        
+        elements = content.get("elements", [])
+        for element in elements:
+            caregiver_guidance = element.get("caregiver_guidance", {})
+            if caregiver_guidance.get("implementation"):
+                steps.append(caregiver_guidance["implementation"])
+        
+        return steps
+    
+    def _extract_safety_considerations(self, content: Dict[str, Any]) -> List[str]:
+        """Extract safety considerations from content."""
+        
+        safety = ["Monitor for comfort and positive response"]
+        
+        elements = content.get("elements", [])
+        for element in elements:
+            safety_info = element.get("safety_considerations", {})
+            caregiver_guidance = element.get("caregiver_guidance", {})
+            
+            if safety_info:
+                safety.extend(safety_info.values() if isinstance(safety_info, dict) else [str(safety_info)])
+            
+            if caregiver_guidance.get("safety"):
+                safety.append(caregiver_guidance["safety"])
+        
+        return safety
+    
+    def _extract_customization_options(self, content: Dict[str, Any]) -> List[str]:
+        """Extract customization options from content."""
+        
+        options = ["Adapt based on individual response and preferences"]
+        
+        elements = content.get("elements", [])
+        for element in elements:
+            if element.get("individual_customization"):
+                options.append(element["individual_customization"])
+            
+            caregiver_guidance = element.get("caregiver_guidance", {})
+            if caregiver_guidance.get("customization"):
+                options.append(caregiver_guidance["customization"])
+        
+        return options
+    
+    # Additional helper methods for caregiver guide creation
     def _create_preparation_checklist(self, mobile_content: Dict[str, Any], request_type: str) -> List[str]:
         """Create preparation checklist for caregivers."""
         
@@ -1362,171 +1677,3 @@ class MobileSynthesizerAgent(Agent):
             "ongoing_support_resources": "Support groups, respite care, counseling services",
             "remember": "Asking for help is a sign of good caregiving, not weakness"
         }
-    
-    def _extract_era_enhancements(self, cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract era-based enhancements."""
-        
-        era_context = cultural_profile.get("era_context", {})
-        
-        if not era_context.get("has_era_context"):
-            return {"available": False}
-        
-        return {
-            "available": True,
-            "birth_decade": era_context.get("birth_year", 0) // 10 * 10 if era_context.get("birth_year") else None,
-            "formative_decades": era_context.get("decades_lived", [])[-3:],  # Recent decades
-            "cultural_eras": era_context.get("cultural_eras", {}),
-            "usage_note": "Use era context as conversation starters, not assumptions about preferences"
-        }
-    
-    def _extract_customization_suggestions(self, cultural_profile: Dict[str, Any]) -> List[str]:
-        """Extract customization suggestions from cultural profile."""
-        
-        cultural_elements = cultural_profile.get("cultural_elements", {})
-        
-        suggestions = [
-            "Adapt all activities based on their individual responses",
-            "Use cultural elements as starting points for exploration",
-            "Focus on what generates positive reactions"
-        ]
-        
-        if cultural_elements.get("has_cultural_info"):
-            suggestions.append("Use their heritage sharing for conversation topics")
-            
-        if cultural_elements.get("language_elements", {}).get("multilingual"):
-            suggestions.append("Consider incorporating their languages if they respond positively")
-        
-        return suggestions
-    
-    def _extract_all_activities(self, sensory_content_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Extract all available activities from sensory content."""
-        
-        activities = []
-        
-        for sense, content in sensory_content_data.items():
-            if content.get("available") and content.get("elements"):
-                for element in content["elements"]:
-                    activities.append({
-                        "sensory_domain": sense,
-                        "activity_type": element.get("content_subtype", f"{sense}_activity"),
-                        "title": element.get("activity", element.get("title", f"{sense.capitalize()} Activity")),
-                        "implementation": element.get("implementation", {}).get("approach", "Follow individual guidance"),
-                        "duration": self._estimate_implementation_time(element)
-                    })
-        
-        return activities
-    
-    def _create_cooking_together_guide(self, recipe: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Create cooking together guide from recipe."""
-        
-        if not recipe:
-            return {"available": False, "note": "No recipe available"}
-        
-        return {
-            "available": True,
-            "recipe_name": recipe.get("recipe_data", {}).get("name", "Comfort Food Recipe"),
-            "preparation_steps": "Prepare ingredients and workspace together",
-            "cooking_engagement": "Involve them in simple, safe tasks",
-            "sensory_focus": "Emphasize smells, textures, and tastes",
-            "safety_considerations": recipe.get("safety_considerations", {}),
-            "adaptation_notes": recipe.get("caregiver_guidance", {}).get("customization", "Adapt based on abilities")
-        }
-    
-    def _extract_cooking_sensory_elements(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract sensory elements from cooking content."""
-        
-        sensory_elements = [
-            "Enjoy cooking aromas together",
-            "Touch and feel ingredients", 
-            "Taste small samples during cooking",
-            "Listen to cooking sounds (sizzling, bubbling)",
-            "Appreciate visual presentation of food"
-        ]
-        
-        return sensory_elements
-    
-    def _extract_food_memory_conversations(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract food memory conversation starters."""
-        
-        conversations = [
-            "What was your favorite family recipe?",
-            "Who did the cooking in your family?",
-            "What foods remind you of special occasions?",
-            "Tell me about meals you enjoyed growing up",
-            "What was your favorite restaurant or special meal?"
-        ]
-        
-        return conversations
-    
-    def _extract_cooking_safety_considerations(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract cooking safety considerations."""
-        
-        safety_considerations = [
-            "Supervise all knife and heat use",
-            "Check for food allergies and dietary restrictions",
-            "Ensure safe kitchen environment",
-            "Break cooking into simple, manageable steps",
-            "Be prepared to simplify or modify recipe"
-        ]
-        
-        return safety_considerations
-    
-    def _extract_preparation_requirements(self, content: Dict[str, Any]) -> List[str]:
-        """Extract preparation requirements from content."""
-        
-        requirements = ["Minimal preparation needed"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            implementation = element.get("implementation", {})
-            if implementation.get("setup"):
-                requirements.append(implementation["setup"])
-        
-        return requirements
-    
-    def _extract_implementation_steps(self, content: Dict[str, Any]) -> List[str]:
-        """Extract implementation steps from content."""
-        
-        steps = ["Follow individual guidance and preferences"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            if caregiver_guidance.get("implementation"):
-                steps.append(caregiver_guidance["implementation"])
-        
-        return steps
-    
-    def _extract_safety_considerations(self, content: Dict[str, Any]) -> List[str]:
-        """Extract safety considerations from content."""
-        
-        safety = ["Monitor for comfort and positive response"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            safety_info = element.get("safety_considerations", {})
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            
-            if safety_info:
-                safety.extend(safety_info.values() if isinstance(safety_info, dict) else [str(safety_info)])
-            
-            if caregiver_guidance.get("safety"):
-                safety.append(caregiver_guidance["safety"])
-        
-        return safety
-    
-    def _extract_customization_options(self, content: Dict[str, Any]) -> List[str]:
-        """Extract customization options from content."""
-        
-        options = ["Adapt based on individual response and preferences"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            if element.get("individual_customization"):
-                options.append(element["individual_customization"])
-            
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            if caregiver_guidance.get("customization"):
-                options.append(caregiver_guidance["customization"])
-        
-        return options
