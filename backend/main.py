@@ -1,46 +1,106 @@
-import os
+"""
+Updated Main Application
+Initializes CareConnect system with Gemini-enhanced Qloo integration
+"""
+
 import logging
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
-import uvicorn
 import asyncio
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from typing import Dict, Any
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
+# Import the updated tools and agents
+from multi_tool_agent.tools import initialize_all_tools, get_tool_manager
 
-# Import CareConnect multi-agent system
-from multi_tool_agent.tools import initialize_tools, test_all_tools, get_tool_status
-from multi_tool_agent.sequential_agent import CareConnectAgent
+# Import agents with error handling
+try:
+    from multi_tool_agent.sequential_agent import CareConnectSequentialAgent
+except ImportError:
+    logger.warning("CareConnectSequentialAgent not available - using minimal mode")
+    CareConnectSequentialAgent = None
+
+try:
+    from multi_tool_agent.agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
+except ImportError:
+    logger.warning("QlooCulturalIntelligenceAgent not available")
+    QlooCulturalIntelligenceAgent = None
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Configuration
-class Config:
-    PORT = int(os.getenv("PORT", 8080))
-    QLOO_API_KEY = os.getenv("QLOO_API_KEY")
-    YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
-    GOOGLE_CLOUD_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("GOOGLE_CLOUD_API_KEY"))
+# Global variables
+sequential_agent = None
+tool_status = {}
 
-config = Config()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager - handles startup and shutdown.
+    """
+    # Startup
+    logger.info("🚀 Initializing CareConnect multi-agent system with Gemini-Qloo integration...")
+    
+    try:
+        # Initialize tools with enhanced integration
+        global tool_status
+        tool_status = await initialize_all_tools()
+        
+        tool_manager = get_tool_manager()
+        
+        # Check tool availability
+        qloo_available = tool_manager.is_qloo_available()
+        gemini_available = tool_manager.is_gemini_available()
+        
+        logger.info(f"🔧 Tool Status:")
+        logger.info(f"   - Qloo API: {'✅ Available' if qloo_available else '❌ Unavailable'}")
+        logger.info(f"   - Gemini API: {'✅ Available' if gemini_available else '❌ Unavailable'}")
+        
+        if not qloo_available:
+            logger.warning("⚠️  Qloo API unavailable - cultural recommendations will be limited")
+        
+        if not gemini_available:
+            logger.warning("⚠️  Gemini API unavailable - query optimization disabled")
+        
+        # Initialize the sequential agent with enhanced tools
+        global sequential_agent
+        if CareConnectSequentialAgent:
+            sequential_agent = CareConnectSequentialAgent(tool_manager)
+            logger.info("✅ Sequential agent initialized")
+        else:
+            logger.warning("⚠️  Sequential agent not available - using direct Qloo mode")
+            sequential_agent = None
+        
+        logger.info("✅ CareConnect system initialization complete")
+        
+        # Log final status
+        status = tool_manager.get_tool_status()
+        logger.info(f"📊 System Status: {status['total_tools']} tools, "
+                   f"Qloo: {status['qloo_available']}, "
+                   f"Gemini: {status['gemini_available']}")
+        
+    except Exception as e:
+        logger.error(f"💥 Initialization failed: {e}")
+        raise e
+    
+    yield
+    
+    # Shutdown
+    logger.info("🛑 Shutting down CareConnect system...")
 
-# Global variables for multi-agent system
-tools = None
-careconnect_agent = None
-
-# Initialize FastAPI app
+# Create FastAPI app with lifespan
 app = FastAPI(
-    title="CareConnect Cultural Intelligence API",
-    description="AI-powered dementia care assistant with 7-agent cultural intelligence pipeline",
-    version="2.0.0"
+    title="CareConnect API",
+    description="Multi-agent system for personalized care recommendations with Gemini-enhanced Qloo integration",
+    version="2.0.0",
+    lifespan=lifespan
 )
 
-# CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -49,404 +109,217 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request models
-class PatientProfile(BaseModel):
-    first_name: str
-    birth_year: Optional[int] = None
-    birth_month: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    cultural_heritage: Optional[str] = None
-    languages: Optional[str] = None
-    spiritual_traditions: Optional[str] = None
-    additional_context: Optional[str] = None
-    caregiver_notes: Optional[str] = None
-
-class CareConnectRequest(BaseModel):
-    patient_profile: PatientProfile
-    request_type: str = "dashboard"  # dashboard, meal, conversation, music, video, photo_analysis
-    session_id: Optional[str] = None
-    feedback_history: Optional[Dict[str, Any]] = None
-
-class FeedbackRequest(BaseModel):
-    session_id: str
-    content_id: str
-    feedback_type: str  # "positive", "negative", "blocked"
-    content_category: str  # "music", "food", "conversation", etc.
-    content_details: Dict[str, Any]
-    blocking_scope: Optional[str] = None  # "item", "type", "category"
-
-# Startup event to initialize multi-agent system
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the CareConnect multi-agent system on startup."""
-    global tools, careconnect_agent
-    
-    try:
-        logger.info("Initializing CareConnect multi-agent system...")
-        
-        # Initialize all tools
-        tools = initialize_tools()
-        logger.info("Tools initialized successfully")
-        
-        # Test tools (optional but recommended)
-        logger.info("Testing tool connections...")
-        test_results = await test_all_tools(tools)
-        
-        working_tools = sum(1 for result in test_results.values() if result)
-        total_tools = len(test_results)
-        logger.info(f"Tool test results: {working_tools}/{total_tools} tools working")
-        
-        if working_tools < total_tools:
-            logger.warning(f"Some tools failed: {test_results}")
-        
-        # Initialize CareConnect agent
-        careconnect_agent = CareConnectAgent(tools)
-        logger.info("CareConnect 7-agent pipeline initialized successfully")
-        
-    except Exception as e:
-        logger.error(f"Failed to initialize CareConnect system: {str(e)}")
-        # Continue without multi-agent system (fallback mode)
-        tools = None
-        careconnect_agent = None
-
-# Basic health endpoints
 @app.get("/")
 async def root():
     """Root endpoint with system status."""
+    tool_manager = get_tool_manager()
+    status = tool_manager.get_tool_status()
+    
     return {
-        "message": "CareConnect AI-Powered Dementia Care Assistant",
-        "status": "healthy",
+        "message": "CareConnect API with Gemini-Enhanced Qloo Integration",
         "version": "2.0.0",
-        "system": "7-agent cultural intelligence pipeline",
-        "multi_agent_status": "active" if careconnect_agent else "fallback_mode",
-        "api_keys_configured": {
-            "qloo": bool(config.QLOO_API_KEY),
-            "youtube": bool(config.YOUTUBE_API_KEY),
-            "google_cloud": bool(config.GOOGLE_CLOUD_API_KEY),
-            "gemini": bool(config.GEMINI_API_KEY)
-        }
+        "status": "operational",
+        "features": {
+            "gemini_query_optimization": status["gemini_available"],
+            "cultural_recommendations": status["qloo_available"],
+            "total_tools": status["total_tools"]
+        },
+        "tool_status": tool_status
     }
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy", 
-        "timestamp": "2025-07-21",
-        "multi_agent_system": "active" if careconnect_agent else "inactive"
-    }
-
-@app.get("/api/v1/system-status")
-async def system_status():
-    """Detailed system status including tool status."""
-    tool_status = get_tool_status() if tools else {}
+@app.get("/api/v1/status")
+async def get_system_status():
+    """Detailed system status endpoint."""
+    tool_manager = get_tool_manager()
+    status = tool_manager.get_tool_status()
     
     return {
-        "status": "success",
-        "system_info": {
-            "multi_agent_pipeline": "active" if careconnect_agent else "inactive",
-            "tools_initialized": bool(tools),
-            "agent_count": 7 if careconnect_agent else 0
+        "system": "CareConnect Multi-Agent System",
+        "version": "2.0.0",
+        "initialization": {
+            "completed": status["initialized"],
+            "tools_available": status["available_tools"],
+            "total_tools": status["total_tools"]
         },
-        "tool_status": tool_status,
-        "environment": {
-            "port": config.PORT,
-            "api_keys_configured": {
-                "qloo": bool(config.QLOO_API_KEY),
-                "youtube": bool(config.YOUTUBE_API_KEY), 
-                "google_cloud": bool(config.GOOGLE_CLOUD_API_KEY),
-                "gemini": bool(config.GEMINI_API_KEY)
-            }
-        }
+        "capabilities": {
+            "gemini_optimization": status["gemini_available"],
+            "qloo_recommendations": status["qloo_available"],
+            "enhanced_cultural_intelligence": status["gemini_available"] and status["qloo_available"]
+        },
+        "performance": status.get("qloo_cache_stats", {}),
+        "tool_test_results": tool_status
     }
 
-# Main CareConnect endpoints
 @app.post("/api/v1/careconnect")
-async def careconnect_pipeline(request: CareConnectRequest):
+async def process_careconnect_request(request_data: Dict[str, Any]):
     """
-    Main CareConnect endpoint - runs the complete 7-agent pipeline.
-    
-    This endpoint processes patient information through all 7 agents:
-    1. Information Consolidator
-    2. Cultural Profile Builder  
-    3. Qloo Cultural Intelligence
-    4. Sensory Content Generator
-    5. Photo Cultural Analyzer
-    6. Mobile Synthesizer
-    7. Feedback Learning System
+    Main CareConnect processing endpoint with Gemini-enhanced Qloo integration.
     """
-    
-    if not careconnect_agent:
-        logger.error("CareConnect agent not initialized - using fallback")
-        return await fallback_response(request)
-    
     try:
-        logger.info(f"Processing CareConnect request: {request.request_type}")
+        request_type = request_data.get("request_type", "dashboard")
+        logger.info(f"🎯 Processing CareConnect request: {request_type}")
         
-        # Convert Pydantic model to dict for agent processing
-        patient_profile_dict = request.patient_profile.dict()
+        if sequential_agent:
+            # Use full sequential agent pipeline
+            result = await sequential_agent.process_request(request_data)
+        else:
+            # Use direct Qloo processing as fallback
+            result = await process_direct_qloo_request(request_data)
         
-        # Run the complete 7-agent pipeline
-        result = await careconnect_agent.run(
-            patient_profile=patient_profile_dict,
-            request_type=request.request_type,
-            session_id=request.session_id,
-            feedback_history=request.feedback_history,
-            photo_data=None,  # Photo handling in separate endpoint
-            feedback_data=None
-        )
+        # Add system metadata
+        tool_manager = get_tool_manager()
+        result["system_metadata"] = {
+            "version": "2.0.0",
+            "processing_mode": "gemini_enhanced" if sequential_agent else "direct_qloo",
+            "qloo_optimization": tool_manager.is_qloo_available() and tool_manager.is_gemini_available(),
+            "timestamp": result.get("timestamp")
+        }
         
-        # Extract mobile experience for response
-        mobile_experience = result.get("mobile_experience", {})
-        pipeline_metadata = result.get("pipeline_metadata", {})
+        # Log processing summary
+        qloo_success = result.get("qloo_recommendations", {})
+        if qloo_success:
+            successful_types = sum(1 for r in qloo_success.values() if r.get("success"))
+            logger.info(f"✅ CareConnect completed: {successful_types} successful recommendation types")
         
-        logger.info(f"CareConnect pipeline completed successfully for {request.request_type}")
+        return result
         
-        return {
-            "status": "success",
-            "request_type": request.request_type,
-            "patient_id": patient_profile_dict.get("first_name", "unknown"),
-            "pipeline_metadata": pipeline_metadata,
-            "mobile_experience": mobile_experience,
-            "session_info": {
-                "session_id": request.session_id,
-                "agents_executed": pipeline_metadata.get("agents_executed", 7)
+    except Exception as e:
+        logger.error(f"💥 CareConnect request failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+
+async def process_direct_qloo_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Direct Qloo processing when sequential agent is not available.
+    """
+    try:
+        tool_manager = get_tool_manager()
+        qloo_api = tool_manager.get_qloo_api()
+        
+        if not qloo_api:
+            return {
+                "success": False,
+                "error": "Qloo API not available",
+                "qloo_recommendations": {}
             }
-        }
         
-    except Exception as e:
-        logger.error(f"CareConnect pipeline error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
-
-@app.post("/api/v1/photo-analysis")
-async def photo_analysis(
-    patient_profile: str,  # JSON string of patient profile
-    request_type: str = "photo_analysis",
-    session_id: Optional[str] = None,
-    photo: UploadFile = File(...)
-):
-    """
-    Photo analysis endpoint - includes photo in the 7-agent pipeline.
-    
-    Processes uploaded photo through Agent 5 (Photo Cultural Analyzer)
-    along with the complete pipeline.
-    """
-    
-    if not careconnect_agent:
-        raise HTTPException(status_code=503, detail="CareConnect agent not available")
-    
-    try:
-        import json
+        # Extract basic cultural information
+        cultural_keywords = request_data.get("cultural_keywords", ["family", "food", "music"])
+        demographic_signals = request_data.get("demographic_signals", {})
         
-        # Parse patient profile
-        patient_profile_dict = json.loads(patient_profile)
-        
-        # Process uploaded photo
-        photo_content = await photo.read()
-        photo_data = {
-            "type": "family_photo",
-            "description": f"Uploaded photo: {photo.filename}",
-            "timestamp": "2025-07-21",
-            "content": photo_content  # In production, would process this properly
-        }
-        
-        logger.info(f"Processing photo analysis request with {photo.filename}")
-        
-        # Run pipeline with photo data
-        result = await careconnect_agent.run(
-            patient_profile=patient_profile_dict,
-            request_type=request_type,
-            session_id=session_id,
-            feedback_history=None,
-            photo_data=photo_data,
-            feedback_data=None
+        # Process with Qloo
+        logger.info("🎯 Processing direct Qloo request")
+        qloo_results = await qloo_api.get_cultural_recommendations_with_gemini(
+            cultural_keywords=cultural_keywords,
+            demographic_signals=demographic_signals
         )
         
-        # Extract photo analysis results
-        photo_analysis_result = result.get("photo_analysis", {})
-        mobile_experience = result.get("mobile_experience", {})
-        
         return {
-            "status": "success",
-            "request_type": "photo_analysis",
-            "photo_filename": photo.filename,
-            "photo_analysis": photo_analysis_result,
-            "mobile_experience": mobile_experience,
-            "session_info": {"session_id": session_id}
+            "success": qloo_results.get("success", False),
+            "qloo_recommendations": qloo_results.get("results", {}),
+            "search_plan": qloo_results.get("search_plan", {}),
+            "total_successful": qloo_results.get("total_successful", 0),
+            "processing_mode": "direct_qloo",
+            "timestamp": "2025-01-22"  # You might want to use actual timestamp
         }
         
     except Exception as e:
-        logger.error(f"Photo analysis error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Photo analysis error: {str(e)}")
+        logger.error(f"Direct Qloo processing failed: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "qloo_recommendations": {}
+        }
 
-@app.post("/api/v1/feedback")
-async def submit_feedback(feedback: FeedbackRequest):
+@app.get("/api/v1/test/qloo")
+async def test_qloo_integration():
     """
-    Submit user feedback - processes through Agent 7 (Feedback Learning System).
-    
-    This endpoint handles emoji feedback and blocking choices to improve
-    future recommendations.
+    Test endpoint for Qloo-Gemini integration.
     """
-    
-    if not careconnect_agent:
-        raise HTTPException(status_code=503, detail="CareConnect agent not available")
-    
     try:
-        logger.info(f"Processing feedback: {feedback.feedback_type} for {feedback.content_category}")
+        tool_manager = get_tool_manager()
+        qloo_api = tool_manager.get_qloo_api()
         
-        # Create feedback data structure
-        feedback_data = {
-            "session_id": feedback.session_id,
-            "content_id": feedback.content_id,
-            "feedback_type": feedback.feedback_type,
-            "content_category": feedback.content_category,
-            "content_details": feedback.content_details,
-            "blocking_scope": feedback.blocking_scope,
-            "timestamp": "2025-07-21"
-        }
+        if not qloo_api:
+            return {"status": "unavailable", "error": "Qloo API not initialized"}
         
-        # Process feedback through the agent pipeline
-        # Note: This would typically run just Agent 7, but for simplicity
-        # we're running the full pipeline with feedback data
-        result = await careconnect_agent.run(
-            patient_profile={"first_name": "feedback_user"},  # Minimal profile for feedback
-            request_type="feedback_processing",
-            session_id=feedback.session_id,
-            feedback_history=None,
-            photo_data=None,
-            feedback_data=feedback_data
-        )
+        # Test basic search
+        search_result = await qloo_api._search_entities_simple("music", ["urn:entity:artist"])
         
-        # Extract feedback learning results
-        updated_preferences = result.get("updated_preferences", {})
+        # Test Gemini optimization if available
+        gemini_test = {"available": False}
+        if tool_manager.is_gemini_available():
+            cultural_keywords = ["italian", "family", "food"]
+            demographic_signals = {"age_range": "adult", "general_location": {"city_region": "Chicago"}}
+            
+            gemini_result = await qloo_api._gemini_optimize_search_strategy(cultural_keywords, demographic_signals)
+            gemini_test = {
+                "available": True,
+                "optimization_success": gemini_result.get("success", False),
+                "query_categories": list(gemini_result.get("search_queries", {}).keys()) if gemini_result.get("success") else []
+            }
         
         return {
-            "status": "success",
-            "message": "Feedback processed successfully",
-            "session_id": feedback.session_id,
-            "feedback_type": feedback.feedback_type,
-            "updated_preferences": updated_preferences,
-            "learning_applied": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Feedback processing error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Feedback error: {str(e)}")
-
-# Legacy compatibility endpoints (simplified versions)
-@app.post("/api/v1/daily-dashboard")
-async def legacy_daily_dashboard(request: CareConnectRequest):
-    """Legacy daily dashboard endpoint - redirects to main CareConnect pipeline."""
-    
-    # Convert to CareConnect request format
-    request.request_type = "dashboard"
-    
-    return await careconnect_pipeline(request)
-
-# Test endpoints for individual components
-@app.get("/api/v1/test-agents")
-async def test_agents():
-    """Test the multi-agent system with a simple request."""
-    
-    if not careconnect_agent:
-        return {"status": "error", "message": "CareConnect agent not initialized"}
-    
-    try:
-        # Simple test patient profile
-        test_profile = {
-            "first_name": "TestUser",
-            "birth_year": 1950,
-            "city": "Brooklyn",
-            "cultural_heritage": "Italian-American"
-        }
-        
-        # Run a simple dashboard request
-        result = await careconnect_agent.run(
-            patient_profile=test_profile,
-            request_type="dashboard",
-            session_id="test_session",
-            feedback_history=None,
-            photo_data=None,
-            feedback_data=None
-        )
-        
-        pipeline_metadata = result.get("pipeline_metadata", {})
-        
-        return {
-            "status": "success",
-            "message": "Agent pipeline test completed",
-            "agents_executed": pipeline_metadata.get("agents_executed", 0),
-            "pipeline_status": pipeline_metadata.get("pipeline_status", "unknown"),
-            "test_completed": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Agent test error: {str(e)}")
-        return {"status": "error", "message": str(e)}
-
-@app.get("/api/v1/test-tools")
-async def test_tools_endpoint():
-    """Test all tools individually."""
-    
-    if not tools:
-        return {"status": "error", "message": "Tools not initialized"}
-    
-    try:
-        test_results = await test_all_tools(tools)
-        
-        return {
-            "status": "success",
-            "message": "Tool tests completed",
-            "test_results": test_results,
-            "working_tools": sum(1 for result in test_results.values() if result),
-            "total_tools": len(test_results)
-        }
-        
-    except Exception as e:
-        logger.error(f"Tool test error: {str(e)}")
-        return {"status": "error", "message": str(e)}
-
-# Fallback function for when multi-agent system is unavailable
-async def fallback_response(request: CareConnectRequest):
-    """Fallback response when multi-agent system is unavailable."""
-    
-    logger.warning("Using fallback response - multi-agent system unavailable")
-    
-    patient_profile = request.patient_profile
-    
-    return {
-        "status": "fallback_mode",
-        "request_type": request.request_type,
-        "patient_id": patient_profile.first_name,
-        "message": "Multi-agent system unavailable - using simple fallback",
-        "mobile_experience": {
-            "page_structure": {"structure_type": "simple_fallback"},
-            "mobile_content": {
-                "primary_content": {
-                    "content_type": "basic_activities",
-                    "activities": [
-                        f"Listen to music from the {patient_profile.birth_year or 1950}s",
-                        "Look at family photos together",
-                        "Have a conversation about favorite memories",
-                        "Enjoy a simple, familiar meal together"
-                    ]
-                }
+            "qloo_search": {
+                "success": search_result.get("success", False),
+                "entities_found": len(search_result.get("entities", []))
             },
-            "caregiver_guide": {
-                "caregiver_authority_note": {
-                    "principle": "You know them best - use your caring judgment",
-                    "approach": "Focus on simple, familiar activities they enjoy"
-                }
+            "gemini_optimization": gemini_test,
+            "integration_status": "operational" if search_result.get("success") else "limited"
+        }
+        
+    except Exception as e:
+        logger.error(f"Qloo test failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+@app.post("/api/v1/test/cultural-recommendations")
+async def test_cultural_recommendations(test_request: Dict[str, Any]):
+    """
+    Test endpoint for cultural recommendations with Gemini optimization.
+    """
+    try:
+        tool_manager = get_tool_manager()
+        qloo_api = tool_manager.get_qloo_api()
+        
+        if not qloo_api:
+            return {"status": "unavailable", "error": "Qloo API not initialized"}
+        
+        # Extract test parameters
+        cultural_keywords = test_request.get("cultural_keywords", ["italian", "family", "music"])
+        demographic_signals = test_request.get("demographic_signals", {
+            "age_range": "adult",
+            "general_location": {"city_region": "Chicago"}
+        })
+        
+        # Test the full Gemini-enhanced flow
+        logger.info(f"🧪 Testing cultural recommendations with keywords: {cultural_keywords}")
+        
+        result = await qloo_api.get_cultural_recommendations_with_gemini(
+            cultural_keywords=cultural_keywords,
+            demographic_signals=demographic_signals
+        )
+        
+        return {
+            "test_status": "completed",
+            "input": {
+                "cultural_keywords": cultural_keywords,
+                "demographic_signals": demographic_signals
+            },
+            "results": {
+                "overall_success": result.get("success", False),
+                "successful_types": result.get("total_successful", 0),
+                "search_plan": result.get("search_plan", {}),
+                "recommendations": result.get("results", {})
+            },
+            "system": {
+                "gemini_available": tool_manager.is_gemini_available(),
+                "qloo_available": tool_manager.is_qloo_available()
             }
-        },
-        "fallback_reason": "Multi-agent system initialization failed"
-    }
+        }
+        
+    except Exception as e:
+        logger.error(f"Cultural recommendations test failed: {e}")
+        return {"status": "error", "error": str(e)}
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=config.PORT, 
-        reload=True
-    )
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

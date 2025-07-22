@@ -1,5 +1,6 @@
 """
-Fixed Qloo Tools - Implements proper two-stage API pattern with robust error handling
+Simplified Qloo Tools with Gemini Preprocessing
+Implements clean two-stage API pattern with intelligent query optimization
 """
 
 import asyncio
@@ -12,54 +13,224 @@ logger = logging.getLogger(__name__)
 
 class QlooInsightsAPI:
     """
-    COMPLETELY FIXED Qloo API integration following Sarah Qloo's best practices.
+    Simplified Qloo API integration with Gemini-powered query optimization.
     
-    Qloo Insights API tool for cultural intelligence recommendations.
-    Used by Agent 3: Qloo Cultural Intelligence Agent
-    
-    Key Fixes:
-    1. Two-stage API pattern: search → insights
-    2. Simplified query structure with essential parameters only
-    3. Proper rate limiting (1-2 second delays)
-    4. Entity-specific parameter validation
-    5. Robust error recovery with meaningful timeouts
-    6. Smart caching for entity_ids and tags
+    Key Features:
+    1. Gemini preprocessing for intelligent query generation
+    2. Clean two-stage pattern: search → insights
+    3. Quality over quantity approach
+    4. Minimal error handling - fail fast, log clearly
+    5. No complex fallbacks or circuit breakers
     """
     
-    def __init__(self, api_key: str, base_url: str = "https://hackathon.api.qloo.com"):
+    def __init__(self, api_key: str, gemini_client, base_url: str = "https://hackathon.api.qloo.com"):
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
+        self.gemini = gemini_client
         self.headers = {
             "X-API-Key": api_key,
             "Content-Type": "application/json"
         }
         
-        # Smart caching to reduce API calls
-        self._entity_cache = {}
-        self._tag_cache = {}
+        # Simple caching for successful searches
+        self._search_cache = {}
         
-        # Circuit breaker for failed entity types
-        self._failed_entity_types = set()
-        
-        logger.info(f"Qloo API initialized with base URL: {self.base_url}")
+        logger.info(f"Qloo API initialized with Gemini preprocessing")
     
-    async def search_entities(self, query: str, entity_types: List[str] = None, limit: int = 3) -> Dict[str, Any]:
+    async def get_cultural_recommendations_with_gemini(self, 
+                                                      cultural_keywords: List[str],
+                                                      demographic_signals: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Stage 1: Search for entities using /search endpoint.
-        This is the CORRECT way to find entity_ids according to best practices.
+        Main entry point: Use Gemini to optimize queries, then execute Qloo API calls.
+        """
+        logger.info("🤖 Starting Gemini-optimized Qloo recommendations")
+        
+        # Step 1: Gemini preprocessing - generate optimized search plan
+        search_plan = await self._gemini_optimize_search_strategy(cultural_keywords, demographic_signals)
+        
+        if not search_plan.get("success"):
+            logger.error("Gemini preprocessing failed")
+            return {"success": False, "error": "gemini_preprocessing_failed"}
+        
+        # Step 2: Execute optimized searches
+        search_results = await self._execute_optimized_searches(search_plan["search_queries"])
+        
+        # Step 3: Generate insights using found entities
+        insights_results = await self._execute_insights_with_entities(search_results, demographic_signals)
+        
+        successful_results = sum(1 for r in insights_results.values() if r.get("success"))
+        logger.info(f"✅ Completed: {successful_results}/{len(insights_results)} successful")
+        
+        return {
+            "success": successful_results > 0,
+            "results": insights_results,
+            "search_plan": search_plan.get("search_queries", {}),
+            "total_successful": successful_results
+        }
+    
+    async def _gemini_optimize_search_strategy(self, 
+                                             cultural_keywords: List[str], 
+                                             demographic_signals: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Use Gemini to generate intelligent, context-aware search queries.
         """
         try:
-            # Default to most useful entity types if none specified
-            if not entity_types:
-                entity_types = ["urn:entity:movie", "urn:entity:artist", "urn:entity:place"]
+            # Build context for Gemini
+            age_context = demographic_signals.get("age_range", "unknown")
+            location_context = demographic_signals.get("general_location", {})
+            city = location_context.get("city_region", "")
+            
+            prompt = f"""
+You are helping generate precise search queries for the Qloo API to find culturally relevant recommendations.
+
+Cultural Context: {', '.join(cultural_keywords)}
+Age Group: {age_context}
+Location: {city}
+
+Generate specific, searchable terms that would find relevant entities in these categories:
+
+1. PLACES (restaurants, venues, locations)
+2. ARTISTS (musicians, performers) 
+3. MOVIES (films, shows)
+4. BOOKS (literature, reading)
+
+Rules:
+- Use specific terms, not generic words
+- Consider cultural context (e.g., "italian" → "italian restaurants", "traditional italian music")
+- Make searches likely to find real entities
+- Include location context when relevant
+- Focus on 2-3 high-quality searches per category
+
+Return JSON format:
+{{
+    "places": ["specific restaurant/venue searches"],
+    "artists": ["specific musician/artist searches"], 
+    "movies": ["specific film/genre searches"],
+    "books": ["specific book/author searches"]
+}}
+
+Example for Italian-American context:
+{{
+    "places": ["italian restaurants", "family dining"],
+    "artists": ["Frank Sinatra", "italian american singers"],
+    "movies": ["italian family movies", "classic italian films"],
+    "books": ["italian cookbook", "italian american authors"]
+}}
+"""
+
+            logger.info("🤖 Gemini: Optimizing search strategy...")
+            gemini_response = await self.gemini.generate_content(prompt)
+            
+            if not gemini_response or not gemini_response.get("text"):
+                logger.error("Gemini returned empty response")
+                return {"success": False, "error": "empty_gemini_response"}
+            
+            # Parse Gemini response
+            response_text = gemini_response["text"].strip()
+            
+            # Extract JSON from response
+            try:
+                # Find JSON in response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                
+                if start_idx == -1 or end_idx == 0:
+                    raise ValueError("No JSON found in response")
+                    
+                json_str = response_text[start_idx:end_idx]
+                search_queries = json.loads(json_str)
+                
+                # Validate structure
+                required_keys = ["places", "artists", "movies", "books"]
+                if not all(key in search_queries for key in required_keys):
+                    raise ValueError(f"Missing required keys. Expected: {required_keys}")
+                
+                logger.info(f"✅ Gemini generated optimized queries: {len(search_queries)} categories")
+                return {"success": True, "search_queries": search_queries}
+                
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.error(f"Failed to parse Gemini JSON response: {e}")
+                logger.error(f"Raw response: {response_text}")
+                
+                # Fallback to simple queries
+                return self._generate_fallback_queries(cultural_keywords)
+                
+        except Exception as e:
+            logger.error(f"Gemini optimization failed: {e}")
+            return self._generate_fallback_queries(cultural_keywords)
+    
+    def _generate_fallback_queries(self, cultural_keywords: List[str]) -> Dict[str, Any]:
+        """
+        Generate simple fallback queries if Gemini fails.
+        """
+        logger.info("🔄 Using fallback query generation")
+        
+        # Create basic queries from cultural keywords
+        queries = {
+            "places": [f"{kw} restaurants" for kw in cultural_keywords[:2]],
+            "artists": [f"{kw} music" for kw in cultural_keywords[:2]], 
+            "movies": [f"{kw} movies" for kw in cultural_keywords[:2]],
+            "books": [f"{kw} books" for kw in cultural_keywords[:2]]
+        }
+        
+        return {"success": True, "search_queries": queries}
+    
+    async def _execute_optimized_searches(self, search_queries: Dict[str, List[str]]) -> Dict[str, List[Dict]]:
+        """
+        Execute the optimized searches generated by Gemini.
+        """
+        logger.info("🔍 Executing optimized searches...")
+        
+        entity_type_mapping = {
+            "places": "urn:entity:place",
+            "artists": "urn:entity:artist", 
+            "movies": "urn:entity:movie",
+            "books": "urn:entity:book"
+        }
+        
+        search_results = {}
+        
+        for category, queries in search_queries.items():
+            if category not in entity_type_mapping:
+                continue
+                
+            entity_type = entity_type_mapping[category]
+            search_results[entity_type] = []
+            
+            # Try each query in the category
+            for query in queries[:2]:  # Limit to 2 queries per category
+                logger.info(f"🔍 Searching: '{query}' in {category}")
+                
+                result = await self._search_entities_simple(query, [entity_type])
+                
+                if result.get("success") and result.get("entities"):
+                    search_results[entity_type].extend(result["entities"])
+                    logger.info(f"✅ Found {len(result['entities'])} entities for '{query}'")
+                
+                # Rate limiting
+                await asyncio.sleep(1.0)
+        
+        # Log summary
+        total_found = sum(len(entities) for entities in search_results.values())
+        logger.info(f"🎯 Search complete: {total_found} total entities found")
+        
+        return search_results
+    
+    async def _search_entities_simple(self, query: str, entity_types: List[str]) -> Dict[str, Any]:
+        """
+        Simple, clean entity search with no complex logic.
+        """
+        try:
+            # Check cache
+            cache_key = f"{query.lower()}:{':'.join(entity_types)}"
+            if cache_key in self._search_cache:
+                return self._search_cache[cache_key]
             
             params = {
-                "query": query.strip()[:50],  # Limit query length
+                "query": query.strip()[:50],
                 "types": ",".join(entity_types),
-                "limit": limit
+                "limit": 3
             }
-            
-            logger.info(f"Qloo search: '{query}' for types: {entity_types}")
             
             async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
                 response = await client.get(
@@ -70,99 +241,166 @@ class QlooInsightsAPI:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    results = data.get("results", [])  # FIXED: Correct parsing
+                    entities = data.get("results", [])
+                    
+                    result = {"success": True, "entities": entities}
                     
                     # Cache successful results
-                    for result in results:
-                        entity_id = result.get("id")
-                        if entity_id:
-                            self._entity_cache[query.lower()] = entity_id
+                    self._search_cache[cache_key] = result
                     
-                    logger.info(f"Search success: {len(results)} entities found")
-                    return {"success": True, "results": results}  # FIXED: Return results directly
-                
-                elif response.status_code == 400:
-                    logger.error(f"Search bad request (400): {response.text}")
-                    return {"success": False, "error": "bad_request"}
-                
-                elif response.status_code == 429:
-                    logger.warning("Search rate limited (429)")
-                    await asyncio.sleep(2.0)  # Wait before retry
-                    return {"success": False, "error": "rate_limited"}
+                    return result
                 
                 else:
-                    logger.error(f"Search API error: {response.status_code}")
-                    return {"success": False, "error": f"http_{response.status_code}"}
-        
-        except httpx.TimeoutException:
-            logger.error("Search API timeout")
-            return {"success": False, "error": "timeout"}
-        except Exception as e:
-            logger.error(f"Search API exception: {str(e)}")
-            return {"success": False, "error": "exception"}
-    
-    async def search_tags(self, query: str, limit: int = 5) -> Dict[str, Any]:
-        """
-        Search for valid tags using /tags/search endpoint.
-        """
-        try:
-            # Check cache first
-            cache_key = query.lower()
-            if cache_key in self._tag_cache:
-                return {"success": True, "results": self._tag_cache[cache_key]}
-            
-            params = {
-                "query": query.strip()[:30],
-                "limit": limit
-            }
-            
-            logger.info(f"Tag search: '{query}'")
-            
-            async with httpx.AsyncClient(timeout=httpx.Timeout(8.0)) as client:
-                response = await client.get(
-                    f"{self.base_url}/tags/search",
-                    headers=self.headers,
-                    params=params
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    results = data.get("results", [])
-                    
-                    # Cache results
-                    self._tag_cache[cache_key] = results
-                    
-                    logger.info(f"Tag search success: {len(results)} tags found")
-                    return {"success": True, "results": results}
-                
-                else:
-                    logger.error(f"Tag search error: {response.status_code}")
+                    logger.warning(f"Search failed for '{query}': {response.status_code}")
                     return {"success": False, "error": f"http_{response.status_code}"}
         
         except Exception as e:
-            logger.error(f"Tag search exception: {str(e)}")
+            logger.error(f"Search exception for '{query}': {e}")
             return {"success": False, "error": "exception"}
     
-    async def get_insights(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_insights_with_entities(self, 
+                                            search_results: Dict[str, List[Dict]], 
+                                            demographic_signals: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Stage 2: Get insights using /v2/insights endpoint with proper parameters.
-        Only called after we have valid entity_ids from search.
+        Execute insights calls using found entities. Simple and direct.
+        """
+        logger.info("💡 Executing insights with found entities...")
+        
+        insights_results = {}
+        
+        for entity_type, entities in search_results.items():
+            if not entities:
+                logger.info(f"⏭️  Skipping {entity_type}: no entities found")
+                insights_results[entity_type] = {"success": False, "error": "no_entities_found"}
+                continue
+            
+            # Use the first entity found
+            entity = entities[0]
+            entity_id = entity.get("entity_id") or entity.get("id")
+            
+            if not entity_id:
+                logger.warning(f"⚠️  No entity_id found for {entity_type}")
+                insights_results[entity_type] = {"success": False, "error": "no_entity_id"}
+                continue
+            
+            # Build simple, clean parameters
+            params = await self._gemini_build_insights_params(entity_type, entity_id, demographic_signals)
+            
+            if not params:
+                logger.error(f"❌ Failed to build params for {entity_type}")
+                insights_results[entity_type] = {"success": False, "error": "param_build_failed"}
+                continue
+            
+            # Execute insights call
+            logger.info(f"💡 Getting insights for {entity_type} with entity {entity_id}")
+            result = await self._get_insights_simple(params)
+            
+            insights_results[entity_type] = result
+            
+            # Rate limiting
+            await asyncio.sleep(1.5)
+        
+        return insights_results
+    
+    async def _gemini_build_insights_params(self, 
+                                          entity_type: str, 
+                                          entity_id: str, 
+                                          demographic_signals: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Use Gemini to build optimal insights parameters.
         """
         try:
-            entity_type = params.get("filter.type")
+            age_range = demographic_signals.get("age_range", "")
+            location = demographic_signals.get("general_location", {})
             
-            # Circuit breaker - skip if this entity type failed recently
-            if entity_type in self._failed_entity_types:
-                logger.warning(f"Skipping {entity_type} due to circuit breaker")
-                return {"success": False, "error": "circuit_breaker"}
+            prompt = f"""
+Build optimal parameters for Qloo Insights API call.
+
+Entity Type: {entity_type}
+Entity ID: {entity_id}
+Age Range: {age_range}
+Location: {location}
+
+Rules:
+1. Always include filter.type and signal.interests.entities
+2. Add take=5 for results limit
+3. Add demographics if age_range available: 18_to_34, 35_to_54, or 55_and_older
+4. For places, add location if available
+5. Only use supported parameters
+
+Return clean JSON:
+{{
+    "filter.type": "{entity_type}",
+    "signal.interests.entities": "{entity_id}",
+    "take": "5"
+}}
+"""
+
+            gemini_response = await self.gemini.generate_content(prompt)
             
-            # Validate parameters before sending
-            validation_result = self._validate_insights_params(params)
-            if not validation_result["valid"]:
-                logger.error(f"Parameter validation failed: {validation_result['error']}")
-                return {"success": False, "error": "invalid_params", "details": validation_result['error']}
+            if gemini_response and gemini_response.get("text"):
+                response_text = gemini_response["text"].strip()
+                
+                # Extract JSON
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                
+                if start_idx != -1 and end_idx > start_idx:
+                    json_str = response_text[start_idx:end_idx]
+                    params = json.loads(json_str)
+                    
+                    # Validate required params
+                    if "filter.type" in params and "signal.interests.entities" in params:
+                        logger.info(f"✅ Gemini built params: {list(params.keys())}")
+                        return params
             
-            logger.info(f"Insights request for {entity_type}: {list(params.keys())}")
+            # Fallback to manual construction
+            logger.info("🔄 Using manual parameter construction")
+            return self._build_simple_params(entity_type, entity_id, demographic_signals)
+            
+        except Exception as e:
+            logger.warning(f"Gemini param building failed: {e}")
+            return self._build_simple_params(entity_type, entity_id, demographic_signals)
+    
+    def _build_simple_params(self, 
+                           entity_type: str, 
+                           entity_id: str, 
+                           demographic_signals: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Build simple, guaranteed-to-work parameters.
+        """
+        params = {
+            "filter.type": entity_type,
+            "signal.interests.entities": entity_id,
+            "take": "5"
+        }
+        
+        # Add age if available
+        age_range = demographic_signals.get("age_range", "")
+        if "senior" in age_range or "older" in age_range:
+            params["signal.demographics.age"] = "55_and_older"
+        elif "adult" in age_range or "mature" in age_range:
+            params["signal.demographics.age"] = "35_to_54"
+        elif "young" in age_range:
+            params["signal.demographics.age"] = "18_to_34"
+        
+        # Add location for places
+        if entity_type == "urn:entity:place":
+            location = demographic_signals.get("general_location", {})
+            city = location.get("city_region", "").strip()
+            if city and len(city) > 2:
+                params["signal.location.query"] = city[:30]
+        
+        return params
+    
+    async def _get_insights_simple(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Simple insights call with clear error handling.
+        """
+        try:
+            entity_type = params.get("filter.type", "unknown")
+            
+            logger.info(f"💡 Insights request: {list(params.keys())}")
             
             async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
                 response = await client.get(
@@ -176,286 +414,28 @@ class QlooInsightsAPI:
                     entities = data.get("entities", [])
                     
                     if entities:
-                        logger.info(f"Insights success: {len(entities)} entities for {entity_type}")
-                        return {"success": True, "results": data}
+                        logger.info(f"✅ Insights success: {len(entities)} recommendations")
+                        return {"success": True, "results": data, "count": len(entities)}
                     else:
-                        logger.warning(f"Insights returned no entities for {entity_type}")
-                        return {"success": False, "error": "no_entities"}
-                
-                elif response.status_code == 400:
-                    # Bad request - add to circuit breaker
-                    self._failed_entity_types.add(entity_type)
-                    error_data = response.text
-                    logger.error(f"Insights bad request (400) for {entity_type}: {error_data}")
-                    return {"success": False, "error": "bad_request", "details": error_data}
-                
-                elif response.status_code == 403:
-                    # Forbidden - add to circuit breaker
-                    self._failed_entity_types.add(entity_type)
-                    logger.error(f"Insights forbidden (403) for {entity_type}")
-                    return {"success": False, "error": "forbidden"}
-                
-                elif response.status_code == 429:
-                    logger.warning(f"Insights rate limited (429) for {entity_type}")
-                    await asyncio.sleep(3.0)  # Longer wait for rate limit
-                    return {"success": False, "error": "rate_limited"}
+                        logger.warning(f"⚠️  Insights returned no results for {entity_type}")
+                        return {"success": False, "error": "no_results"}
                 
                 else:
-                    logger.error(f"Insights API error: {response.status_code} for {entity_type}")
+                    logger.error(f"❌ Insights API error: {response.status_code}")
                     return {"success": False, "error": f"http_{response.status_code}"}
         
-        except httpx.TimeoutException:
-            logger.error(f"Insights timeout for {entity_type}")
-            return {"success": False, "error": "timeout"}
         except Exception as e:
-            logger.error(f"Insights exception for {entity_type}: {str(e)}")
+            logger.error(f"💥 Insights exception: {e}")
             return {"success": False, "error": "exception"}
     
-    def _validate_insights_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Validate parameters against Entity Type Parameter Guide.
-        """
-        entity_type = params.get("filter.type")
-        if not entity_type:
-            return {"valid": False, "error": "filter.type is required"}
-        
-        # Check for at least one signal
-        signal_params = [key for key in params.keys() if key.startswith("signal.")]
-        if not signal_params:
-            return {"valid": False, "error": "At least one signal parameter is required"}
-        
-        # Entity-specific validation based on Parameter Guide
-        valid_params = self._get_valid_params_for_entity(entity_type)
-        
-        for param in params.keys():
-            if param not in valid_params and param != "take":
-                logger.warning(f"Parameter {param} may not be valid for {entity_type}")
-        
-        return {"valid": True, "error": None}
-    
-    def _get_valid_params_for_entity(self, entity_type: str) -> List[str]:
-        """
-        Return valid parameters for each entity type based on Parameter Guide.
-        """
-        # Core parameters valid for all entity types
-        base_params = [
-            "filter.type", "take", "offset",
-            "signal.demographics.age", "signal.demographics.gender",
-            "signal.interests.entities", "signal.interests.tags"
-        ]
-        
-        # Entity-specific parameters
-        entity_specific = {
-            "urn:entity:place": base_params + [
-                "signal.location.query", "filter.location", "filter.geocode.name"
-            ],
-            "urn:entity:movie": base_params + [
-                "filter.release_year.min", "filter.release_year.max", "filter.rating.min"
-            ],
-            "urn:entity:artist": base_params + [
-                "filter.popularity.min", "filter.popularity.max"
-            ],
-            "urn:entity:book": base_params + [
-                "filter.publication_year.min", "filter.publication_year.max"
-            ]
-        }
-        
-        return entity_specific.get(entity_type, base_params)
-    
-    async def get_cultural_recommendations_fixed(self, 
-                                               cultural_keywords: List[str],
-                                               demographic_signals: Dict[str, Any],
-                                               entity_types: List[str] = None) -> Dict[str, Any]:
-        """
-        FIXED: Two-stage cultural recommendations following best practices.
-        
-        Stage 1: Search for entities based on cultural keywords
-        Stage 2: Get insights using found entity_ids
-        """
-        if not entity_types:
-            entity_types = [
-                "urn:entity:artist",
-                "urn:entity:place", 
-                "urn:entity:movie"
-            ]
-        
-        results = {}
-        
-        # Stage 1: Find entities for cultural concepts
-        entity_findings = {}
-        for keyword in cultural_keywords[:3]:  # Limit to avoid too many API calls
-            search_result = await self.search_entities(keyword, entity_types, limit=2)
-            
-            if search_result.get("success"):
-                search_entities = search_result.get("results", [])
-                logger.info(f"Search for '{keyword}' returned {len(search_entities)} entities")
-                
-                # Debug: Log first entity structure
-                if search_entities:
-                    logger.info(f"Sample entity structure: {search_entities[0]}")
-                
-                for entity in search_entities:
-                    entity_types_array = entity.get("types", [])
-                    entity_id = entity.get("entity_id", "")
-                    
-                    # Debug logging
-                    logger.info(f"Processing entity: entity_id={entity_id}, types={entity_types_array}")
-                    
-                    if entity_types_array and entity_id:
-                        # Use the first type from the types array
-                        entity_type = entity_types_array[0] if entity_types_array else ""
-                        
-                        if entity_type and entity_id:
-                            if entity_type not in entity_findings:
-                                entity_findings[entity_type] = []
-                            if entity_id not in entity_findings[entity_type]:  # Avoid duplicates
-                                entity_findings[entity_type].append(entity_id)
-                            logger.info(f"✅ Found entity {entity_id} for type {entity_type}")
-                        else:
-                            logger.warning(f"❌ Invalid entity: missing entity_id or type")
-                    else:
-                        logger.warning(f"❌ Invalid entity: missing entity_id or types array")
-            
-            # Rate limiting between searches
-            await asyncio.sleep(1.5)
-        
-        logger.info(f"Entity findings summary: {[(k, len(v)) for k, v in entity_findings.items()]}")
-        logger.info(f"Total entity IDs found: {sum(len(v) for v in entity_findings.values())}")
-        
-        # Stage 2: Get insights for each entity type with found entities
-        for entity_type in entity_types:
-            if entity_type in self._failed_entity_types:
-                logger.warning(f"Skipping {entity_type} due to circuit breaker")
-                continue
-            
-            # Build minimal, focused parameters
-            params = self._build_minimal_params(entity_type, entity_findings, demographic_signals)
-            
-            if params:
-                logger.info(f"Executing insights for {entity_type} with params: {list(params.keys())}")
-                insights_result = await self.get_insights(params)
-                results[entity_type] = insights_result
-                
-                # Rate limiting between insights calls
-                await asyncio.sleep(2.0)
-            else:
-                logger.error(f"Could not build params for {entity_type}")
-                results[entity_type] = {"success": False, "error": "no_params"}
-        
-        successful_results = sum(1 for r in results.values() if r.get("success"))
-        logger.info(f"Cultural recommendations complete: {successful_results}/{len(entity_types)} successful")
-        
-        return results
-    
-    def _build_minimal_params(self, 
-                            entity_type: str, 
-                            entity_findings: Dict[str, List[str]], 
-                            demographic_signals: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Build minimal, focused parameters for insights API.
-        """
-        params = {
-            "filter.type": entity_type,
-            "take": "3"
-        }
-        
-        # Add entity signals if we found relevant entities
-        found_entities = entity_findings.get(entity_type, [])
-        if found_entities:
-            params["signal.interests.entities"] = found_entities[0]  # Use first found entity
-            logger.info(f"Using entity signal for {entity_type}: {found_entities[0]}")
-        else:
-            # Try to use entities from other types if available
-            all_entities = []
-            for entities_list in entity_findings.values():
-                all_entities.extend(entities_list)
-            
-            if all_entities:
-                params["signal.interests.entities"] = all_entities[0]
-                logger.info(f"Using cross-type entity signal for {entity_type}: {all_entities[0]}")
-            else:
-                # Last resort: use more specific interest tags
-                specific_tags = {
-                    "urn:entity:artist": "urn:tag:genre:music:jazz",
-                    "urn:entity:place": "urn:tag:cuisine:media:italian", 
-                    "urn:entity:movie": "urn:tag:genre:movie:drama",
-                    "urn:entity:book": "urn:tag:genre:book:fiction"
-                }
-                fallback_tag = specific_tags.get(entity_type, "music")
-                params["signal.interests.tags"] = fallback_tag
-                logger.warning(f"No entities found, using fallback tag for {entity_type}: {fallback_tag}")
-        
-        # Add demographics if available
-        age_range = demographic_signals.get("age_range", "")
-        if age_range and age_range != "age_unknown":
-            if "senior" in age_range or "older" in age_range:
-                params["signal.demographics.age"] = "55_and_older"
-            elif "adult" in age_range or "mature" in age_range:
-                params["signal.demographics.age"] = "35_to_54"
-            elif "young" in age_range:
-                params["signal.demographics.age"] = "18_to_34"
-        
-        # Add location for places
-        if entity_type == "urn:entity:place":
-            location = demographic_signals.get("general_location", {})
-            city = location.get("city_region", "").strip()
-            if city and len(city) > 2:
-                params["signal.location.query"] = city[:30]
-        
-        return params
-    
     async def test_connection(self) -> bool:
-        """
-        Test connection with a simple, guaranteed-to-work query.
-        """
+        """Simple connection test."""
         try:
-            test_result = await self.search_entities("music", ["urn:entity:artist"], limit=1)
-            return test_result.get("success", False)
-        except Exception as e:
-            logger.error(f"Connection test failed: {str(e)}")
+            result = await self._search_entities_simple("music", ["urn:entity:artist"])
+            return result.get("success", False)
+        except Exception:
             return False
     
-    def reset_circuit_breaker(self):
-        """Reset circuit breaker for failed entity types."""
-        self._failed_entity_types.clear()
-        logger.info("Circuit breaker reset")
-    
     def get_cache_stats(self) -> Dict[str, int]:
-        """Get cache statistics for monitoring."""
-        return {
-            "entity_cache_size": len(self._entity_cache),
-            "tag_cache_size": len(self._tag_cache),
-            "failed_entity_types": len(self._failed_entity_types)
-        }
-    
-    async def _discover_tag_for_entity_type(self, entity_type: str) -> Optional[str]:
-        """
-        Discover valid tags for entity type using /tags/search endpoint.
-        """
-        try:
-            # Map entity types to search queries
-            search_queries = {
-                "urn:entity:artist": "music",
-                "urn:entity:place": "restaurant",
-                "urn:entity:movie": "movies", 
-                "urn:entity:book": "books"
-            }
-            
-            search_query = search_queries.get(entity_type, "entertainment")
-            tag_result = await self.search_tags(search_query, limit=3)
-            
-            if tag_result.get("success"):
-                tags = tag_result.get("results", [])
-                if tags:
-                    # Use the first valid tag ID
-                    tag_id = tags[0].get("id", "")
-                    if tag_id:
-                        logger.info(f"Discovered tag via /tags/search: {tag_id}")
-                        return tag_id
-            
-            logger.warning(f"No tags discovered for {entity_type}, using simple fallback")
-            return None
-            
-        except Exception as e:
-            logger.error(f"Tag discovery failed for {entity_type}: {str(e)}")
-            return None
+        """Get simple cache statistics."""
+        return {"search_cache_size": len(self._search_cache)}

@@ -1,177 +1,249 @@
 """
-Tools Initialization
-File: backend/multi_tool_agent/tools/__init__.py
-
-Initializes all tools required for the CareConnect 7-agent pipeline
+Updated Tools Initialization
+Sets up Gemini-enhanced Qloo API integration
 """
 
-import os
 import logging
+import os
 from typing import Dict, Any
 
+# Set up logger first
+logger = logging.getLogger(__name__)
+
+# Import the enhanced tools with error handling
 from .qloo_tools import QlooInsightsAPI
-from .youtube_tools import YouTubeAPI
-from .vision_ai_tools import VisionAIAnalyzer
-from .gemini_tools import GeminiRecipeGenerator
-from .session_storage_tools import SessionStorageManager
+from .gemini_tools import GeminiAITool
+
+# Import existing tools with fallbacks
+try:
+    from .youtube_tools import YouTubeAPI
+except ImportError:
+    logger.warning("YouTubeAPI not available")
+    YouTubeAPI = None
+
+# Handle vision tools more robustly
+VisionAITool = None
+try:
+    from .vision_ai_tools import VisionAIAnalyzer as VisionAITool
+except ImportError:
+    try:
+        # Try other possible names
+        from .vision_ai_tools import VisionAITool
+    except ImportError:
+        try:
+            # Try another common name
+            from .vision_ai_tools import GoogleVisionAI as VisionAITool
+        except ImportError:
+            # Give up and skip vision tools
+            logger.warning("VisionAITool not available - skipping vision functionality")
+            VisionAITool = None
+
+# Handle session storage tools
+SessionStorageTool = None
+try:
+    from .session_storage_tools import SessionStorageManager as SessionStorageTool
+except ImportError:
+    try:
+        # Try alternative import names
+        from .session_storage_tools import SessionStorageTool
+    except ImportError:
+        try:
+            # Try another name
+            from .session_storage_tools import SessionStorage as SessionStorageTool
+        except ImportError:
+            logger.warning("SessionStorageTool not available - skipping session functionality")
+            SessionStorageTool = None
 
 logger = logging.getLogger(__name__)
 
-def initialize_tools() -> Dict[str, Any]:
+class ToolManager:
     """
-    Initialize all tools required for the CareConnect multi-agent system.
-    
-    Returns:
-        Dictionary containing all initialized tools
+    Manages all tools with enhanced Gemini-Qloo integration.
     """
     
-    try:
-        # Get API keys from environment
-        qloo_api_key = os.getenv("QLOO_API_KEY")
-        youtube_api_key = os.getenv("YOUTUBE_API_KEY")
-        google_cloud_api_key = os.getenv("GOOGLE_CLOUD_API_KEY")
-        gemini_api_key = os.getenv("GEMINI_API_KEY")  # Could be same as google_cloud_api_key
+    def __init__(self):
+        self.tools = {}
+        self.initialized = False
         
-        # Check required API keys
-        missing_keys = []
-        if not qloo_api_key:
-            missing_keys.append("QLOO_API_KEY")
-        if not youtube_api_key:
-            missing_keys.append("YOUTUBE_API_KEY")
-        if not google_cloud_api_key:
-            missing_keys.append("GOOGLE_CLOUD_API_KEY")
-        if not gemini_api_key:
-            # Fallback to Google Cloud API key for Gemini
-            gemini_api_key = google_cloud_api_key
-            if not gemini_api_key:
-                missing_keys.append("GEMINI_API_KEY or GOOGLE_CLOUD_API_KEY")
+    async def initialize_tools(self) -> Dict[str, bool]:
+        """
+        Initialize all tools with enhanced integration.
+        """
+        logger.info("🚀 Initializing tools with Gemini-Qloo integration...")
         
-        if missing_keys:
-            logger.error(f"Missing required API keys: {missing_keys}")
-            raise ValueError(f"Missing API keys: {missing_keys}")
+        results = {}
         
-        # Initialize all tools
-        tools = {
-            "qloo_tool": QlooInsightsAPI(qloo_api_key),
-            "youtube_tool": YouTubeAPI(youtube_api_key),
-            "vision_ai_tool": VisionAIAnalyzer(google_cloud_api_key),
-            "gemini_tool": GeminiRecipeGenerator(gemini_api_key),
-            "session_storage_tool": SessionStorageManager()
+        try:
+            # 1. Initialize Gemini first (needed for Qloo optimization)
+            gemini_api_key = os.getenv("GEMINI_API_KEY")
+            if gemini_api_key:
+                self.tools["gemini"] = GeminiAITool(
+                    api_key=gemini_api_key,
+                    model="gemini-2.5-flash"
+                )
+                gemini_test = await self.tools["gemini"].test_connection()
+                results["gemini_tool"] = gemini_test
+                logger.info(f"✅ Gemini tool: {'PASSED' if gemini_test else 'FAILED'}")
+            else:
+                logger.error("❌ GEMINI_API_KEY not found")
+                results["gemini_tool"] = False
+            
+            # 2. Initialize Qloo with Gemini integration
+            qloo_api_key = os.getenv("QLOO_API_KEY")
+            if qloo_api_key and self.tools.get("gemini"):
+                self.tools["qloo"] = QlooInsightsAPI(
+                    api_key=qloo_api_key,
+                    gemini_client=self.tools["gemini"],
+                    base_url="https://hackathon.api.qloo.com"
+                )
+                qloo_test = await self.tools["qloo"].test_connection()
+                results["qloo_tool"] = qloo_test
+                logger.info(f"✅ Qloo tool: {'PASSED' if qloo_test else 'FAILED'}")
+            else:
+                logger.error("❌ QLOO_API_KEY not found or Gemini not available")
+                results["qloo_tool"] = False
+            
+            # 3. Initialize YouTube API (if available)
+            if YouTubeAPI:
+                youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+                if youtube_api_key:
+                    self.tools["youtube"] = YouTubeAPI(api_key=youtube_api_key)
+                    try:
+                        youtube_test = await self.tools["youtube"].test_connection()
+                        results["youtube_tool"] = youtube_test
+                        logger.info(f"✅ YouTube tool: {'PASSED' if youtube_test else 'FAILED'}")
+                    except Exception as e:
+                        logger.warning(f"YouTube test failed: {e}")
+                        results["youtube_tool"] = False
+                else:
+                    logger.warning("⚠️  YOUTUBE_API_KEY not found")
+                    results["youtube_tool"] = False
+            else:
+                logger.warning("⚠️  YouTube tool not available")
+                results["youtube_tool"] = False
+            
+            # 4. Initialize Vision AI (if available)
+            if VisionAITool:
+                vision_api_key = os.getenv("VISION_API_KEY")
+                if vision_api_key:
+                    self.tools["vision"] = VisionAITool(api_key=vision_api_key)
+                    try:
+                        vision_test = await self.tools["vision"].test_connection()
+                        results["vision_ai_tool"] = vision_test
+                        logger.info(f"✅ Vision AI tool: {'PASSED' if vision_test else 'FAILED'}")
+                    except Exception as e:
+                        logger.warning(f"Vision AI test failed: {e}")
+                        results["vision_ai_tool"] = False
+                else:
+                    logger.warning("⚠️  VISION_API_KEY not found")
+                    results["vision_ai_tool"] = False
+            else:
+                logger.warning("⚠️  Vision AI tool not available")
+                results["vision_ai_tool"] = False
+            
+            # 5. Initialize Session Storage (if available)
+            if SessionStorageTool:
+                self.tools["session_storage"] = SessionStorageTool()
+                try:
+                    session_test = self.tools["session_storage"].test_connection()
+                    results["session_storage_tool"] = session_test
+                    logger.info(f"✅ Session storage tool: {'PASSED' if session_test else 'FAILED'}")
+                except Exception as e:
+                    logger.warning(f"Session storage test failed: {e}")
+                    results["session_storage_tool"] = False
+            else:
+                logger.warning("⚠️  Session storage tool not available")
+                results["session_storage_tool"] = False
+            
+            # Summary
+            passed_tools = sum(1 for passed in results.values() if passed)
+            total_tools = len(results)
+            
+            logger.info(f"🎯 Tool initialization complete: {passed_tools}/{total_tools} tools working")
+            
+            # Check for minimum viable tools (Gemini + Qloo for core functionality)
+            core_tools_available = results.get("gemini_tool", False) and results.get("qloo_tool", False)
+            
+            if core_tools_available:
+                self.initialized = True
+                logger.info("✅ Core tools (Gemini + Qloo) available - system operational")
+            elif passed_tools >= 2:  # At least some tools working
+                self.initialized = True
+                logger.warning("⚠️  Limited functionality - some tools unavailable")
+            else:
+                logger.error("❌ Insufficient tools for operation")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"💥 Tool initialization failed: {e}")
+            return {"error": str(e)}
+    
+    def get_tool(self, tool_name: str):
+        """Get a specific tool."""
+        return self.tools.get(tool_name)
+    
+    def get_qloo_api(self) -> QlooInsightsAPI:
+        """Get the Gemini-enhanced Qloo API."""
+        return self.tools.get("qloo")
+    
+    def get_gemini_api(self) -> GeminiAITool:
+        """Get the Gemini API."""
+        return self.tools.get("gemini")
+    
+    def is_qloo_available(self) -> bool:
+        """Check if Qloo API is available and working."""
+        qloo_tool = self.tools.get("qloo")
+        return qloo_tool is not None
+    
+    def is_gemini_available(self) -> bool:
+        """Check if Gemini API is available and working."""
+        gemini_tool = self.tools.get("gemini")
+        return gemini_tool is not None
+    
+    def get_tool_status(self) -> Dict[str, Any]:
+        """Get status of all tools."""
+        status = {
+            "initialized": self.initialized,
+            "available_tools": list(self.tools.keys()),
+            "qloo_available": self.is_qloo_available(),
+            "gemini_available": self.is_gemini_available(),
+            "total_tools": len(self.tools)
         }
         
-        logger.info("All tools initialized successfully")
-        return tools
+        # Add cache stats for performance monitoring
+        if self.is_qloo_available():
+            qloo_stats = self.tools["qloo"].get_cache_stats()
+            status["qloo_cache_stats"] = qloo_stats
         
-    except Exception as e:
-        logger.error(f"Error initializing tools: {str(e)}")
-        raise
+        return status
 
-async def test_all_tools(tools: Dict[str, Any]) -> Dict[str, bool]:
-    """
-    Test all tools to verify they're working correctly.
-    
-    Args:
-        tools: Dictionary of initialized tools
-        
-    Returns:
-        Dictionary with test results for each tool
-    """
-    
-    test_results = {}
-    
-    # Test Qloo API
-    try:
-        qloo_result = await tools["qloo_tool"].test_connection()
-        test_results["qloo_tool"] = qloo_result
-        logger.info(f"Qloo tool test: {'PASSED' if qloo_result else 'FAILED'}")
-    except Exception as e:
-        logger.error(f"Qloo tool test error: {str(e)}")
-        test_results["qloo_tool"] = False
-    
-    # Test YouTube API
-    try:
-        youtube_result = await tools["youtube_tool"].test_connection()
-        test_results["youtube_tool"] = youtube_result
-        logger.info(f"YouTube tool test: {'PASSED' if youtube_result else 'FAILED'}")
-    except Exception as e:
-        logger.error(f"YouTube tool test error: {str(e)}")
-        test_results["youtube_tool"] = False
-    
-    # Test Vision AI
-    try:
-        vision_result = await tools["vision_ai_tool"].test_connection()
-        test_results["vision_ai_tool"] = vision_result
-        logger.info(f"Vision AI tool test: {'PASSED' if vision_result else 'FAILED'}")
-    except Exception as e:
-        logger.error(f"Vision AI tool test error: {str(e)}")
-        test_results["vision_ai_tool"] = False
-    
-    # Test Gemini
-    try:
-        gemini_result = await tools["gemini_tool"].test_connection()
-        test_results["gemini_tool"] = gemini_result
-        logger.info(f"Gemini tool test: {'PASSED' if gemini_result else 'FAILED'}")
-    except Exception as e:
-        logger.error(f"Gemini tool test error: {str(e)}")
-        test_results["gemini_tool"] = False
-    
-    # Test Session Storage (always works since it's in-memory)
-    try:
-        session_id = await tools["session_storage_tool"].create_session("test_patient")
-        session_data = await tools["session_storage_tool"].get_session(session_id)
-        test_results["session_storage_tool"] = session_data is not None
-        logger.info(f"Session storage tool test: {'PASSED' if test_results['session_storage_tool'] else 'FAILED'}")
-    except Exception as e:
-        logger.error(f"Session storage tool test error: {str(e)}")
-        test_results["session_storage_tool"] = False
-    
-    # Summary
-    passed_tests = sum(1 for result in test_results.values() if result)
-    total_tests = len(test_results)
-    
-    logger.info(f"Tool tests completed: {passed_tests}/{total_tests} passed")
-    
-    return test_results
+# Global tool manager instance
+tool_manager = ToolManager()
 
-def get_tool_status() -> Dict[str, str]:
-    """
-    Get status information about all tools.
-    
-    Returns:
-        Dictionary with status information for each tool
-    """
-    
-    status = {}
-    
-    # Check API key availability
-    api_keys = {
-        "qloo_tool": "QLOO_API_KEY",
-        "youtube_tool": "YOUTUBE_API_KEY", 
-        "vision_ai_tool": "GOOGLE_CLOUD_API_KEY",
-        "gemini_tool": "GEMINI_API_KEY",
-        "session_storage_tool": "N/A (in-memory)"
-    }
-    
-    for tool_name, env_var in api_keys.items():
-        if env_var == "N/A (in-memory)":
-            status[tool_name] = "Available (in-memory storage)"
-        else:
-            api_key = os.getenv(env_var)
-            if api_key:
-                status[tool_name] = f"API key configured ({len(api_key)} chars)"
-            else:
-                status[tool_name] = f"API key missing: {env_var}"
-    
-    return status
+async def initialize_all_tools():
+    """Initialize all tools - main entry point."""
+    return await tool_manager.initialize_tools()
 
-# Export all tools and utilities
+def get_qloo_api():
+    """Get the Gemini-enhanced Qloo API."""
+    return tool_manager.get_qloo_api()
+
+def get_gemini_api():
+    """Get the Gemini API."""
+    return tool_manager.get_gemini_api()
+
+def get_tool_manager():
+    """Get the tool manager instance."""
+    return tool_manager
+
+# Export the enhanced tools
 __all__ = [
+    "tool_manager",
+    "initialize_all_tools", 
+    "get_qloo_api",
+    "get_gemini_api",
+    "get_tool_manager",
     "QlooInsightsAPI",
-    "YouTubeAPI", 
-    "VisionAIAnalyzer",
-    "GeminiRecipeGenerator",
-    "SessionStorageManager",
-    "initialize_tools",
-    "test_all_tools",
-    "get_tool_status"
+    "GeminiAITool"
 ]
