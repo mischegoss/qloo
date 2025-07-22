@@ -1,7 +1,7 @@
 """
-Agent 6: Mobile Synthesizer - FIXED VERSION
+Agent 6: Mobile Synthesizer - COMPLETELY FIXED VERSION
 Role: Package all content for mobile caregiver experience
-Follows Responsible Development Guide principles - caregiver authority and individual focus
+Fixes: Proper content population, comprehensive fallback content, robust error handling
 """
 
 from typing import Dict, Any, Optional, List
@@ -13,25 +13,20 @@ logger = logging.getLogger(__name__)
 
 class MobileSynthesizerAgent(Agent):
     """
-    Agent 6: Mobile Synthesizer
+    Agent 6: Mobile Synthesizer - COMPLETELY FIXED
     
-    Purpose: Package all content for mobile caregiver experience
-    Input: All previous agent outputs
-    Output: Complete mobile experience with caregiver instructions
-    
-    Anti-Bias Principles:
-    - Structure for specific page type (dashboard, recipe, music, conversation)
-    - Add caregiver guidance and cultural context explanations
-    - Include feedback collection points
-    - Maintain caregiver authority throughout interface
-    - Present cultural intelligence as suggestions, not directions
-    - Individual preferences override all recommendations
+    FIXED ISSUES:
+    - Content arrays are now properly populated from all sources
+    - Comprehensive fallback content when sources are empty
+    - Enhanced content validation and error handling
+    - Better integration of all agent outputs
+    - Guaranteed non-empty mobile experience
     """
     
     def __init__(self):
         super().__init__(
             name="mobile_synthesizer",
-            description="Synthesizes all content into mobile-optimized caregiver experience"
+            description="Synthesizes all content into guaranteed non-empty mobile caregiver experience"
         )
     
     async def run(self, 
@@ -41,21 +36,21 @@ class MobileSynthesizerAgent(Agent):
                   sensory_content: Dict[str, Any],
                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize all content into mobile caregiver experience.
+        Synthesize all content into mobile caregiver experience with guaranteed content.
         
         Args:
             consolidated_info: Output from Agent 1
-            cultural_profile: Output from Agent 2
-            qloo_intelligence: Output from Agent 3  
+            cultural_profile: Output from Agent 2  
+            qloo_intelligence: Output from Agent 3
             sensory_content: Output from Agent 4
             photo_analysis: Output from Agent 5
             
         Returns:
-            Complete mobile experience package
+            Complete mobile experience package with guaranteed content
         """
         
         try:
-            logger.info("Synthesizing content for mobile caregiver experience")
+            logger.info("Starting mobile synthesis with comprehensive content validation")
             
             # Extract request context and metadata
             request_context = consolidated_info.get("request_context", {})
@@ -63,26 +58,32 @@ class MobileSynthesizerAgent(Agent):
             session_metadata = consolidated_info.get("session_metadata", {})
             feedback_patterns = consolidated_info.get("feedback_patterns", {})
             
+            # ENHANCED: Validate all input sources
+            source_validation = self._validate_all_sources(
+                cultural_profile, qloo_intelligence, sensory_content, photo_analysis
+            )
+            
             # Determine mobile page structure based on request type
             page_structure = self._determine_page_structure(request_type)
             
-            # Synthesize content for mobile presentation
-            mobile_content = self._synthesize_mobile_content(
+            # CRITICAL FIX: Synthesize content with guaranteed population
+            mobile_content = self._synthesize_guaranteed_mobile_content(
                 request_type,
                 cultural_profile,
                 qloo_intelligence,
                 sensory_content,
-                photo_analysis
+                photo_analysis,
+                source_validation
             )
             
-            # Generate caregiver implementation guide
+            # Generate comprehensive caregiver implementation guide
             caregiver_guide = self._generate_comprehensive_caregiver_guide(
                 mobile_content,
                 request_type,
                 feedback_patterns
             )
             
-            # Create cultural context explanations - FIXED: Added missing method
+            # Create cultural context explanations
             cultural_context_explanations = self._create_cultural_context_explanations(
                 cultural_profile,
                 qloo_intelligence,
@@ -90,7 +91,7 @@ class MobileSynthesizerAgent(Agent):
             )
             
             # Structure feedback collection points
-            feedback_collection = self._structure_feedback_collection(request_type, mobile_content)
+            feedback_collection = self._structure_enhanced_feedback_collection(request_type, mobile_content)
             
             # Generate mobile accessibility features
             accessibility_features = self._generate_accessibility_features(mobile_content)
@@ -98,16 +99,18 @@ class MobileSynthesizerAgent(Agent):
             # Create emergency and fallback options
             emergency_options = self._create_emergency_fallback_options(request_type)
             
-            # Build complete mobile experience
+            # Build complete mobile experience with validation
             mobile_experience = {
                 "synthesis_metadata": {
                     "timestamp": datetime.utcnow().isoformat(),
                     "request_type": request_type,
                     "page_structure": page_structure["structure_type"],
                     "content_sources": self._document_content_sources(qloo_intelligence, sensory_content, photo_analysis),
+                    "source_validation": source_validation,
                     "caregiver_authority": "maintained_throughout",
                     "individual_focus": "prioritized",
-                    "cultural_approach": "enhancement_not_direction"
+                    "cultural_approach": "enhancement_not_direction",
+                    "guaranteed_content": True
                 },
                 "page_structure": page_structure,
                 "mobile_content": mobile_content,
@@ -124,148 +127,1392 @@ class MobileSynthesizerAgent(Agent):
                 }
             }
             
-            # Validate mobile experience quality
-            self._validate_mobile_experience_quality(mobile_experience)
+            # CRITICAL: Validate mobile experience has content
+            content_validation = self._validate_mobile_content_completeness(mobile_experience)
+            
+            if not content_validation["has_content"]:
+                logger.error("Mobile experience validation failed - creating emergency fallback")
+                return self._create_emergency_mobile_experience(consolidated_info)
             
             # Validate caregiver authority maintenance
             self._validate_caregiver_authority_compliance(mobile_experience)
             
-            logger.info("Mobile caregiver experience synthesized successfully")
+            logger.info(f"✅ Mobile synthesis completed successfully with {content_validation['content_count']} content items")
             return {"mobile_experience": mobile_experience}
             
         except Exception as e:
-            logger.error(f"Error synthesizing mobile experience: {str(e)}")
-            return self._create_fallback_mobile_experience(consolidated_info)
+            logger.error(f"Critical error in mobile synthesis: {str(e)}")
+            return self._create_emergency_mobile_experience(consolidated_info)
     
-    def _create_cultural_context_explanations(self, 
+    def _validate_all_sources(self, 
+                             cultural_profile: Dict[str, Any],
+                             qloo_intelligence: Dict[str, Any], 
+                             sensory_content: Dict[str, Any],
+                             photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate all input sources and document what's available."""
+        
+        validation = {
+            "cultural_profile_available": bool(cultural_profile.get("cultural_elements", {}).get("has_cultural_info")),
+            "qloo_recommendations_available": False,
+            "sensory_content_available": False,
+            "photo_analysis_available": bool(photo_analysis.get("analysis_metadata", {}).get("photo_analyzed")),
+            "content_sources": []
+        }
+        
+        # Validate Qloo intelligence
+        qloo_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+        if qloo_recommendations:
+            for entity_type, rec_data in qloo_recommendations.items():
+                if isinstance(rec_data, dict) and rec_data.get("available") and rec_data.get("entities"):
+                    validation["qloo_recommendations_available"] = True
+                    validation["content_sources"].append(f"qloo_{entity_type}")
+                    break
+        
+        # Validate sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    validation["sensory_content_available"] = True
+                    validation["content_sources"].append(f"sensory_{sense}")
+        
+        logger.info(f"Source validation: Cultural={validation['cultural_profile_available']}, "
+                   f"Qloo={validation['qloo_recommendations_available']}, "
+                   f"Sensory={validation['sensory_content_available']}, "
+                   f"Photo={validation['photo_analysis_available']}")
+        
+        return validation
+    
+    def _synthesize_guaranteed_mobile_content(self, 
+                                            request_type: str,
                                             cultural_profile: Dict[str, Any],
                                             qloo_intelligence: Dict[str, Any],
-                                            photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        FIXED: Create cultural context explanations for caregiver understanding.
+                                            sensory_content: Dict[str, Any],
+                                            photo_analysis: Dict[str, Any],
+                                            source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Synthesize mobile content with guaranteed non-empty arrays."""
         
-        Args:
-            cultural_profile: Cultural profile from Agent 2
-            qloo_intelligence: Qloo intelligence from Agent 3  
-            photo_analysis: Photo analysis from Agent 5
+        logger.info(f"Synthesizing guaranteed content for {request_type}")
+        
+        # CRITICAL FIX: Build content with multiple fallback layers
+        mobile_content = {
+            "content_synthesis_approach": "guaranteed_content_with_multiple_fallbacks",
+            "primary_content": {},
+            "enhancement_content": {},
+            "caregiver_implementation": {},
+            "cultural_intelligence_insights": {},
+            "individual_customization_options": {},
+            "anti_bias_safeguards": {
+                "individual_preferences_override": "all_suggestions_are_starting_points",
+                "caregiver_authority": "caregiver_makes_all_decisions",
+                "cultural_approach": "enhancement_not_prescription",
+                "adaptation_required": "customize_based_on_individual_response"
+            }
+        }
+        
+        # LAYER 1: Try to build from successful sources
+        try:
+            mobile_content["primary_content"] = self._build_guaranteed_primary_content(
+                request_type, qloo_intelligence, sensory_content, source_validation
+            )
+        except Exception as e:
+            logger.warning(f"Primary content synthesis failed: {e}")
+            mobile_content["primary_content"] = self._create_fallback_primary_content(request_type)
+        
+        # LAYER 2: Enhancement content with fallbacks
+        try:
+            mobile_content["enhancement_content"] = self._build_guaranteed_enhancement_content(
+                cultural_profile, photo_analysis, qloo_intelligence, source_validation
+            )
+        except Exception as e:
+            logger.warning(f"Enhancement content synthesis failed: {e}")
+            mobile_content["enhancement_content"] = self._create_fallback_enhancement_content()
+        
+        # LAYER 3: Implementation guidance
+        try:
+            mobile_content["caregiver_implementation"] = self._build_implementation_content(
+                sensory_content, mobile_content["primary_content"]
+            )
+        except Exception as e:
+            logger.warning(f"Implementation content synthesis failed: {e}")
+            mobile_content["caregiver_implementation"] = self._create_fallback_implementation_content()
+        
+        # LAYER 4: Cultural insights
+        mobile_content["cultural_intelligence_insights"] = self._build_cultural_insights(
+            qloo_intelligence, cultural_profile, photo_analysis, source_validation
+        )
+        
+        # LAYER 5: Customization options
+        mobile_content["individual_customization_options"] = self._build_customization_options(request_type)
+        
+        # FINAL VALIDATION: Ensure we have content
+        if self._is_mobile_content_empty(mobile_content):
+            logger.error("All content synthesis failed - using emergency content")
+            mobile_content = self._create_emergency_mobile_content(request_type)
+        
+        return mobile_content
+    
+    def _build_guaranteed_primary_content(self, 
+                                        request_type: str,
+                                        qloo_intelligence: Dict[str, Any],
+                                        sensory_content: Dict[str, Any],
+                                        source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Build primary content with multiple fallback strategies."""
+        
+        if request_type == "dashboard":
+            return self._create_guaranteed_dashboard_content(
+                qloo_intelligence, sensory_content, source_validation
+            )
+        elif request_type == "meal":
+            return self._create_guaranteed_meal_content(sensory_content, source_validation)
+        elif request_type == "conversation":
+            return self._create_guaranteed_conversation_content(sensory_content, qloo_intelligence, source_validation)
+        elif request_type == "music":
+            return self._create_guaranteed_music_content(sensory_content, qloo_intelligence, source_validation)
+        elif request_type == "video":
+            return self._create_guaranteed_video_content(sensory_content, qloo_intelligence, source_validation)
+        else:
+            return self._create_guaranteed_general_content(sensory_content, qloo_intelligence, source_validation)
+    
+    def _create_guaranteed_dashboard_content(self, 
+                                           qloo_intelligence: Dict[str, Any],
+                                           sensory_content: Dict[str, Any],
+                                           source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create dashboard content with guaranteed population."""
+        
+        dashboard_content = {
+            "content_type": "comprehensive_dashboard",
+            "today_highlights": [],
+            "quick_activities": [],
+            "multi_sensory_experiences": {},
+            "cultural_discoveries": []
+        }
+        
+        # STRATEGY 1: Extract from sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    elements = content.get("elements", [])
+                    for element in elements[:2]:  # Top 2 per sense
+                        dashboard_content["today_highlights"].append({
+                            "sensory_domain": sense,
+                            "activity": element.get("content_subtype", f"{sense}_activity"),
+                            "title": element.get("activity", element.get("name", f"{sense.capitalize()} Experience")),
+                            "quick_description": self._create_quick_description(element, sense),
+                            "implementation_time": self._estimate_implementation_time(element),
+                            "caregiver_preparation": self._extract_preparation_steps(element),
+                            "individual_customization": "Adapt based on their response and preferences"
+                        })
+        
+        # STRATEGY 2: Extract quick activities from sensory content
+        dashboard_content["quick_activities"] = self._extract_guaranteed_quick_activities(sensory_content_data)
+        
+        # STRATEGY 3: Extract cultural discoveries from Qloo
+        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+        if cultural_recommendations:
+            for entity_type, recommendations in cultural_recommendations.items():
+                if isinstance(recommendations, dict) and recommendations.get("available") and recommendations.get("entities"):
+                    entities = recommendations.get("entities", [])
+                    for entity in entities[:2]:  # Top 2 per type
+                        dashboard_content["cultural_discoveries"].append({
+                            "discovery_type": recommendations.get("entity_type_category", "cultural"),
+                            "title": entity.get("name", "Cultural Discovery"),
+                            "why_suggested": "Based on cultural intelligence and individual context",
+                            "how_to_explore": entity.get("caregiver_guidance", {}).get("implementation", "Explore together"),
+                            "cultural_connection": entity.get("cultural_context", {}).get("why_suggested", "Cultural exploration"),
+                            "individual_note": "Use this as a starting point - customize based on their interests"
+                        })
+        
+        # STRATEGY 4: Multi-sensory experiences
+        cross_sensory_experiences = sensory_content.get("cross_sensory_experiences", [])
+        if cross_sensory_experiences:
+            dashboard_content["multi_sensory_experiences"] = {
+                "available": True,
+                "experiences": cross_sensory_experiences[:3]  # Top 3
+            }
+        
+        # CRITICAL FALLBACK: Ensure we have content
+        total_items = (len(dashboard_content["today_highlights"]) + 
+                      len(dashboard_content["quick_activities"]) + 
+                      len(dashboard_content["cultural_discoveries"]))
+        
+        if total_items < 3:
+            logger.warning(f"Dashboard content insufficient ({total_items} items) - adding guaranteed fallbacks")
+            dashboard_content = self._add_guaranteed_dashboard_fallbacks(dashboard_content)
+        
+        logger.info(f"Dashboard content created: {len(dashboard_content['today_highlights'])} highlights, "
+                   f"{len(dashboard_content['quick_activities'])} quick activities, "
+                   f"{len(dashboard_content['cultural_discoveries'])} discoveries")
+        
+        return dashboard_content
+    
+    def _add_guaranteed_dashboard_fallbacks(self, dashboard_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Add guaranteed fallback content to dashboard."""
+        
+        # Ensure minimum highlights
+        if len(dashboard_content["today_highlights"]) < 2:
+            fallback_highlights = [
+                {
+                    "sensory_domain": "auditory",
+                    "activity": "music_conversation",
+                    "title": "Music Memory Conversation",
+                    "quick_description": "Talk about favorite songs and music memories",
+                    "implementation_time": "10-20 minutes",
+                    "caregiver_preparation": ["Choose quiet time together", "Think of music topics"],
+                    "individual_customization": "Focus on music they've mentioned enjoying"
+                },
+                {
+                    "sensory_domain": "visual",
+                    "activity": "photo_viewing",
+                    "title": "Family Photo Time",
+                    "quick_description": "Look at family photos and share memories",
+                    "implementation_time": "15-30 minutes",
+                    "caregiver_preparation": ["Gather family photos", "Ensure good lighting"],
+                    "individual_customization": "Use photos that usually bring positive reactions"
+                }
+            ]
             
-        Returns:
-            Cultural context explanations with caregiver guidance
-        """
+            needed = 2 - len(dashboard_content["today_highlights"])
+            dashboard_content["today_highlights"].extend(fallback_highlights[:needed])
         
-        explanations = {
-            "approach_explanation": {
-                "title": "How Cultural Intelligence Works",
-                "description": "These suggestions use cultural data to enhance possibilities, not to make assumptions about individual preferences",
-                "key_principles": [
-                    "Cultural background provides starting points, not predetermined preferences",
-                    "Individual responses always override cultural suggestions", 
-                    "Heritage information enhances exploration opportunities",
-                    "Era context provides conversation topics, not assumptions about taste"
+        # Ensure minimum quick activities
+        if len(dashboard_content["quick_activities"]) < 3:
+            fallback_quick = [
+                {
+                    "title": "Gentle Hand Massage",
+                    "duration": "5-10 minutes",
+                    "preparation": "Gentle lotion if no allergies",
+                    "description": "Comforting tactile experience"
+                },
+                {
+                    "title": "Nature Sounds",
+                    "duration": "10+ minutes",
+                    "preparation": "Smartphone or music device",
+                    "description": "Gentle background sounds"
+                },
+                {
+                    "title": "Simple Conversation",
+                    "duration": "5-20 minutes",
+                    "preparation": "No special preparation needed",
+                    "description": "Talk about their day or feelings"
+                }
+            ]
+            
+            needed = 3 - len(dashboard_content["quick_activities"])
+            dashboard_content["quick_activities"].extend(fallback_quick[:needed])
+        
+        # Ensure minimum cultural discoveries
+        if len(dashboard_content["cultural_discoveries"]) < 1:
+            dashboard_content["cultural_discoveries"].append({
+                "discovery_type": "general",
+                "title": "Meaningful Conversations",
+                "why_suggested": "Human connection is universally important",
+                "how_to_explore": "Ask open-ended questions about their experiences and feelings",
+                "cultural_connection": "Personal stories and memories",
+                "individual_note": "Let them guide the conversation topics"
+            })
+        
+        return dashboard_content
+    
+    def _extract_guaranteed_quick_activities(self, sensory_content_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Extract quick activities with guaranteed minimum content."""
+        
+        quick_activities = []
+        
+        if isinstance(sensory_content_data, dict):
+            for sense, content in sensory_content_data.items():
+                if isinstance(content, dict) and content.get("available") and content.get("elements"):
+                    elements = content["elements"]
+                    for element in elements:
+                        # Identify quick activities (5-15 minutes)
+                        if element.get("content_subtype") in [
+                            "ambient_sound", "cultural_scent", "texture_exploration", 
+                            "spice_exploration", "gentle_touch", "photo_viewing"
+                        ]:
+                            quick_activities.append({
+                                "title": element.get("activity", element.get("name", f"{sense.capitalize()} Activity")),
+                                "duration": "5-15 minutes",
+                                "preparation": element.get("implementation", {}).get("setup", "Minimal setup"),
+                                "description": element.get("description", f"Quick {sense} experience")
+                            })
+                        
+                        if len(quick_activities) >= 4:  # Limit to prevent overflow
+                            break
+        
+        # GUARANTEED FALLBACK: Ensure minimum quick activities
+        if len(quick_activities) < 2:
+            fallback_activities = [
+                {
+                    "title": "Deep Breathing Together",
+                    "duration": "5 minutes",
+                    "preparation": "Comfortable seating",
+                    "description": "Calming breathing exercise"
+                },
+                {
+                    "title": "Hand Holding",
+                    "duration": "5-10 minutes", 
+                    "preparation": "None needed",
+                    "description": "Simple comforting physical connection"
+                }
+            ]
+            needed = 2 - len(quick_activities)
+            quick_activities.extend(fallback_activities[:needed])
+        
+        return quick_activities
+    
+    def _create_guaranteed_meal_content(self, 
+                                      sensory_content: Dict[str, Any],
+                                      source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create meal content with guaranteed recipes."""
+        
+        meal_content = {
+            "content_type": "meal_experience",
+            "featured_recipe": None,
+            "alternative_recipes": [],
+            "cooking_together_guide": {},
+            "sensory_engagement": [],
+            "memory_conversation_starters": [],
+            "safety_considerations": []
+        }
+        
+        # Extract recipes from sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        gustatory_content = sensory_content_data.get("gustatory", {})
+        
+        if gustatory_content.get("available") and gustatory_content.get("elements"):
+            elements = gustatory_content["elements"]
+            recipes = [elem for elem in elements if "recipe" in elem.get("content_subtype", "")]
+            
+            if recipes:
+                meal_content["featured_recipe"] = recipes[0]
+                meal_content["alternative_recipes"] = recipes[1:3]
+                meal_content["cooking_together_guide"] = self._create_cooking_guide(recipes[0])
+        
+        # GUARANTEED FALLBACK: Create recipe if none found
+        if not meal_content["featured_recipe"]:
+            logger.warning("No recipes found - creating guaranteed fallback recipe")
+            meal_content["featured_recipe"] = self._create_guaranteed_fallback_recipe()
+            meal_content["cooking_together_guide"] = self._create_cooking_guide(meal_content["featured_recipe"])
+        
+        # Add guaranteed sensory engagement
+        meal_content["sensory_engagement"] = [
+            "Enjoy cooking aromas together",
+            "Feel ingredient textures",
+            "Taste small samples during cooking",
+            "Listen to cooking sounds",
+            "Appreciate visual presentation"
+        ]
+        
+        # Add guaranteed conversation starters
+        meal_content["memory_conversation_starters"] = [
+            "What was your favorite family recipe?",
+            "Who did the cooking in your family?",
+            "What foods remind you of special occasions?",
+            "Tell me about meals you enjoyed growing up"
+        ]
+        
+        # Add guaranteed safety considerations
+        meal_content["safety_considerations"] = [
+            "Supervise all knife and heat use",
+            "Check for food allergies",
+            "Ensure safe kitchen environment",
+            "Break cooking into simple steps"
+        ]
+        
+        return meal_content
+    
+    def _create_guaranteed_fallback_recipe(self) -> Dict[str, Any]:
+        """Create guaranteed fallback recipe that always works."""
+        
+        return {
+            "content_subtype": "universal_comfort_recipe",
+            "activity": "Making tea and simple snacks together",
+            "name": "Tea Time with Simple Snacks",
+            "description": "Comforting warm beverage with easy snacks",
+            "recipe_data": {
+                "name": "Tea Time with Simple Snacks",
+                "description": "A simple, safe cooking experience focused on connection",
+                "prep_time": "5 minutes",
+                "cook_time": "5 minutes",
+                "total_time": "10 minutes",
+                "servings": "2 people",
+                "difficulty": "very easy",
+                "ingredients": [
+                    {"item": "Tea bags or instant tea", "amount": "2", "notes": "Their preferred type"},
+                    {"item": "Hot water", "amount": "2 cups", "notes": "Not boiling hot"},
+                    {"item": "Simple crackers or cookies", "amount": "A few", "notes": "Their favorites"},
+                    {"item": "Honey or sugar", "amount": "Optional", "notes": "If desired"}
+                ],
+                "instructions": [
+                    {"step": 1, "instruction": "Heat water to warm, not boiling", "time": "3 minutes", "notes": "Safety first"},
+                    {"step": 2, "instruction": "Prepare tea together", "time": "2 minutes", "notes": "Let them help"},
+                    {"step": 3, "instruction": "Arrange snacks on plate", "time": "2 minutes", "notes": "Make it look nice"},
+                    {"step": 4, "instruction": "Sit together and enjoy", "time": "10+ minutes", "notes": "Focus on conversation"}
                 ]
             },
-            "data_sources_explained": {
-                "heritage_sharing": self._explain_heritage_usage(cultural_profile),
-                "qloo_intelligence": self._explain_qloo_usage(qloo_intelligence),
-                "photo_analysis": self._explain_photo_usage(photo_analysis),
-                "era_context": self._explain_era_usage(cultural_profile)
-            },
-            "how_to_use_suggestions": {
-                "starting_points": "Use all suggestions as conversation starters and activity ideas",
-                "individual_focus": "Pay attention to their actual responses and preferences",
-                "customization": "Modify everything based on what they actually enjoy",
-                "flexibility": "Feel free to ignore suggestions that don't seem right for them"
-            },
-            "bias_prevention_note": {
-                "cultural_assumptions": "We never assume someone likes something because of their heritage",
-                "individual_priority": "Their personal interests and reactions are most important",
-                "stereotype_avoidance": "Cultural information is used for exploration, not prescription",
-                "caregiver_authority": "You know them best - trust your judgment over any suggestion"
-            },
-            "practical_guidance": {
-                "try_suggestions": "Start with one or two activities that seem most appropriate",
-                "watch_responses": "Notice what generates positive reactions",
-                "build_on_success": "Do more of what works, less of what doesn't",
-                "document_preferences": "Keep notes about what they enjoy for future reference"
+            "caregiver_guidance": {
+                "implementation": "Focus on the shared experience, not perfect execution",
+                "engagement": "Talk about favorite beverages and snack memories",
+                "customization": "Use their preferred tea and snacks",
+                "safety": "Ensure appropriate temperature and check for allergies"
             }
         }
-        
-        return explanations
     
-    def _explain_heritage_usage(self, cultural_profile: Dict[str, Any]) -> Dict[str, str]:
-        """Explain how heritage information is used."""
+    def _create_guaranteed_conversation_content(self, 
+                                              sensory_content: Dict[str, Any],
+                                              qloo_intelligence: Dict[str, Any],
+                                              source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create conversation content with guaranteed topics."""
         
-        cultural_elements = cultural_profile.get("cultural_elements", {})
-        has_heritage = cultural_elements.get("has_cultural_info", False)
+        conversation_content = {
+            "content_type": "conversation_experience",
+            "conversation_starters": [],
+            "follow_up_questions": [],
+            "memory_exploration_topics": [],
+            "cultural_conversation_enhancements": []
+        }
         
-        if not has_heritage:
-            return {
-                "usage": "No specific heritage information provided",
-                "approach": "Using general cultural exploration activities"
-            }
+        # Extract from sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        auditory_content = sensory_content_data.get("auditory", {})
+        
+        if auditory_content.get("available") and auditory_content.get("elements"):
+            elements = auditory_content["elements"]
+            conversation_elements = [elem for elem in elements if "conversation" in elem.get("content_subtype", "")]
+            
+            for element in conversation_elements[:3]:
+                conversation_content["conversation_starters"].append({
+                    "topic": element.get("topic", "General conversation"),
+                    "opening": element.get("conversation_guide", {}).get("opening", "Let's talk about..."),
+                    "follow_ups": element.get("conversation_guide", {}).get("follow_up_questions", []),
+                    "caregiver_guidance": element.get("caregiver_guidance", {}),
+                    "individual_adaptation": "Customize based on their interests and comfort"
+                })
+        
+        # GUARANTEED FALLBACK: Add universal conversation topics
+        if len(conversation_content["conversation_starters"]) < 3:
+            guaranteed_starters = [
+                {
+                    "topic": "Daily experiences and feelings",
+                    "opening": "How are you feeling today?",
+                    "follow_ups": [
+                        "What's something good that happened recently?",
+                        "Is there anything on your mind?",
+                        "What would make today better?"
+                    ],
+                    "caregiver_guidance": {
+                        "implementation": "Start with simple, present-focused questions",
+                        "engagement": "Listen actively and validate their responses",
+                        "customization": "Follow their emotional state and interests"
+                    },
+                    "individual_adaptation": "Adjust depth based on their communication abilities"
+                },
+                {
+                    "topic": "Favorite memories and experiences",
+                    "opening": "Tell me about something you enjoyed doing",
+                    "follow_ups": [
+                        "What did you like most about that?",
+                        "Who were you with?",
+                        "How did it make you feel?"
+                    ],
+                    "caregiver_guidance": {
+                        "implementation": "Let them choose what memories to share",
+                        "engagement": "Show genuine interest in their stories",
+                        "customization": "Don't pressure for specific details"
+                    },
+                    "individual_adaptation": "Focus on emotions rather than facts"
+                },
+                {
+                    "topic": "Family and relationships",
+                    "opening": "Tell me about people who are important to you",
+                    "follow_ups": [
+                        "What do you like about spending time with them?",
+                        "What makes them special?",
+                        "What's a happy memory you have together?"
+                    ],
+                    "caregiver_guidance": {
+                        "implementation": "Be prepared for emotional responses",
+                        "engagement": "Celebrate all relationships they mention",
+                        "customization": "Include pets and other meaningful connections"
+                    },
+                    "individual_adaptation": "Respect if some topics are difficult"
+                }
+            ]
+            
+            needed = 3 - len(conversation_content["conversation_starters"])
+            conversation_content["conversation_starters"].extend(guaranteed_starters[:needed])
+        
+        # Add guaranteed memory exploration topics
+        conversation_content["memory_exploration_topics"] = [
+            "Childhood homes and neighborhoods",
+            "School experiences and friends",
+            "Work and career memories",
+            "Travel and special places",
+            "Holidays and celebrations",
+            "Hobbies and interests"
+        ]
+        
+        return conversation_content
+    
+    def _create_guaranteed_music_content(self, 
+                                       sensory_content: Dict[str, Any],
+                                       qloo_intelligence: Dict[str, Any],
+                                       source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create music content with guaranteed selections."""
+        
+        music_content = {
+            "content_type": "music_experience",
+            "music_selections": [],
+            "engagement_activities": [],
+            "cultural_connections": [],
+            "multi_sensory_enhancements": []
+        }
+        
+        # Extract from sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        auditory_content = sensory_content_data.get("auditory", {})
+        
+        if auditory_content.get("available") and auditory_content.get("elements"):
+            elements = auditory_content["elements"]
+            music_elements = [elem for elem in elements if elem.get("content_subtype") == "youtube_music"]
+            
+            for element in music_elements:
+                music_content["music_selections"].append({
+                    "title": element.get("title", "Music Selection"),
+                    "artist": element.get("artist", "Various Artists"),
+                    "youtube_url": element.get("youtube_url", ""),
+                    "cultural_connection": element.get("cultural_connection", {}),
+                    "engagement_guide": element.get("caregiver_guidance", {}),
+                    "individual_customization": "Adjust based on their musical preferences"
+                })
+        
+        # GUARANTEED FALLBACK: Add universal music suggestions
+        if not music_content["music_selections"]:
+            music_content["music_selections"] = [
+                {
+                    "title": "Classic Favorites Playlist",
+                    "artist": "Various Classic Artists",
+                    "youtube_url": "Search: 'classic music playlist'",
+                    "cultural_connection": {"type": "universal_appeal"},
+                    "engagement_guide": {
+                        "implementation": "Play gentle, familiar music",
+                        "engagement": "Ask about their music preferences",
+                        "customization": "Adjust volume and song selection"
+                    },
+                    "individual_customization": "Focus on music that brings positive responses"
+                }
+            ]
+        
+        # Add guaranteed engagement activities
+        music_content["engagement_activities"] = [
+            "Gentle swaying or movement to rhythm",
+            "Singing along to familiar songs",
+            "Tapping hands or feet to the beat",
+            "Sharing memories about favorite songs"
+        ]
+        
+        # Add guaranteed multi-sensory enhancements
+        music_content["multi_sensory_enhancements"] = [
+            "Combine with gentle movement or dance",
+            "Add comfortable seating and lighting",
+            "Include visual elements like album covers",
+            "Incorporate tactile elements like holding hands"
+        ]
+        
+        return music_content
+    
+    def _create_guaranteed_video_content(self, 
+                                       sensory_content: Dict[str, Any],
+                                       qloo_intelligence: Dict[str, Any],
+                                       source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create video content with guaranteed selections."""
+        
+        video_content = {
+            "content_type": "video_experience",
+            "video_selections": [],
+            "viewing_guidance": [],
+            "discussion_prompts": []
+        }
+        
+        # Extract from sensory content
+        sensory_content_data = sensory_content.get("sensory_content", {})
+        visual_content = sensory_content_data.get("visual", {})
+        
+        if visual_content.get("available") and visual_content.get("elements"):
+            elements = visual_content["elements"]
+            video_elements = [elem for elem in elements if elem.get("content_subtype") == "youtube_video"]
+            
+            for element in video_elements:
+                video_content["video_selections"].append({
+                    "title": element.get("title", "Video Selection"),
+                    "content_source": element.get("original_content", "Various"),
+                    "youtube_url": element.get("youtube_url", ""),
+                    "viewing_notes": element.get("viewing_notes", {}),
+                    "engagement_guidance": element.get("caregiver_guidance", {}),
+                    "individual_adaptation": "Adjust based on attention and interest"
+                })
+        
+        # GUARANTEED FALLBACK: Add universal video suggestions
+        if not video_content["video_selections"]:
+            video_content["video_selections"] = [
+                {
+                    "title": "Nature and Travel Videos",
+                    "content_source": "Various nature content",
+                    "youtube_url": "Search: 'peaceful nature videos'",
+                    "viewing_notes": {"duration": "Start with 5-15 minutes"},
+                    "engagement_guidance": {
+                        "implementation": "Watch calming nature content together",
+                        "engagement": "Comment on what you see together",
+                        "customization": "Choose content they find interesting"
+                    },
+                    "individual_adaptation": "Focus on content that brings positive reactions"
+                }
+            ]
+        
+        # Add guaranteed viewing guidance
+        video_content["viewing_guidance"] = [
+            "Start with short segments (5-15 minutes)",
+            "Ensure comfortable seating and good lighting",
+            "Be prepared to pause for comments or questions",
+            "Watch for attention span and adjust accordingly"
+        ]
+        
+        # Add guaranteed discussion prompts
+        video_content["discussion_prompts"] = [
+            "What do you think about what we're watching?",
+            "Does this remind you of anything?",
+            "What's your favorite part so far?",
+            "Would you like to watch something similar?"
+        ]
+        
+        return video_content
+    
+    def _create_guaranteed_general_content(self, 
+                                         sensory_content: Dict[str, Any],
+                                         qloo_intelligence: Dict[str, Any],
+                                         source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Create general content for other request types."""
         
         return {
-            "usage": "Heritage information used to find conversation topics and activity ideas",
-            "approach": "Broad exploration of cultural themes without assumptions about preferences",
-            "note": "Heritage provides starting points - their individual interests matter most"
+            "content_type": "general_experience",
+            "available_activities": [
+                {
+                    "activity_type": "conversation",
+                    "title": "Meaningful Conversation",
+                    "description": "Talk about their day, feelings, or memories",
+                    "duration": "10-30 minutes",
+                    "implementation": "Ask open-ended questions and listen actively"
+                },
+                {
+                    "activity_type": "comfort",
+                    "title": "Comfort Activities",
+                    "description": "Gentle hand holding, soft music, or familiar objects",
+                    "duration": "5-20 minutes",
+                    "implementation": "Focus on what brings them comfort"
+                },
+                {
+                    "activity_type": "sensory",
+                    "title": "Simple Sensory Experience",
+                    "description": "Gentle textures, pleasant scents, or soothing sounds",
+                    "duration": "5-15 minutes",
+                    "implementation": "Monitor their responses and adjust accordingly"
+                }
+            ],
+            "implementation_guidance": "Choose activities based on current mood and energy level",
+            "individual_focus": "Customize all activities based on their preferences and responses"
         }
     
-    def _explain_qloo_usage(self, qloo_intelligence: Dict[str, Any]) -> Dict[str, str]:
-        """Explain how Qloo cultural intelligence is used."""
+    def _build_guaranteed_enhancement_content(self, 
+                                            cultural_profile: Dict[str, Any],
+                                            photo_analysis: Dict[str, Any],
+                                            qloo_intelligence: Dict[str, Any],
+                                            source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Build enhancement content with guaranteed elements."""
         
-        qloo_meta = qloo_intelligence.get("qloo_metadata", {})
-        api_calls = qloo_meta.get("api_calls_made", 0)
-        
-        if api_calls == 0:
-            return {
-                "usage": "Qloo cultural intelligence not available for this session",
-                "fallback": "Using general activity suggestions instead"
-            }
-        
-        return {
-            "usage": f"Qloo made {api_calls} cultural intelligence queries to find diverse suggestions",
-            "approach": "Cross-domain cultural discovery without stereotypical assumptions",
-            "note": "Qloo suggestions are starting points for exploration - customize based on individual response"
+        enhancement_content = {
+            "cultural_intelligence_enhancements": [],
+            "photo_memory_enhancements": [],
+            "cross_domain_connections": {},
+            "era_context_enhancements": {},
+            "individual_customization_suggestions": []
         }
-    
-    def _explain_photo_usage(self, photo_analysis: Dict[str, Any]) -> Dict[str, str]:
-        """Explain how photo analysis is used."""
         
-        analysis_meta = photo_analysis.get("analysis_metadata", {})
-        photo_analyzed = analysis_meta.get("photo_analyzed", False)
+        # Extract Qloo enhancements
+        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+        for entity_type, recommendations in cultural_recommendations.items():
+            if isinstance(recommendations, dict) and recommendations.get("available") and recommendations.get("entities"):
+                entities = recommendations.get("entities", [])
+                for entity in entities[:2]:
+                    enhancement_content["cultural_intelligence_enhancements"].append({
+                        "enhancement_type": recommendations.get("entity_type_category", "cultural"),
+                        "suggestion": entity.get("name", "Cultural Enhancement"),
+                        "cultural_context": entity.get("cultural_context", {}),
+                        "implementation_guidance": entity.get("caregiver_guidance", {}),
+                        "individual_note": "Use as starting point - adapt based on their actual interests"
+                    })
         
-        if not photo_analyzed:
-            return {
-                "usage": "No photo analysis performed",
-                "note": "Photo-based suggestions not available"
-            }
+        # Extract photo enhancements
+        photo_suggestions = photo_analysis.get("conversation_suggestions", [])
+        enhancement_content["photo_memory_enhancements"] = photo_suggestions
         
-        return {
-            "usage": "Photo analyzed for visible elements and potential conversation topics",
-            "approach": "Factual observation of photo contents, not cultural assumptions",
-            "note": "Photo analysis provides conversation starters based on what's actually visible"
-        }
-    
-    def _explain_era_usage(self, cultural_profile: Dict[str, Any]) -> Dict[str, str]:
-        """Explain how era information is used."""
+        # Extract cross-domain connections
+        enhancement_content["cross_domain_connections"] = qloo_intelligence.get("cross_domain_connections", {})
         
+        # Extract era context
         era_context = cultural_profile.get("era_context", {})
-        has_era = era_context.get("has_era_context", False)
-        
-        if not has_era:
-            return {
-                "usage": "No specific era information available",
-                "approach": "Using general activities suitable for all ages"
+        if era_context.get("has_era_context"):
+            enhancement_content["era_context_enhancements"] = {
+                "available": True,
+                "birth_decade": (era_context.get("birth_year", 0) // 10) * 10 if era_context.get("birth_year") else None,
+                "formative_decades": era_context.get("decades_lived", [])[-3:] if era_context.get("decades_lived") else [],
+                "cultural_eras": era_context.get("cultural_eras", {}),
+                "usage_note": "Use era context as conversation starters, not assumptions about preferences"
             }
         
-        birth_year = era_context.get("birth_year")
-        decades_lived = era_context.get("decades_lived", [])
+        # Add guaranteed customization suggestions
+        enhancement_content["individual_customization_suggestions"] = [
+            "Adapt all activities based on their individual responses",
+            "Use cultural elements as starting points for exploration",
+            "Focus on what generates positive reactions",
+            "Always respect their 'no' and try alternatives",
+            "Celebrate any level of engagement or participation"
+        ]
+        
+        return enhancement_content
+    
+    def _build_implementation_content(self, 
+                                    sensory_content: Dict[str, Any],
+                                    primary_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Build implementation guidance with guaranteed elements."""
         
         return {
-            "usage": f"Era context from {birth_year} provides historical and cultural background",
-            "decades_lived": f"Lived through: {', '.join(decades_lived[-4:])}",  # Recent decades
-            "approach": "Era used for conversation topics and content discovery, not taste assumptions",
-            "note": "Individual experiences within any era vary greatly - follow their specific interests"
+            "getting_started_guide": {
+                "step_1": "Choose one activity that matches their current mood and energy",
+                "step_2": "Prepare any materials needed in advance",
+                "step_3": "Create a comfortable, distraction-free environment", 
+                "step_4": "Start with simple engagement and build based on response",
+                "step_5": "Watch for positive responses and adapt accordingly"
+            },
+            "sensory_implementation_guides": self._create_guaranteed_sensory_guides(),
+            "multi_sensory_implementation": [],
+            "troubleshooting_guide": {
+                "no_response": "Try a different activity or return to this later",
+                "negative_response": "Stop immediately and try something comforting",
+                "overwhelm": "Reduce stimulation and focus on one simple element",
+                "fatigue": "Shorten the activity and focus on comfort",
+                "agitation": "Switch to calming activities like gentle music or soft textures"
+            },
+            "success_indicators": {
+                "positive_signs": [
+                    "Facial expressions of interest or pleasure",
+                    "Verbal responses or questions",
+                    "Physical engagement (reaching, touching, moving)",
+                    "Sustained attention to the activity",
+                    "Requests to continue or do more"
+                ],
+                "when_to_continue": "Any positive response indicates success",
+                "when_to_adapt": "If response is neutral, try modifications",
+                "when_to_stop": "Any negative response or signs of distress"
+            }
+        }
+    
+    def _create_guaranteed_sensory_guides(self) -> Dict[str, Dict[str, List[str]]]:
+        """Create guaranteed sensory implementation guides."""
+        
+        return {
+            "auditory": {
+                "preparation": ["Choose quiet environment", "Test volume levels"],
+                "implementation_steps": ["Start with low volume", "Watch for responses"],
+                "safety_considerations": ["Monitor for sensitivity", "Be ready to stop"],
+                "customization_options": ["Adjust volume", "Change music type", "Add or remove visual elements"]
+            },
+            "visual": {
+                "preparation": ["Ensure good lighting", "Have comfortable seating"],
+                "implementation_steps": ["Present visual materials slowly", "Allow processing time"],
+                "safety_considerations": ["Check vision abilities", "Avoid overwhelming content"],
+                "customization_options": ["Adjust brightness", "Change viewing distance", "Switch content types"]
+            },
+            "tactile": {
+                "preparation": ["Gather safe materials", "Check for allergies or sensitivities"],
+                "implementation_steps": ["Introduce textures gently", "Let them guide exploration"],
+                "safety_considerations": ["Ensure all materials are safe", "Monitor comfort level"],
+                "customization_options": ["Change textures", "Adjust pressure", "Add or remove elements"]
+            },
+            "gustatory": {
+                "preparation": ["Check dietary restrictions", "Prepare safe ingredients"],
+                "implementation_steps": ["Start with familiar tastes", "Allow them to lead"],
+                "safety_considerations": ["Check for allergies", "Ensure safe temperatures"],
+                "customization_options": ["Adjust flavors", "Change textures", "Modify portions"]
+            },
+            "olfactory": {
+                "preparation": ["Choose mild scents", "Ensure good ventilation"],
+                "implementation_steps": ["Introduce scents gradually", "Watch for reactions"],
+                "safety_considerations": ["Check for allergies", "Avoid strong scents"],
+                "customization_options": ["Change intensity", "Switch scents", "Remove if needed"]
+            }
+        }
+    
+    def _build_cultural_insights(self, 
+                               qloo_intelligence: Dict[str, Any],
+                               cultural_profile: Dict[str, Any],
+                               photo_analysis: Dict[str, Any],
+                               source_validation: Dict[str, Any]) -> Dict[str, Any]:
+        """Build cultural insights with guaranteed content."""
+        
+        cultural_insights = {
+            "why_these_suggestions": {
+                "approach": "individual_first_cultural_enhancement",
+                "data_sources": [],
+                "cultural_intelligence_note": "These suggestions use cultural intelligence to enhance possibilities, not prescribe preferences",
+                "individual_priority": "Their individual responses and preferences always override these suggestions"
+            },
+            "cultural_connections_explained": [],
+            "era_context_insights": {},
+            "photo_cultural_insights": {},
+            "customization_guidance": {
+                "use_suggestions_as": "starting_points_for_exploration",
+                "adapt_based_on": "their_individual_responses_and_preferences",
+                "remember": "cultural_background_does_not_determine_individual_preferences",
+                "focus_on": "what_they_actually_enjoy_and_respond_to_positively"
+            }
+        }
+        
+        # Document available data sources
+        if source_validation["qloo_recommendations_available"]:
+            cultural_insights["why_these_suggestions"]["data_sources"].append("Qloo cultural intelligence API")
+        if source_validation["cultural_profile_available"]:
+            cultural_insights["why_these_suggestions"]["data_sources"].append("Individual heritage sharing")
+        if source_validation["photo_analysis_available"]:
+            cultural_insights["why_these_suggestions"]["data_sources"].append("Photo cultural analysis")
+        if source_validation["sensory_content_available"]:
+            cultural_insights["why_these_suggestions"]["data_sources"].append("Multi-sensory content generation")
+        
+        # Always include basic source
+        if not cultural_insights["why_these_suggestions"]["data_sources"]:
+            cultural_insights["why_these_suggestions"]["data_sources"] = ["Caregiver input and universal human needs"]
+        
+        # Add era context if available
+        era_context = cultural_profile.get("era_context", {})
+        if era_context.get("has_era_context"):
+            cultural_insights["era_context_insights"] = {
+                "birth_year": era_context.get("birth_year"),
+                "decades_lived": era_context.get("decades_lived", []),
+                "usage_note": "Era context provides factual background - individual experiences vary greatly",
+                "customization": "Use era information to start conversations, but focus on their specific memories"
+            }
+        
+        return cultural_insights
+    
+    def _build_customization_options(self, request_type: str) -> Dict[str, Any]:
+        """Build customization options with guaranteed content."""
+        
+        base_customization = {
+            "timing_adjustments": {
+                "activity_duration": "Adjust from 5 minutes to 1+ hours based on engagement",
+                "time_of_day": "Choose times when they're most alert and comfortable",
+                "frequency": "Can be daily, weekly, or as-needed based on enjoyment"
+            },
+            "intensity_adjustments": {
+                "sensory_intensity": "Adjust volume, brightness, scent strength based on sensitivity",
+                "complexity": "Simplify or elaborate based on current cognitive abilities",
+                "social_interaction": "Adapt from quiet solo activities to more social engagement"
+            },
+            "content_customization": {
+                "topic_selection": "Focus on topics that generate positive responses",
+                "difficulty_level": "Adjust complexity based on current abilities and comfort",
+                "cultural_elements": "Emphasize cultural elements that resonate with them individually"
+            },
+            "environment_customization": {
+                "physical_setup": "Adjust lighting, seating, noise level for comfort",
+                "materials": "Provide familiar or preferred objects and tools",
+                "space": "Choose indoor/outdoor settings based on preference"
+            }
+        }
+        
+        # Add request-specific customizations
+        request_specific = {
+            "meal": {
+                "cooking_customization": {
+                    "participation_level": "From watching to full participation based on ability",
+                    "dietary_preferences": "Adapt recipes for dietary restrictions and preferences",
+                    "cooking_complexity": "Simplify steps based on current abilities"
+                }
+            },
+            "music": {
+                "music_customization": {
+                    "music_selection": "Focus on music that generates positive responses",
+                    "volume_control": "Adjust for hearing ability and sensitivity", 
+                    "interaction_level": "From passive listening to active participation"
+                }
+            },
+            "conversation": {
+                "conversation_customization": {
+                    "topic_depth": "Adjust from simple to complex based on cognitive abilities",
+                    "emotional_sensitivity": "Avoid topics that cause distress",
+                    "memory_support": "Provide gentle prompts without pressure to remember"
+                }
+            }
+        }
+        
+        if request_type in request_specific:
+            base_customization.update(request_specific[request_type])
+        
+        return base_customization
+    
+    def _is_mobile_content_empty(self, mobile_content: Dict[str, Any]) -> bool:
+        """Check if mobile content is essentially empty."""
+        
+        primary_content = mobile_content.get("primary_content", {})
+        
+        # Check dashboard content
+        if primary_content.get("content_type") == "comprehensive_dashboard":
+            highlights = len(primary_content.get("today_highlights", []))
+            quick_activities = len(primary_content.get("quick_activities", []))
+            discoveries = len(primary_content.get("cultural_discoveries", []))
+            
+            return highlights + quick_activities + discoveries < 2
+        
+        # Check other content types
+        elif primary_content.get("content_type") in ["meal_experience", "conversation_experience", "music_experience", "video_experience"]:
+            # Look for primary arrays in each type
+            for key, value in primary_content.items():
+                if isinstance(value, list) and len(value) > 0:
+                    return False
+                elif isinstance(value, dict) and value:
+                    return False
+            return True
+        
+        # Default check
+        return not primary_content or len(str(primary_content)) < 100
+    
+    def _create_emergency_mobile_content(self, request_type: str) -> Dict[str, Any]:
+        """Create emergency mobile content when all else fails."""
+        
+        logger.error("Creating emergency mobile content - all normal synthesis failed")
+        
+        return {
+            "content_synthesis_approach": "emergency_fallback_universal_activities",
+            "primary_content": {
+                "content_type": "emergency_universal_activities",
+                "today_highlights": [
+                    {
+                        "sensory_domain": "emotional",
+                        "activity": "human_connection",
+                        "title": "Spend Quiet Time Together",
+                        "quick_description": "Simply being present with them",
+                        "implementation_time": "As long as comfortable",
+                        "caregiver_preparation": ["No special preparation needed"],
+                        "individual_customization": "Follow their lead and comfort level"
+                    },
+                    {
+                        "sensory_domain": "auditory",
+                        "activity": "gentle_conversation",
+                        "title": "Gentle Conversation",
+                        "quick_description": "Talk about how they're feeling today",
+                        "implementation_time": "5-20 minutes",
+                        "caregiver_preparation": ["Create quiet, comfortable environment"],
+                        "individual_customization": "Let them guide topics and pace"
+                    }
+                ],
+                "quick_activities": [
+                    {
+                        "title": "Hand Holding",
+                        "duration": "5-10 minutes",
+                        "preparation": "None needed",
+                        "description": "Simple physical comfort and connection"
+                    },
+                    {
+                        "title": "Looking Out the Window Together",
+                        "duration": "5-15 minutes",
+                        "preparation": "Find comfortable seating by window",
+                        "description": "Observe and comment on what you see outside"
+                    }
+                ],
+                "cultural_discoveries": [
+                    {
+                        "discovery_type": "universal",
+                        "title": "The Value of Human Connection",
+                        "why_suggested": "Connection is a fundamental human need",
+                        "how_to_explore": "Focus on being present and caring",
+                        "cultural_connection": "Universal human experience",
+                        "individual_note": "Your presence and care are the most important gifts you can offer"
+                    }
+                ]
+            },
+            "enhancement_content": {
+                "individual_customization_suggestions": [
+                    "Focus on comfort and safety above all else",
+                    "Your caring presence is more valuable than any activity",
+                    "Follow their lead - they will show you what they need",
+                    "It's okay if formal activities don't work - being together matters most"
+                ]
+            },
+            "emergency_note": "When technology fails, human compassion always works"
+        }
+    
+    def _validate_mobile_content_completeness(self, mobile_experience: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate that mobile experience has sufficient content."""
+        
+        mobile_content = mobile_experience.get("mobile_content", {})
+        primary_content = mobile_content.get("primary_content", {})
+        
+        content_count = 0
+        has_content = False
+        
+        # Count content items based on type
+        if primary_content.get("content_type") == "comprehensive_dashboard":
+            highlights = len(primary_content.get("today_highlights", []))
+            activities = len(primary_content.get("quick_activities", []))
+            discoveries = len(primary_content.get("cultural_discoveries", []))
+            content_count = highlights + activities + discoveries
+            has_content = content_count >= 2
+            
+        elif primary_content.get("content_type") in ["meal_experience", "conversation_experience", "music_experience", "video_experience"]:
+            # Look for any populated arrays or objects
+            for key, value in primary_content.items():
+                if isinstance(value, list):
+                    content_count += len(value)
+                elif isinstance(value, dict) and value:
+                    content_count += 1
+            has_content = content_count >= 1
+            
+        elif primary_content.get("content_type") in ["general_experience", "emergency_universal_activities"]:
+            activities = primary_content.get("available_activities", primary_content.get("today_highlights", []))
+            content_count = len(activities) if isinstance(activities, list) else 1
+            has_content = content_count >= 1
+        
+        return {
+            "has_content": has_content,
+            "content_count": content_count,
+            "content_type": primary_content.get("content_type", "unknown")
+        }
+    
+    # Helper methods for content creation
+    def _create_quick_description(self, element: Dict[str, Any], sense: str) -> str:
+        """Create quick description for dashboard items."""
+        
+        description = element.get("description", "")
+        if description:
+            return description
+        
+        activity = element.get("activity", element.get("name", ""))
+        if activity:
+            return f"{sense.capitalize()} activity: {activity}"
+        
+        return f"{sense.capitalize()} experience for comfort and engagement"
+    
+    def _estimate_implementation_time(self, element: Dict[str, Any]) -> str:
+        """Estimate implementation time for activities."""
+        
+        # Check if duration is specified
+        duration = element.get("duration", element.get("implementation", {}).get("duration", ""))
+        if duration:
+            return duration
+        
+        # Time estimates based on activity type
+        time_mapping = {
+            "youtube_music": "5-15 minutes",
+            "youtube_video": "5-20 minutes",
+            "heritage_inspired_recipe": "30-60 minutes",
+            "recipe": "30-60 minutes",
+            "conversation_starter": "10-30 minutes",
+            "cultural_scent": "5-10 minutes",
+            "texture_exploration": "10-20 minutes",
+            "photo_viewing": "15-30 minutes",
+            "ambient_sound": "10+ minutes"
+        }
+        
+        content_subtype = element.get("content_subtype", "")
+        return time_mapping.get(content_subtype, "10-20 minutes")
+    
+    def _extract_preparation_steps(self, element: Dict[str, Any]) -> List[str]:
+        """Extract preparation steps from element."""
+        
+        preparation_steps = []
+        
+        # Check implementation guidance
+        implementation = element.get("implementation", {})
+        if implementation.get("setup"):
+            preparation_steps.append(implementation["setup"])
+        
+        # Check caregiver guidance
+        caregiver_guidance = element.get("caregiver_guidance", {})
+        if caregiver_guidance.get("preparation"):
+            preparation_steps.append(caregiver_guidance["preparation"])
+        
+        # Default preparation if none specified
+        if not preparation_steps:
+            preparation_steps = ["Minimal preparation needed", "Create comfortable environment"]
+        
+        return preparation_steps
+    
+    def _create_cooking_guide(self, recipe: Dict[str, Any]) -> Dict[str, Any]:
+        """Create cooking together guide from recipe."""
+        
+        if not recipe:
+            return {
+                "available": False,
+                "note": "No recipe available for cooking guide"
+            }
+        
+        recipe_data = recipe.get("recipe_data", {})
+        
+        return {
+            "available": True,
+            "recipe_name": recipe_data.get("name", recipe.get("name", "Cooking Together")),
+            "preparation_steps": "Gather ingredients and workspace together",
+            "cooking_engagement": "Involve them in simple, safe tasks they can handle",
+            "sensory_focus": "Point out smells, textures, colors, and sounds during cooking",
+            "safety_considerations": [
+                "Supervise all knife and heat use",
+                "Check for food allergies",
+                "Ensure safe kitchen environment",
+                "Break tasks into simple steps"
+            ],
+            "adaptation_notes": "Adjust participation level based on their current abilities and interest"
+        }
+    
+    def _create_fallback_primary_content(self, request_type: str) -> Dict[str, Any]:
+        """Create fallback primary content when normal synthesis fails."""
+        
+        fallback_content_mapping = {
+            "dashboard": lambda: {
+                "content_type": "fallback_dashboard",
+                "today_highlights": [
+                    {
+                        "sensory_domain": "emotional",
+                        "activity": "quality_time",
+                        "title": "Quality Time Together",
+                        "quick_description": "Focus on being present and connected",
+                        "implementation_time": "As long as feels comfortable",
+                        "caregiver_preparation": ["Create peaceful environment"],
+                        "individual_customization": "Follow their mood and energy level"
+                    }
+                ],
+                "quick_activities": [
+                    {
+                        "title": "Simple Conversation",
+                        "duration": "5-15 minutes",
+                        "preparation": "No special preparation",
+                        "description": "Ask how they're feeling today"
+                    }
+                ],
+                "cultural_discoveries": [
+                    {
+                        "discovery_type": "universal",
+                        "title": "Human Connection",
+                        "why_suggested": "Being together is always meaningful",
+                        "how_to_explore": "Focus on presence and compassion",
+                        "individual_note": "Your caring attention is the most important thing"
+                    }
+                ]
+            },
+            "meal": lambda: {
+                "content_type": "fallback_meal",
+                "featured_recipe": self._create_guaranteed_fallback_recipe(),
+                "cooking_together_guide": {
+                    "available": True,
+                    "focus": "Simple shared food experience"
+                }
+            },
+            "conversation": lambda: {
+                "content_type": "fallback_conversation",
+                "conversation_starters": [
+                    {
+                        "topic": "Today's feelings",
+                        "opening": "How are you feeling right now?",
+                        "follow_ups": ["What would make you more comfortable?"],
+                        "individual_adaptation": "Follow their emotional state"
+                    }
+                ]
+            }
+        }
+        
+        return fallback_content_mapping.get(request_type, fallback_content_mapping["dashboard"])()
+    
+    def _create_fallback_enhancement_content(self) -> Dict[str, Any]:
+        """Create fallback enhancement content."""
+        
+        return {
+            "cultural_intelligence_enhancements": [],
+            "photo_memory_enhancements": [],
+            "cross_domain_connections": {},
+            "era_context_enhancements": {"available": False},
+            "individual_customization_suggestions": [
+                "Focus on their comfort and well-being",
+                "Use your caring judgment about what they need",
+                "Remember that your presence is more important than any activity",
+                "Be flexible and ready to adapt to their current state"
+            ]
+        }
+    
+    def _create_fallback_implementation_content(self) -> Dict[str, Any]:
+        """Create fallback implementation content."""
+        
+        return {
+            "getting_started_guide": {
+                "step_1": "Ensure they are comfortable and safe",
+                "step_2": "Focus on simple human connection",
+                "step_3": "Follow their lead and comfort level",
+                "step_4": "Remember that being together is enough"
+            },
+            "troubleshooting_guide": {
+                "general_guidance": "When in doubt, focus on comfort and safety",
+                "if_nothing_works": "Sometimes just sitting together is perfect"
+            },
+            "success_indicators": {
+                "any_positive_response": "Any sign of comfort or contentment is success"
+            }
+        }
+    
+    def _structure_enhanced_feedback_collection(self, request_type: str, mobile_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Structure enhanced feedback collection with guaranteed content."""
+        
+        feedback_collection = {
+            "feedback_approach": "simple_emoji_plus_blocking_options",
+            "collection_points": [],
+            "feedback_processing": {
+                "immediate_response": "Adjust current activity based on feedback",
+                "session_learning": "Update preferences for future sessions",
+                "blocking_respect": "Never suggest blocked content again",
+                "preference_building": "Build individual preference profile over time"
+            },
+            "emoji_feedback_system": {
+                "😊": "This worked well - remember for future",
+                "😐": "This was okay - neutral response",
+                "😞": "This didn't work - avoid similar content",
+                "blocking_follow_up": "After 😞, ask what to block (item, type, or category)"
+            }
+        }
+        
+        # Always include overall experience feedback
+        feedback_collection["collection_points"].append({
+            "content_type": "overall_experience",
+            "content_title": "Today's Experience",
+            "feedback_question": "How was today's overall experience?",
+            "blocking_options": [
+                "Specific elements that didn't work",
+                "Types of activities to avoid",
+                "Time of day adjustments needed",
+                "No changes needed"
+            ]
+        })
+        
+        # Add content-specific feedback based on what was actually created
+        primary_content = mobile_content.get("primary_content", {})
+        
+        if primary_content.get("content_type") == "comprehensive_dashboard":
+            highlights = primary_content.get("today_highlights", [])
+            for highlight in highlights[:2]:  # Limit to prevent overwhelming
+                feedback_collection["collection_points"].append({
+                    "content_type": highlight.get("sensory_domain", "activity"),
+                    "content_title": highlight.get("title", "Activity"),
+                    "feedback_question": f"How did '{highlight.get('title', 'this activity')}' work?",
+                    "blocking_options": [
+                        "Just this specific activity",
+                        f"All {highlight.get('sensory_domain', 'similar')} activities",
+                        "This type of activity",
+                        "No blocking - just note it didn't work"
+                    ]
+                })
+        
+        return feedback_collection
+    
+    def _generate_accessibility_features(self, mobile_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate comprehensive accessibility features."""
+        
+        return {
+            "visual_accessibility": {
+                "large_text_options": "All text can be increased for better readability",
+                "high_contrast_mode": "Available for users with visual difficulties",
+                "image_descriptions": "All images include descriptive text",
+                "clear_navigation": "Simple, large buttons with clear labels"
+            },
+            "auditory_accessibility": {
+                "volume_controls": "All audio content has easy volume adjustment",
+                "visual_indicators": "Visual cues accompany audio content",
+                "subtitle_options": "Text descriptions of audio content available",
+                "quiet_mode": "All activities can be done without sound"
+            },
+            "motor_accessibility": {
+                "large_touch_targets": "All buttons and controls are easy to tap",
+                "simple_gestures": "Only basic taps required, no complex gestures",
+                "voice_control": "Voice commands available for navigation",
+                "caregiver_operation": "Caregiver can operate all controls"
+            },
+            "cognitive_accessibility": {
+                "simple_language": "All instructions use clear, simple language",
+                "step_by_step": "Complex activities broken into simple steps",
+                "visual_cues": "Icons and images support text instructions",
+                "no_time_pressure": "All activities can be done at individual pace"
+            },
+            "caregiver_accessibility": {
+                "one_handed_operation": "App can be operated with one hand while assisting",
+                "quick_access_help": "Help and safety information always accessible",
+                "emergency_contacts": "Quick access to emergency contacts and resources",
+                "offline_mode": "Core features work without internet connection"
+            }
+        }
+    
+    def _create_emergency_fallback_options(self, request_type: str) -> Dict[str, Any]:
+        """Create comprehensive emergency and fallback options."""
+        
+        return {
+            "when_activities_arent_working": {
+                "immediate_comfort_options": [
+                    "Switch to gentle music or nature sounds",
+                    "Offer comfort objects like soft blankets or familiar items",
+                    "Move to a quieter, more familiar environment",
+                    "Engage in simple, repetitive activities like hand massage"
+                ],
+                "de_escalation_strategies": [
+                    "Lower your voice and speak slowly",
+                    "Remove any overstimulating elements",
+                    "Offer simple choices between two options",
+                    "Use familiar phrases or words that usually comfort them"
+                ]
+            },
+            "safety_protocols": {
+                "stop_activity_if": [
+                    "Any signs of distress or agitation",
+                    "Physical discomfort or pain",
+                    "Confusion that increases anxiety",
+                    "Any negative emotional response"
+                ],
+                "emergency_contacts": {
+                    "note": "Keep emergency contacts easily accessible",
+                    "include": "Doctor, family members, emergency services",
+                    "quick_access": "Program into phone for immediate access"
+                }
+            },
+            "backup_activities": {
+                "always_available_options": [
+                    "Looking at familiar family photos",
+                    "Listening to very familiar, gentle music",
+                    "Simple hand-holding or gentle touch",
+                    "Sitting together in comfortable silence"
+                ],
+                "minimal_preparation_needed": [
+                    "Describing what you see outside the window",
+                    "Talking about pets or familiar animals",
+                    "Simple counting or naming games",
+                    "Gentle singing of familiar songs"
+                ]
+            },
+            "caregiver_self_care": {
+                "when_you_feel_overwhelmed": [
+                    "It's okay if activities don't work - you're doing your best",
+                    "Take breaks when you need them",
+                    "Ask for help from family, friends, or support groups",
+                    "Remember that your presence and care matter most"
+                ],
+                "support_resources": {
+                    "note": "Caregiving is challenging - seek support when needed",
+                    "options": "Support groups, respite care, counseling services",
+                    "reminder": "Taking care of yourself helps you care for them better"
+                }
+            }
         }
     
     def _determine_page_structure(self, request_type: str) -> Dict[str, Any]:
@@ -277,7 +1524,7 @@ class MobileSynthesizerAgent(Agent):
                 "layout": "vertical_scrolling_cards",
                 "primary_sections": [
                     "daily_highlights",
-                    "quick_activities", 
+                    "quick_activities",
                     "suggested_conversations",
                     "sensory_experiences",
                     "photo_memories"
@@ -354,512 +1601,38 @@ class MobileSynthesizerAgent(Agent):
         
         return page_structures.get(request_type, page_structures["dashboard"])
     
-    def _synthesize_mobile_content(self, 
-                                  request_type: str,
-                                  cultural_profile: Dict[str, Any],
-                                  qloo_intelligence: Dict[str, Any],
-                                  sensory_content: Dict[str, Any],
-                                  photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Synthesize all content for mobile presentation."""
+    def _document_content_sources(self, 
+                                 qloo_intelligence: Dict[str, Any],
+                                 sensory_content: Dict[str, Any],
+                                 photo_analysis: Dict[str, Any]) -> List[str]:
+        """Document what content sources were successfully used."""
         
-        # Extract key content from each agent
-        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+        sources = ["Individual heritage sharing", "Caregiver input"]
+        
+        # Check Qloo usage
+        if qloo_intelligence.get("cultural_recommendations"):
+            sources.append("Qloo cultural intelligence API")
+        
+        # Check photo analysis
+        if photo_analysis.get("analysis_metadata", {}).get("photo_analyzed"):
+            sources.append("Photo cultural analysis")
+        
+        # Check sensory content
         sensory_content_data = sensory_content.get("sensory_content", {})
-        cross_sensory_experiences = sensory_content.get("connected_experience", {})
-        photo_suggestions = photo_analysis.get("conversation_suggestions", [])
-        
-        # Create unified content structure
-        mobile_content = {
-            "content_synthesis_approach": "individual_first_cultural_enhancement",
-            "primary_content": self._structure_primary_content(
-                request_type, 
-                cultural_recommendations,
-                sensory_content_data,
-                cross_sensory_experiences
-            ),
-            "enhancement_content": self._structure_enhancement_content(
-                cultural_profile,
-                photo_suggestions,
-                qloo_intelligence
-            ),
-            "caregiver_implementation": self._structure_implementation_content(
-                sensory_content_data,
-                cross_sensory_experiences
-            ),
-            "cultural_intelligence_insights": self._structure_cultural_insights(
-                qloo_intelligence,
-                cultural_profile,
-                photo_analysis
-            ),
-            "individual_customization_options": self._structure_customization_options(request_type),
-            "anti_bias_safeguards": {
-                "individual_preferences_override": "all_suggestions_are_starting_points",
-                "caregiver_authority": "caregiver_makes_all_decisions",
-                "cultural_approach": "enhancement_not_prescription",
-                "adaptation_required": "customize_based_on_individual_response"
-            }
-        }
-        
-        return mobile_content
-    
-    def _structure_primary_content(self, 
-                                  request_type: str,
-                                  cultural_recommendations: Dict[str, Any],
-                                  sensory_content_data: Dict[str, Any],
-                                  cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
-        """Structure primary content based on request type."""
-        
-        if request_type == "dashboard":
-            return self._create_dashboard_primary_content(
-                cultural_recommendations, 
-                sensory_content_data,
-                cross_sensory_experiences
-            )
-        elif request_type == "meal":
-            return self._create_meal_primary_content(sensory_content_data)
-        elif request_type == "conversation":
-            return self._create_conversation_primary_content(sensory_content_data)
-        elif request_type == "music":
-            return self._create_music_primary_content(sensory_content_data)
-        elif request_type == "video":
-            return self._create_video_primary_content(sensory_content_data)
-        else:
-            return self._create_general_primary_content(sensory_content_data)
-    
-    def _create_dashboard_primary_content(self, 
-                                         cultural_recommendations: Dict[str, Any],
-                                         sensory_content_data: Dict[str, Any],
-                                         cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
-        """Create dashboard-specific primary content."""
-        
-        dashboard_content = {
-            "content_type": "comprehensive_dashboard",
-            "today_highlights": [],
-            "quick_activities": [],
-            "multi_sensory_experiences": cross_sensory_experiences,
-            "cultural_discoveries": []
-        }
-        
-        # Extract highlights from each sensory domain
         if isinstance(sensory_content_data, dict):
             for sense, content in sensory_content_data.items():
                 if isinstance(content, dict) and content.get("available") and content.get("elements"):
-                    # Take top 2 elements from each sense for dashboard
-                    top_elements = content["elements"][:2]
-                    for element in top_elements:
-                        dashboard_content["today_highlights"].append({
-                            "sensory_domain": sense,
-                            "activity": element.get("content_subtype", f"{sense}_activity"),
-                            "title": element.get("activity", element.get("title", f"{sense.capitalize()} Experience")),
-                            "quick_description": self._create_quick_description(element, sense),
-                            "implementation_time": self._estimate_implementation_time(element),
-                            "caregiver_preparation": self._extract_preparation_steps(element),
-                            "individual_customization": "Adapt based on their response and preferences"
-                        })
+                    sources.append(f"{sense.capitalize()} content generation")
         
-        # Create quick activities (5-15 minute activities)
-        dashboard_content["quick_activities"] = self._extract_quick_activities(sensory_content_data)
-        
-        # Extract cultural discoveries from Qloo recommendations
-        for entity_type, recommendations in cultural_recommendations.items():
-            if isinstance(recommendations, dict) and recommendations.get("available") and recommendations.get("entities"):
-                entity = recommendations["entities"][0]  # Top recommendation
-                dashboard_content["cultural_discoveries"].append({
-                    "discovery_type": recommendations.get("entity_type_category", "cultural"),
-                    "title": entity.get("name", "Cultural Discovery"),
-                    "why_suggested": "Based on cultural intelligence and individual context",
-                    "how_to_explore": entity.get("caregiver_guidance", {}).get("implementation", "Explore together"),
-                    "cultural_connection": entity.get("cultural_context", {}).get("why_suggested", "Cultural exploration"),
-                    "individual_note": "Use this as a starting point - customize based on their interests"
-                })
-        
-        return dashboard_content
-    
-    def _create_meal_primary_content(self, sensory_content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create meal-specific primary content."""
-        
-        gustatory_content = sensory_content_data.get("gustatory", {})
-        
-        if not gustatory_content.get("available"):
-            return {
-                "content_type": "meal_experience",
-                "available": False,
-                "reason": "No meal content available",
-                "alternative": "Consider simple food memory conversations"
-            }
-        
-        # Extract recipe content
-        elements = gustatory_content.get("elements", [])
-        recipes = [elem for elem in elements 
-                  if elem.get("content_subtype") in ["heritage_inspired_recipe", "era_comfort_food", "universal_comfort_recipe", "recipe"]]
-        
-        meal_content = {
-            "content_type": "meal_experience",
-            "available": True,
-            "featured_recipe": recipes[0] if recipes else None,
-            "alternative_recipes": recipes[1:3] if len(recipes) > 1 else [],
-            "cooking_together_guide": self._create_cooking_together_guide(recipes[0] if recipes else None),
-            "sensory_engagement": self._extract_cooking_sensory_elements(gustatory_content),
-            "memory_conversation_starters": self._extract_food_memory_conversations(gustatory_content),
-            "safety_considerations": self._extract_cooking_safety_considerations(gustatory_content)
-        }
-        
-        return meal_content
-    
-    def _create_conversation_primary_content(self, sensory_content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create conversation-specific primary content."""
-        
-        auditory_content = sensory_content_data.get("auditory", {})
-        
-        conversation_content = {
-            "content_type": "conversation_experience",
-            "conversation_starters": [],
-            "follow_up_questions": [],
-            "memory_exploration_topics": [],
-            "cultural_conversation_enhancements": []
-        }
-        
-        # Extract conversation elements
-        if auditory_content.get("available"):
-            elements = auditory_content.get("elements", [])
-            conversation_elements = [elem for elem in elements
-                                   if elem.get("content_subtype") in ["conversation_starter", "era_conversation"]]
-            
-            for element in conversation_elements:
-                conversation_content["conversation_starters"].append({
-                    "topic": element.get("topic", "General conversation"),
-                    "opening": element.get("conversation_guide", {}).get("opening", "Let's talk about..."),
-                    "follow_ups": element.get("conversation_guide", {}).get("follow_up_questions", []),
-                    "caregiver_guidance": element.get("caregiver_guidance", {}),
-                    "cultural_connection": element.get("cultural_connection", ""),
-                    "individual_adaptation": "Customize based on their interests and comfort level"
-                })
-        
-        return conversation_content
-    
-    def _create_music_primary_content(self, sensory_content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create music-specific primary content."""
-        
-        auditory_content = sensory_content_data.get("auditory", {})
-        
-        music_content = {
-            "content_type": "music_experience",
-            "music_selections": [],
-            "engagement_activities": [],
-            "cultural_connections": [],
-            "multi_sensory_enhancements": []
-        }
-        
-        # Extract music elements
-        if auditory_content.get("available"):
-            elements = auditory_content.get("elements", [])
-            music_elements = [elem for elem in elements
-                            if elem.get("content_subtype") == "youtube_music"]
-            
-            for element in music_elements:
-                music_content["music_selections"].append({
-                    "title": element.get("title", "Music Selection"),
-                    "artist": element.get("artist", "Unknown Artist"),
-                    "youtube_url": element.get("youtube_url", ""),
-                    "cultural_connection": element.get("cultural_connection", {}),
-                    "engagement_guide": element.get("caregiver_guidance", {}),
-                    "accessibility_notes": element.get("accessibility", {}),
-                    "individual_customization": "Adjust volume, duration, and interaction based on their response"
-                })
-        
-        return music_content
-    
-    def _create_video_primary_content(self, sensory_content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create video-specific primary content."""
-        
-        visual_content = sensory_content_data.get("visual", {})
-        
-        video_content = {
-            "content_type": "video_experience",
-            "video_selections": [],
-            "viewing_guidance": [],
-            "discussion_prompts": []
-        }
-        
-        # Extract video elements
-        if visual_content.get("available"):
-            elements = visual_content.get("elements", [])
-            video_elements = [elem for elem in elements
-                            if elem.get("content_subtype") == "youtube_video"]
-            
-            for element in video_elements:
-                video_content["video_selections"].append({
-                    "title": element.get("title", "Video Selection"),
-                    "content_source": element.get("original_content", "Unknown"),
-                    "youtube_url": element.get("youtube_url", ""),
-                    "viewing_notes": element.get("viewing_notes", {}),
-                    "engagement_guidance": element.get("caregiver_guidance", {}),
-                    "individual_adaptation": "Adjust viewing duration and interaction based on attention and interest"
-                })
-        
-        return video_content
-    
-    def _create_general_primary_content(self, sensory_content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create general primary content for other request types."""
-        
-        return {
-            "content_type": "general_experience",
-            "available_activities": self._extract_all_activities(sensory_content_data),
-            "implementation_guidance": "Choose activities based on current mood and energy level",
-            "individual_focus": "Customize all activities based on their preferences and responses"
-        }
-    
-    def _structure_enhancement_content(self, 
-                                     cultural_profile: Dict[str, Any],
-                                     photo_suggestions: List[Dict[str, Any]],
-                                     qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
-        """Structure enhancement content from cultural intelligence."""
-        
-        enhancement_content = {
-            "cultural_intelligence_enhancements": [],
-            "photo_memory_enhancements": photo_suggestions,
-            "cross_domain_connections": qloo_intelligence.get("cross_domain_connections", {}),
-            "era_context_enhancements": self._extract_era_enhancements(cultural_profile),
-            "individual_customization_suggestions": self._extract_customization_suggestions(cultural_profile)
-        }
-        
-        # Extract Qloo-powered enhancements
-        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
-        for entity_type, recommendations in cultural_recommendations.items():
-            if isinstance(recommendations, dict) and recommendations.get("available"):
-                entities = recommendations.get("entities", [])
-                for entity in entities[:2]:  # Top 2 per domain
-                    enhancement_content["cultural_intelligence_enhancements"].append({
-                        "enhancement_type": recommendations.get("entity_type_category", "cultural"),
-                        "suggestion": entity.get("name", "Cultural Enhancement"),
-                        "cultural_context": entity.get("cultural_context", {}),
-                        "implementation_guidance": entity.get("caregiver_guidance", {}),
-                        "cross_domain_potential": entity.get("cross_domain_potential", []),
-                        "individual_note": "Use as starting point - adapt based on their actual interests and responses"
-                    })
-        
-        return enhancement_content
-    
-    def _extract_era_enhancements(self, cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """FIXED: Extract era-based enhancements."""
-        
-        era_context = cultural_profile.get("era_context", {})
-        
-        if not era_context.get("has_era_context"):
-            return {"available": False}
-        
-        return {
-            "available": True,
-            "birth_decade": era_context.get("birth_year", 0) // 10 * 10 if era_context.get("birth_year") else None,
-            "formative_decades": era_context.get("decades_lived", [])[-3:],  # Recent decades
-            "cultural_eras": era_context.get("cultural_eras", {}),
-            "usage_note": "Use era context as conversation starters, not assumptions about preferences"
-        }
-    
-    def _extract_customization_suggestions(self, cultural_profile: Dict[str, Any]) -> List[str]:
-        """FIXED: Extract customization suggestions from cultural profile."""
-        
-        cultural_elements = cultural_profile.get("cultural_elements", {})
-        
-        suggestions = [
-            "Adapt all activities based on their individual responses",
-            "Use cultural elements as starting points for exploration",
-            "Focus on what generates positive reactions"
-        ]
-        
-        if cultural_elements.get("has_cultural_info"):
-            suggestions.append("Use their heritage sharing for conversation topics")
-            
-        if cultural_elements.get("language_elements", {}).get("multilingual"):
-            suggestions.append("Consider incorporating their languages if they respond positively")
-        
-        return suggestions
-    
-    def _structure_implementation_content(self, 
-                                        sensory_content_data: Dict[str, Any],
-                                        cross_sensory_experiences: Dict[str, Any]) -> Dict[str, Any]:
-        """Structure implementation guidance for caregivers."""
-        
-        implementation_content = {
-            "getting_started_guide": {
-                "step_1": "Choose one activity that matches their current mood and energy",
-                "step_2": "Prepare any materials needed in advance", 
-                "step_3": "Create a comfortable, distraction-free environment",
-                "step_4": "Start with simple engagement and build based on response",
-                "step_5": "Watch for positive responses and adapt accordingly"
-            },
-            "sensory_implementation_guides": {},
-            "multi_sensory_implementation": [],
-            "troubleshooting_guide": {
-                "no_response": "Try a different activity or return to this later",
-                "negative_response": "Stop immediately and try something comforting",
-                "overwhelm": "Reduce stimulation and focus on one simple element",
-                "fatigue": "Shorten the activity and focus on comfort",
-                "agitation": "Switch to calming activities like gentle music or soft textures"
-            },
-            "success_indicators": {
-                "positive_signs": [
-                    "Facial expressions of interest or pleasure",
-                    "Verbal responses or questions",
-                    "Physical engagement (reaching, touching, moving)",
-                    "Sustained attention to the activity",
-                    "Requests to continue or do more"
-                ],
-                "when_to_continue": "Any positive response indicates success",
-                "when_to_adapt": "If response is neutral, try modifications",
-                "when_to_stop": "Any negative response or signs of distress"
-            }
-        }
-        
-        # Create implementation guides for each sensory domain
-        if isinstance(sensory_content_data, dict):
-            for sense, content in sensory_content_data.items():
-                if isinstance(content, dict) and content.get("available"):
-                    implementation_content["sensory_implementation_guides"][sense] = {
-                        "preparation": self._extract_preparation_requirements(content),
-                        "implementation_steps": self._extract_implementation_steps(content),
-                        "safety_considerations": self._extract_safety_considerations(content),
-                        "customization_options": self._extract_customization_options(content)
-                    }
-        
-        # Add multi-sensory implementation guidance
-        if isinstance(cross_sensory_experiences, dict):
-            connection_details = cross_sensory_experiences.get("connection_details", [])
-            for experience in connection_details:
-                implementation_content["multi_sensory_implementation"].append({
-                    "experience_name": experience.get("name", "Multi-sensory Experience"),
-                    "preparation": experience.get("implementation_guide", {}),
-                    "caregiver_guidance": experience.get("implementation_guide", {}),
-                    "individual_adaptation": "Modify based on their response to each sensory element"
-                })
-        
-        return implementation_content
-    
-    def _structure_cultural_insights(self, 
-                                   qloo_intelligence: Dict[str, Any],
-                                   cultural_profile: Dict[str, Any],
-                                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Structure cultural intelligence insights for caregiver understanding."""
-        
-        cultural_insights = {
-            "why_these_suggestions": {
-                "approach": "individual_first_cultural_enhancement",
-                "data_sources": [],
-                "cultural_intelligence_note": "These suggestions use cultural intelligence to enhance possibilities, not prescribe preferences",
-                "individual_priority": "Their individual responses and preferences always override these suggestions"
-            },
-            "cultural_connections_explained": [],
-            "era_context_insights": {},
-            "photo_cultural_insights": {},
-            "customization_guidance": {
-                "use_suggestions_as": "starting_points_for_exploration",
-                "adapt_based_on": "their_individual_responses_and_preferences",
-                "remember": "cultural_background_does_not_determine_individual_preferences",
-                "focus_on": "what_they_actually_enjoy_and_respond_to_positively"
-            }
-        }
-        
-        # Document data sources
-        qloo_meta = qloo_intelligence.get("qloo_metadata", {})
-        if qloo_meta.get("api_calls_made", 0) > 0:
-            cultural_insights["why_these_suggestions"]["data_sources"].append("Qloo cultural intelligence API")
-        
-        photo_meta = photo_analysis.get("analysis_metadata", {})
-        if photo_meta.get("photo_analyzed", False):
-            cultural_insights["why_these_suggestions"]["data_sources"].append("Photo cultural analysis")
-        
-        cultural_insights["why_these_suggestions"]["data_sources"].append("Individual heritage sharing")
-        cultural_insights["why_these_suggestions"]["data_sources"].append("Era and demographic context")
-        
-        # Explain cultural connections without assumptions
-        thematic_intelligence = qloo_intelligence.get("thematic_intelligence", {})
-        common_themes = thematic_intelligence.get("common_themes", [])
-        
-        for theme in common_themes:
-            cultural_insights["cultural_connections_explained"].append({
-                "theme": theme,
-                "explanation": f"This theme emerged from cross-domain cultural intelligence analysis",
-                "how_to_use": "Use as starting point for exploration - customize based on their individual interests",
-                "individual_note": "Their personal preferences may differ from these cultural patterns"
-            })
-        
-        # Add era context insights
-        era_context = cultural_profile.get("era_context", {})
-        if era_context.get("has_era_context"):
-            cultural_insights["era_context_insights"] = {
-                "birth_year": era_context.get("birth_year"),
-                "decades_lived": era_context.get("decades_lived", []),
-                "cultural_eras": era_context.get("cultural_eras", {}),
-                "usage_note": "Era context provides factual background - individual experiences within eras vary greatly",
-                "customization": "Use era information to start conversations, but focus on their specific memories and experiences"
-            }
-        
-        # Add photo insights if available
-        if photo_analysis.get("analysis_metadata", {}).get("photo_analyzed"):
-            cultural_insights["photo_cultural_insights"] = {
-                "photo_elements": photo_analysis.get("cultural_indicators", {}),
-                "conversation_opportunities": photo_analysis.get("conversation_suggestions", []),
-                "usage_note": "Photo analysis provides conversation starters based on what's visible",
-                "individual_focus": "Let them guide what aspects of the photo interest them most"
-            }
-        
-        return cultural_insights
-    
-    def _structure_customization_options(self, request_type: str) -> Dict[str, Any]:
-        """Structure individual customization options."""
-        
-        base_customization = {
-            "timing_adjustments": {
-                "activity_duration": "Adjust from 5 minutes to 1+ hours based on engagement",
-                "time_of_day": "Choose times when they're most alert and comfortable",
-                "frequency": "Can be daily, weekly, or as-needed based on enjoyment"
-            },
-            "intensity_adjustments": {
-                "sensory_intensity": "Adjust volume, brightness, scent strength based on sensitivity",
-                "complexity": "Simplify or elaborate based on current cognitive abilities",
-                "social_interaction": "Adapt from quiet solo activities to more social engagement"
-            },
-            "content_customization": {
-                "topic_selection": "Focus on topics that generate positive responses",
-                "difficulty_level": "Adjust complexity based on current abilities and comfort",
-                "cultural_elements": "Emphasize cultural elements that resonate with them individually"
-            },
-            "environment_customization": {
-                "physical_setup": "Adjust lighting, seating, noise level for comfort",
-                "materials": "Provide familiar or preferred objects and tools",
-                "space": "Choose indoor/outdoor settings based on preference"
-            }
-        }
-        
-        # Add request-type specific customizations
-        if request_type == "meal":
-            base_customization["cooking_customization"] = {
-                "participation_level": "From watching to full participation based on ability",
-                "dietary_preferences": "Adapt recipes for dietary restrictions and preferences",
-                "cooking_complexity": "Simplify steps based on current abilities"
-            }
-        elif request_type == "music":
-            base_customization["music_customization"] = {
-                "music_selection": "Focus on music that generates positive responses",
-                "volume_control": "Adjust for hearing ability and sensitivity",
-                "interaction_level": "From passive listening to active participation"
-            }
-        elif request_type == "conversation":
-            base_customization["conversation_customization"] = {
-                "topic_depth": "Adjust from simple to complex based on cognitive abilities",
-                "emotional_sensitivity": "Avoid topics that cause distress",
-                "memory_support": "Provide gentle prompts without pressure to remember"
-            }
-        
-        return base_customization
+        return sources
     
     def _generate_comprehensive_caregiver_guide(self, 
                                                mobile_content: Dict[str, Any],
                                                request_type: str,
                                                feedback_patterns: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate comprehensive caregiver implementation guide."""
+        """Generate comprehensive caregiver implementation guide with guaranteed content."""
         
-        caregiver_guide = {
+        return {
             "caregiver_authority_note": {
                 "primary_principle": "You know them best - use these suggestions as starting points only",
                 "decision_making": "You make all decisions about what to try and when to stop",
@@ -867,813 +1640,223 @@ class MobileSynthesizerAgent(Agent):
                 "safety": "Stop any activity immediately if it causes distress or discomfort"
             },
             "before_you_start": {
-                "preparation_checklist": self._create_preparation_checklist(mobile_content, request_type),
-                "environment_setup": self._create_environment_setup_guide(request_type),
-                "timing_considerations": self._create_timing_considerations(),
-                "backup_plans": self._create_backup_plans(request_type)
+                "preparation_checklist": [
+                    "Choose a time when they're alert and comfortable",
+                    "Create a quiet, distraction-free environment",
+                    "Have backup activities ready if needed",
+                    "Ensure you have uninterrupted time together"
+                ],
+                "environment_setup": {
+                    "lighting": "Comfortable, not too bright or dim",
+                    "noise_level": "Quiet background, minimal distractions",
+                    "seating": "Comfortable chairs with good support",
+                    "temperature": "Comfortable room temperature",
+                    "safety": "Clear pathways, remove tripping hazards",
+                    "materials": "Have all needed items within easy reach"
+                },
+                "timing_considerations": {
+                    "best_times": "When they're most alert (often mornings)",
+                    "avoid_times": "When tired, hungry, or usually nap",
+                    "duration": "Start with 15-30 minutes, extend if engaged",
+                    "flexibility": "Stop anytime if they're not enjoying it"
+                }
             },
             "during_activities": {
-                "observation_guide": self._create_observation_guide(),
-                "adaptation_strategies": self._create_adaptation_strategies(),
-                "communication_tips": self._create_communication_tips(),
-                "safety_monitoring": self._create_safety_monitoring_guide()
+                "observation_guide": {
+                    "positive_responses": [
+                        "Smiling, laughing, or positive facial expressions",
+                        "Leaning in or moving closer to activity",
+                        "Asking questions or making comments",
+                        "Relaxed body language"
+                    ],
+                    "negative_responses": [
+                        "Turning away or backing away",
+                        "Expressions of confusion or distress",
+                        "Agitation or restlessness",
+                        "Any signs of physical discomfort"
+                    ]
+                },
+                "adaptation_strategies": {
+                    "if_overwhelmed": [
+                        "Reduce sensory input (lower volume, dimmer lights)",
+                        "Simplify the activity to fewer elements",
+                        "Take breaks or pause the activity"
+                    ],
+                    "if_not_engaged": [
+                        "Try a different approach or element",
+                        "Ask what they prefer or would like to do",
+                        "Switch to a more familiar activity"
+                    ]
+                }
             },
-            "after_activities": {
-                "response_assessment": self._create_response_assessment_guide(),
-                "feedback_collection": self._create_feedback_collection_guide(),
-                "future_planning": self._create_future_planning_guide(),
-                "documentation_suggestions": self._create_documentation_suggestions()
-            },
-            "troubleshooting": {
-                "common_challenges": self._create_troubleshooting_guide(),
-                "emergency_responses": self._create_emergency_response_guide(),
-                "when_to_seek_help": self._create_help_seeking_guide()
-            },
-            "individual_focus_reminders": {
+            "success_reminders": {
                 "remember": [
-                    "Their individual preferences override all cultural suggestions",
-                    "What works today may be different tomorrow - stay flexible",
-                    "Positive responses indicate success, regardless of the activity",
                     "Your caring presence is more important than perfect execution",
+                    "Any positive response indicates success",
+                    "It's okay if formal activities don't work - being together matters most",
                     "Every person with dementia is unique - these are just starting points"
                 ]
             }
         }
-        
-        return caregiver_guide
     
-    def _structure_feedback_collection(self, request_type: str, mobile_content: Dict[str, Any]) -> Dict[str, Any]:
-        """Structure feedback collection points throughout the experience."""
-        
-        feedback_collection = {
-            "feedback_approach": "simple_emoji_plus_blocking_options",
-            "collection_points": [],
-            "feedback_processing": {
-                "immediate_response": "Adjust current activity based on feedback",
-                "session_learning": "Update preferences for future sessions",
-                "blocking_respect": "Never suggest blocked content again",
-                "preference_building": "Build individual preference profile over time"
-            },
-            "emoji_feedback_system": {
-                "😊": "This worked well - remember for future",
-                "😐": "This was okay - neutral response",
-                "😞": "This didn't work - avoid similar content",
-                "blocking_follow_up": "After 😞, ask what to block (item, type, or category)"
-            }
-        }
-        
-        # Create feedback collection points based on content
-        primary_content = mobile_content.get("primary_content", {})
-        
-        if request_type == "dashboard":
-            highlights = primary_content.get("today_highlights", [])
-            for highlight in highlights:
-                feedback_collection["collection_points"].append({
-                    "content_type": highlight.get("sensory_domain"),
-                    "content_title": highlight.get("title"),
-                    "feedback_question": f"How did the {highlight.get('sensory_domain')} activity work?",
-                    "blocking_options": [
-                        f"Just this specific {highlight.get('sensory_domain')} activity",
-                        f"All {highlight.get('sensory_domain')} activities", 
-                        f"This type of activity",
-                        "No blocking - just note it didn't work"
-                    ]
-                })
-        
-        elif request_type == "meal":
-            feedback_collection["collection_points"].append({
-                "content_type": "cooking_experience",
-                "content_title": "Cooking Together",
-                "feedback_question": "How did the cooking experience work?",
-                "blocking_options": [
-                    "Just this specific recipe",
-                    "This type of cooking activity",
-                    "All cooking activities",
-                    "No blocking - just note it didn't work"
-                ]
-            })
-        
-        elif request_type == "music":
-            music_selections = primary_content.get("music_selections", [])
-            for music in music_selections:
-                feedback_collection["collection_points"].append({
-                    "content_type": "music",
-                    "content_title": music.get("title"),
-                    "feedback_question": f"How did {music.get('artist')} music work?",
-                    "blocking_options": [
-                        f"Just this specific song",
-                        f"Music by {music.get('artist')}",
-                        "This type of music",
-                        "All music activities"
-                    ]
-                })
-        
-        # Add general activity feedback
-        feedback_collection["collection_points"].append({
-            "content_type": "overall_experience",
-            "content_title": "Today's Experience",
-            "feedback_question": "How was today's overall experience?",
-            "blocking_options": [
-                "Specific elements that didn't work",
-                "Types of activities to avoid",
-                "Time of day adjustments needed",
-                "No changes needed"
-            ]
-        })
-        
-        return feedback_collection
-    
-    def _generate_accessibility_features(self, mobile_content: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate mobile accessibility features."""
+    def _create_cultural_context_explanations(self, 
+                                            cultural_profile: Dict[str, Any],
+                                            qloo_intelligence: Dict[str, Any],
+                                            photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Create cultural context explanations with guaranteed content."""
         
         return {
-            "visual_accessibility": {
-                "large_text_options": "All text can be increased for better readability",
-                "high_contrast_mode": "Available for users with visual difficulties",
-                "image_descriptions": "All images include descriptive text",
-                "clear_navigation": "Simple, large buttons with clear labels"
+            "approach_explanation": {
+                "title": "How Cultural Intelligence Works",
+                "description": "These suggestions use cultural data to enhance possibilities, not to make assumptions about individual preferences",
+                "key_principles": [
+                    "Cultural background provides starting points, not predetermined preferences",
+                    "Individual responses always override cultural suggestions",
+                    "Heritage information enhances exploration opportunities",
+                    "Era context provides conversation topics, not assumptions about taste"
+                ]
             },
-            "auditory_accessibility": {
-                "volume_controls": "All audio content has easy volume adjustment",
-                "visual_indicators": "Visual cues accompany audio content",
-                "subtitle_options": "Text descriptions of audio content available",
-                "quiet_mode": "All activities can be done without sound"
+            "data_sources_explained": {
+                "heritage_sharing": self._explain_heritage_usage(cultural_profile),
+                "qloo_intelligence": self._explain_qloo_usage(qloo_intelligence),
+                "photo_analysis": self._explain_photo_usage(photo_analysis)
             },
-            "motor_accessibility": {
-                "large_touch_targets": "All buttons and controls are easy to tap",
-                "simple_gestures": "Only basic taps required, no complex gestures",
-                "voice_control": "Voice commands available for navigation",
-                "caregiver_operation": "Caregiver can operate all controls"
+            "how_to_use_suggestions": {
+                "starting_points": "Use all suggestions as conversation starters and activity ideas",
+                "individual_focus": "Pay attention to their actual responses and preferences",
+                "customization": "Modify everything based on what they actually enjoy",
+                "flexibility": "Feel free to ignore suggestions that don't seem right for them"
             },
-            "cognitive_accessibility": {
-                "simple_language": "All instructions use clear, simple language",
-                "step_by_step": "Complex activities broken into simple steps",
-                "visual_cues": "Icons and images support text instructions",
-                "no_time_pressure": "All activities can be done at individual pace"
-            },
-            "caregiver_accessibility": {
-                "one_handed_operation": "App can be operated with one hand while assisting",
-                "quick_access_help": "Help and safety information always accessible",
-                "emergency_contacts": "Quick access to emergency contacts and resources",
-                "offline_mode": "Core features work without internet connection"
+            "bias_prevention_note": {
+                "cultural_assumptions": "We never assume someone likes something because of their heritage",
+                "individual_priority": "Their personal interests and reactions are most important",
+                "caregiver_authority": "You know them best - trust your judgment over any suggestion"
             }
         }
     
-    def _create_emergency_fallback_options(self, request_type: str) -> Dict[str, Any]:
-        """Create emergency and fallback options for difficult situations."""
+    def _explain_heritage_usage(self, cultural_profile: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how heritage information is used."""
+        
+        cultural_elements = cultural_profile.get("cultural_elements", {})
+        has_heritage = cultural_elements.get("has_cultural_info", False)
+        
+        if not has_heritage:
+            return {
+                "usage": "No specific heritage information provided",
+                "approach": "Using general cultural exploration activities"
+            }
         
         return {
-            "when_activities_arent_working": {
-                "immediate_comfort_options": [
-                    "Switch to gentle music or nature sounds",
-                    "Offer comfort objects like soft blankets or familiar items",
-                    "Move to a quieter, more familiar environment",
-                    "Engage in simple, repetitive activities like hand massage"
-                ],
-                "de_escalation_strategies": [
-                    "Lower your voice and speak slowly",
-                    "Remove any overstimulating elements",
-                    "Offer simple choices between two options",
-                    "Use familiar phrases or words that usually comfort them"
-                ]
-            },
-            "safety_protocols": {
-                "stop_activity_if": [
-                    "Any signs of distress or agitation",
-                    "Physical discomfort or pain",
-                    "Confusion that increases anxiety",
-                    "Any negative emotional response"
-                ],
-                "emergency_contacts": {
-                    "note": "Keep emergency contacts easily accessible",
-                    "include": "Doctor, family members, emergency services",
-                    "quick_access": "Program into phone for immediate access"
-                }
-            },
-            "backup_activities": {
-                "always_available_options": [
-                    "Looking at familiar family photos",
-                    "Listening to very familiar, gentle music",
-                    "Simple hand-holding or gentle touch",
-                    "Sitting together in comfortable silence"
-                ],
-                "minimal_preparation_needed": [
-                    "Describing what you see outside the window",
-                    "Talking about pets or familiar animals",
-                    "Simple counting or naming games",
-                    "Gentle singing of familiar songs"
-                ]
-            },
-            "caregiver_self_care": {
-                "when_you_feel_overwhelmed": [
-                    "It's okay if activities don't work - you're doing your best",
-                    "Take breaks when you need them",
-                    "Ask for help from family, friends, or support groups",
-                    "Remember that your presence and care matter most"
-                ],
-                "support_resources": {
-                    "note": "Caregiving is challenging - seek support when needed",
-                    "options": "Support groups, respite care, counseling services",
-                    "reminder": "Taking care of yourself helps you care for them better"
-                }
-            }
+            "usage": "Heritage information used to find conversation topics and activity ideas",
+            "approach": "Broad exploration of cultural themes without assumptions about preferences",
+            "note": "Heritage provides starting points - their individual interests matter most"
         }
     
-    def _document_content_sources(self, 
-                                 qloo_intelligence: Dict[str, Any],
-                                 sensory_content: Dict[str, Any],
-                                 photo_analysis: Dict[str, Any]) -> List[str]:
-        """Document what content sources were used."""
+    def _explain_qloo_usage(self, qloo_intelligence: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how Qloo cultural intelligence is used."""
         
-        sources = ["Individual heritage sharing", "Caregiver input"]
-        
-        # Check Qloo usage
         qloo_meta = qloo_intelligence.get("qloo_metadata", {})
-        if qloo_meta.get("api_calls_made", 0) > 0:
-            sources.append("Qloo cultural intelligence API")
+        api_calls = qloo_meta.get("api_calls_made", 0)
+        successful_calls = qloo_meta.get("successful_calls", 0)
         
-        # Check photo analysis
-        photo_meta = photo_analysis.get("analysis_metadata", {})
-        if photo_meta.get("photo_analyzed", False):
-            sources.append("Photo cultural analysis")
+        if api_calls == 0:
+            return {
+                "usage": "Qloo cultural intelligence not available for this session",
+                "fallback": "Using general activity suggestions instead"
+            }
         
-        # Check sensory content generation
-        sensory_meta = sensory_content.get("generation_metadata", {})
-        if sensory_meta.get("senses_activated"):
-            sources.extend([f"{sense.capitalize()} content generation" for sense in sensory_meta["senses_activated"]])
-        
-        return sources
+        return {
+            "usage": f"Qloo made {api_calls} cultural intelligence queries ({successful_calls} successful)",
+            "approach": "Cross-domain cultural discovery without stereotypical assumptions",
+            "note": "Qloo suggestions are starting points for exploration - customize based on individual response"
+        }
     
-    def _validate_mobile_experience_quality(self, mobile_experience: Dict[str, Any]) -> None:
-        """Validate the quality of the mobile experience."""
+    def _explain_photo_usage(self, photo_analysis: Dict[str, Any]) -> Dict[str, str]:
+        """Explain how photo analysis is used."""
         
-        # Check for required components
-        required_components = [
-            "page_structure", "mobile_content", "caregiver_guide", 
-            "feedback_collection", "accessibility_features"
-        ]
+        analysis_meta = photo_analysis.get("analysis_metadata", {})
+        photo_analyzed = analysis_meta.get("photo_analyzed", False)
         
-        missing_components = []
-        for component in required_components:
-            if component not in mobile_experience:
-                missing_components.append(component)
+        if not photo_analyzed:
+            return {
+                "usage": "No photo analysis performed",
+                "note": "Photo-based suggestions not available"
+            }
         
-        if missing_components:
-            logger.warning(f"Missing mobile experience components: {missing_components}")
-        
-        # Check caregiver guidance quality
-        caregiver_guide = mobile_experience.get("caregiver_guide", {})
-        if not caregiver_guide.get("caregiver_authority_note"):
-            logger.warning("Caregiver authority note missing from mobile experience")
-        
-        # Check feedback collection
-        feedback_collection = mobile_experience.get("feedback_collection", {})
-        if not feedback_collection.get("collection_points"):
-            logger.warning("No feedback collection points defined")
-        
-        logger.info("Mobile experience quality validation completed")
+        return {
+            "usage": "Photo analyzed for visible elements and potential conversation topics",
+            "approach": "Factual observation of photo contents, not cultural assumptions",
+            "note": "Photo analysis provides conversation starters based on what's actually visible"
+        }
     
     def _validate_caregiver_authority_compliance(self, mobile_experience: Dict[str, Any]) -> None:
         """Validate that caregiver authority is maintained throughout."""
         
-        # Check for authority indicators
+        # Check for authority indicators in the experience
+        experience_text = str(mobile_experience).lower()
         authority_indicators = [
-            "caregiver", "you know them best", "individual", "customize",
-            "adapt", "modify", "starting point", "suggestion"
+            "caregiver", "you know", "individual", "customize", "adapt", 
+            "modify", "starting point", "suggestion", "their response", "follow their lead"
         ]
         
-        experience_text = str(mobile_experience).lower()
         authority_count = sum(1 for indicator in authority_indicators if indicator in experience_text)
         
         if authority_count < 10:
-            logger.warning("Insufficient caregiver authority language in mobile experience")
+            logger.warning(f"Insufficient caregiver authority language: {authority_count} indicators found")
+        else:
+            logger.info(f"✅ Caregiver authority compliance validated: {authority_count} indicators found")
         
-        # Check for directive language (should be minimal)
-        directive_indicators = [
-            "must", "should", "will", "always", "never", "required"
-        ]
-        
-        directive_count = sum(1 for indicator in directive_indicators if indicator in experience_text)
-        
-        if directive_count > 5:
-            logger.warning("Too much directive language in mobile experience")
-        
-        # Check caregiver authority note
+        # Check that caregiver authority note exists
         caregiver_guide = mobile_experience.get("caregiver_guide", {})
         authority_note = caregiver_guide.get("caregiver_authority_note", {})
         
         if not authority_note.get("primary_principle"):
-            logger.warning("Primary caregiver authority principle missing")
-        
-        logger.info("Caregiver authority compliance validation completed")
+            logger.warning("❌ Primary caregiver authority principle missing")
+        else:
+            logger.info("✅ Caregiver authority principle present")
     
-    def _create_fallback_mobile_experience(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback mobile experience when synthesis fails."""
+    def _create_emergency_mobile_experience(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Create emergency mobile experience when everything fails."""
         
         request_type = consolidated_info.get("request_context", {}).get("request_type", "dashboard")
+        
+        logger.error("🚨 CREATING EMERGENCY MOBILE EXPERIENCE - All synthesis failed")
         
         return {
             "mobile_experience": {
                 "synthesis_metadata": {
                     "timestamp": datetime.utcnow().isoformat(),
                     "request_type": request_type,
-                    "mode": "fallback_safe_defaults",
-                    "caregiver_authority": "maintained"
+                    "mode": "EMERGENCY_FALLBACK",
+                    "caregiver_authority": "maintained",
+                    "guaranteed_content": True,
+                    "emergency_reason": "complete_synthesis_failure"
                 },
                 "page_structure": self._determine_page_structure(request_type),
-                "mobile_content": {
-                    "content_synthesis_approach": "safe_fallback_individual_focus",
-                    "primary_content": {
-                        "content_type": "fallback_activities",
-                        "simple_activities": [
-                            "Look at family photos together",
-                            "Listen to familiar, gentle music",
-                            "Have a simple conversation about today",
-                            "Enjoy a comfortable snack together"
+                "mobile_content": self._create_emergency_mobile_content(request_type),
+                "caregiver_guide": {
+                    "caregiver_authority_note": {
+                        "primary_principle": "You know them best - your caring presence is what matters most",
+                        "emergency_approach": "When technology fails, human compassion always works",
+                        "focus": "Simply being present and caring is enough"
+                    },
+                    "emergency_guidance": {
+                        "remember": [
+                            "Your caring presence is more valuable than any technology",
+                            "Simple human connection never fails",
+                            "Follow your instincts about what they need",
+                            "Being together with love and patience is always right"
                         ]
                     }
                 },
-                "caregiver_guide": {
-                    "caregiver_authority_note": {
-                        "primary_principle": "You know them best - use your judgment about what will work",
-                        "fallback_approach": "Start with simple, familiar activities"
-                    },
-                    "basic_guidance": {
-                        "approach": "Keep it simple and follow their lead",
-                        "observation": "Watch for positive responses and adapt",
-                        "safety": "Stop any activity if it causes discomfort"
-                    }
+                "cultural_context_explanations": {
+                    "emergency_mode": True,
+                    "message": "When systems fail, the most important cultural element is human kindness"
                 },
                 "feedback_collection": {
-                    "simple_feedback": "Note what works and what doesn't for future reference"
+                    "simple_feedback": "Note what brings them comfort for future reference"
                 },
                 "accessibility_features": self._generate_accessibility_features({}),
-                "emergency_options": self._create_emergency_fallback_options(request_type),
-                "cultural_context_explanations": {
-                    "fallback_mode": True,
-                    "note": "Cultural intelligence unavailable - using general activities"
-                }
+                "emergency_options": self._create_emergency_fallback_options(request_type)
             }
-        }
-    
-    # Helper methods for content extraction and creation
-    def _create_quick_description(self, element: Dict[str, Any], sense: str) -> str:
-        """Create quick description for dashboard items."""
-        
-        descriptions = {
-            "auditory": "Music and conversation activities",
-            "visual": "Photos and visual activities", 
-            "gustatory": "Cooking and food experiences",
-            "olfactory": "Scent and aroma activities",
-            "tactile": "Touch and texture activities"
-        }
-        
-        return element.get("description", descriptions.get(sense, f"{sense.capitalize()} experience"))
-    
-    def _estimate_implementation_time(self, element: Dict[str, Any]) -> str:
-        """Estimate implementation time for activities."""
-        
-        # Default time estimates
-        time_mapping = {
-            "youtube_music": "5-15 minutes",
-            "youtube_video": "5-20 minutes",
-            "heritage_inspired_recipe": "30-60 minutes",
-            "recipe": "30-60 minutes",
-            "conversation_starter": "10-30 minutes",
-            "cultural_scent": "5-10 minutes",
-            "tactile_exploration": "10-20 minutes"
-        }
-        
-        content_subtype = element.get("content_subtype", "")
-        return time_mapping.get(content_subtype, "10-20 minutes")
-    
-    def _extract_preparation_steps(self, element: Dict[str, Any]) -> List[str]:
-        """Extract preparation steps from element."""
-        
-        implementation = element.get("implementation", {})
-        caregiver_guidance = element.get("caregiver_guidance", {})
-        
-        preparation_steps = []
-        
-        if implementation.get("setup"):
-            preparation_steps.append(implementation["setup"])
-        if implementation.get("method"):
-            preparation_steps.append(f"Method: {implementation['method']}")
-        if caregiver_guidance.get("preparation"):
-            preparation_steps.append(caregiver_guidance["preparation"])
-        
-        return preparation_steps if preparation_steps else ["Minimal preparation needed"]
-    
-    def _extract_quick_activities(self, sensory_content_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Extract quick 5-15 minute activities."""
-        
-        quick_activities = []
-        
-        if isinstance(sensory_content_data, dict):
-            for sense, content in sensory_content_data.items():
-                if isinstance(content, dict) and content.get("available") and content.get("elements"):
-                    elements = content["elements"]
-                    for element in elements[:1]:  # One per sense for quick activities
-                        if element.get("content_subtype") in ["ambient_sound", "cultural_scent", "texture_exploration", "spice_exploration"]:
-                            quick_activities.append({
-                                "title": element.get("activity", f"{sense.capitalize()} Activity"),
-                                "duration": "5-15 minutes",
-                                "preparation": "Minimal setup required",
-                                "description": f"Quick {sense} experience"
-                            })
-        
-        return quick_activities
-    
-    def _extract_all_activities(self, sensory_content_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Extract all available activities from sensory content."""
-        
-        activities = []
-        
-        if isinstance(sensory_content_data, dict):
-            for sense, content in sensory_content_data.items():
-                if isinstance(content, dict) and content.get("available") and content.get("elements"):
-                    elements = content["elements"]
-                    for element in elements:
-                        activities.append({
-                            "sensory_domain": sense,
-                            "activity_type": element.get("content_subtype", f"{sense}_activity"),
-                            "title": element.get("activity", element.get("title", f"{sense.capitalize()} Activity")),
-                            "implementation": element.get("implementation", {}).get("approach", "Follow individual guidance"),
-                            "duration": self._estimate_implementation_time(element)
-                        })
-        
-        return activities
-    
-    def _create_cooking_together_guide(self, recipe: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Create cooking together guide from recipe."""
-        
-        if not recipe:
-            return {"available": False, "note": "No recipe available"}
-        
-        return {
-            "available": True,
-            "recipe_name": recipe.get("recipe_data", {}).get("name", recipe.get("name", "Comfort Food Recipe")),
-            "preparation_steps": "Prepare ingredients and workspace together",
-            "cooking_engagement": "Involve them in simple, safe tasks",
-            "sensory_focus": "Emphasize smells, textures, and tastes",
-            "safety_considerations": recipe.get("safety_considerations", {}),
-            "adaptation_notes": recipe.get("caregiver_guidance", {}).get("customization", "Adapt based on abilities")
-        }
-    
-    def _extract_cooking_sensory_elements(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract sensory elements from cooking content."""
-        
-        sensory_elements = [
-            "Enjoy cooking aromas together",
-            "Touch and feel ingredients", 
-            "Taste small samples during cooking",
-            "Listen to cooking sounds (sizzling, bubbling)",
-            "Appreciate visual presentation of food"
-        ]
-        
-        return sensory_elements
-    
-    def _extract_food_memory_conversations(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract food memory conversation starters."""
-        
-        conversations = [
-            "What was your favorite family recipe?",
-            "Who did the cooking in your family?",
-            "What foods remind you of special occasions?",
-            "Tell me about meals you enjoyed growing up",
-            "What was your favorite restaurant or special meal?"
-        ]
-        
-        return conversations
-    
-    def _extract_cooking_safety_considerations(self, gustatory_content: Dict[str, Any]) -> List[str]:
-        """Extract cooking safety considerations."""
-        
-        safety_considerations = [
-            "Supervise all knife and heat use",
-            "Check for food allergies and dietary restrictions",
-            "Ensure safe kitchen environment",
-            "Break cooking into simple, manageable steps",
-            "Be prepared to simplify or modify recipe"
-        ]
-        
-        return safety_considerations
-    
-    def _extract_preparation_requirements(self, content: Dict[str, Any]) -> List[str]:
-        """Extract preparation requirements from content."""
-        
-        requirements = ["Minimal preparation needed"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            implementation = element.get("implementation", {})
-            if implementation.get("setup"):
-                requirements.append(implementation["setup"])
-        
-        return requirements
-    
-    def _extract_implementation_steps(self, content: Dict[str, Any]) -> List[str]:
-        """Extract implementation steps from content."""
-        
-        steps = ["Follow individual guidance and preferences"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            if caregiver_guidance.get("implementation"):
-                steps.append(caregiver_guidance["implementation"])
-        
-        return steps
-    
-    def _extract_safety_considerations(self, content: Dict[str, Any]) -> List[str]:
-        """Extract safety considerations from content."""
-        
-        safety = ["Monitor for comfort and positive response"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            safety_info = element.get("safety_considerations", {})
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            
-            if safety_info:
-                safety.extend(safety_info.values() if isinstance(safety_info, dict) else [str(safety_info)])
-            
-            if caregiver_guidance.get("safety"):
-                safety.append(caregiver_guidance["safety"])
-        
-        return safety
-    
-    def _extract_customization_options(self, content: Dict[str, Any]) -> List[str]:
-        """Extract customization options from content."""
-        
-        options = ["Adapt based on individual response and preferences"]
-        
-        elements = content.get("elements", [])
-        for element in elements:
-            if element.get("individual_customization"):
-                options.append(element["individual_customization"])
-            
-            caregiver_guidance = element.get("caregiver_guidance", {})
-            if caregiver_guidance.get("customization"):
-                options.append(caregiver_guidance["customization"])
-        
-        return options
-    
-    # Additional helper methods for caregiver guide creation
-    def _create_preparation_checklist(self, mobile_content: Dict[str, Any], request_type: str) -> List[str]:
-        """Create preparation checklist for caregivers."""
-        
-        base_checklist = [
-            "Choose a time when they're alert and comfortable",
-            "Create a quiet, distraction-free environment",
-            "Have backup activities ready if needed",
-            "Ensure you have uninterrupted time together"
-        ]
-        
-        if request_type == "meal":
-            base_checklist.extend([
-                "Gather all ingredients and cooking tools",
-                "Check for dietary restrictions or allergies",
-                "Ensure kitchen safety (supervise sharp objects and heat)"
-            ])
-        elif request_type == "music":
-            base_checklist.extend([
-                "Test audio equipment and volume levels",
-                "Have comfortable seating arranged",
-                "Prepare alternative music if needed"
-            ])
-        
-        return base_checklist
-    
-    def _create_environment_setup_guide(self, request_type: str) -> Dict[str, str]:
-        """Create environment setup guide."""
-        
-        return {
-            "lighting": "Comfortable, not too bright or dim",
-            "noise_level": "Quiet background, minimal distractions",
-            "seating": "Comfortable chairs with good support",
-            "temperature": "Comfortable room temperature",
-            "safety": "Clear pathways, remove tripping hazards",
-            "materials": "Have all needed items within easy reach"
-        }
-    
-    def _create_timing_considerations(self) -> Dict[str, str]:
-        """Create timing considerations guide."""
-        
-        return {
-            "best_times": "When they're most alert (often mornings)",
-            "avoid_times": "When tired, hungry, or usually nap",
-            "duration": "Start with 15-30 minutes, extend if engaged",
-            "frequency": "Can be daily or several times per week",
-            "flexibility": "Stop anytime if they're not enjoying it"
-        }
-    
-    def _create_backup_plans(self, request_type: str) -> List[str]:
-        """Create backup plans for when activities don't work."""
-        
-        return [
-            "Have simpler versions of activities ready",
-            "Keep familiar comfort activities available",
-            "Be prepared to switch to quiet time together",
-            "Have emergency contact information accessible"
-        ]
-    
-    def _create_observation_guide(self) -> Dict[str, List[str]]:
-        """Create observation guide for caregivers."""
-        
-        return {
-            "positive_responses": [
-                "Smiling, laughing, or positive facial expressions",
-                "Leaning in or moving closer to activity",
-                "Asking questions or making comments",
-                "Wanting to touch or participate more",
-                "Relaxed body language"
-            ],
-            "neutral_responses": [
-                "Quiet attention without strong reaction",
-                "Following along but not actively engaging",
-                "Answering questions when asked but not initiating"
-            ],
-            "negative_responses": [
-                "Turning away or backing away",
-                "Expressions of confusion or distress",
-                "Agitation or restlessness",
-                "Asking to stop or do something else",
-                "Any signs of physical discomfort"
-            ]
-        }
-    
-    def _create_adaptation_strategies(self) -> Dict[str, List[str]]:
-        """Create adaptation strategies."""
-        
-        return {
-            "if_overwhelmed": [
-                "Reduce sensory input (lower volume, dimmer lights)",
-                "Simplify the activity to fewer elements",
-                "Take breaks or pause the activity",
-                "Move to a quieter environment"
-            ],
-            "if_not_engaged": [
-                "Try a different approach or element",
-                "Ask what they prefer or would like to do",
-                "Switch to a more familiar activity",
-                "Give them more time to process"
-            ],
-            "if_agitated": [
-                "Stop the current activity immediately",
-                "Switch to calming activities (gentle music, soft textures)",
-                "Use familiar, comforting words and actions",
-                "Consider if they have basic needs (hungry, tired, need bathroom)"
-            ]
-        }
-    
-    def _create_communication_tips(self) -> Dict[str, List[str]]:
-        """Create communication tips."""
-        
-        return {
-            "verbal_communication": [
-                "Speak slowly and clearly",
-                "Use simple, familiar words",
-                "Ask one question at a time",
-                "Give them time to process and respond"
-            ],
-            "non_verbal_communication": [
-                "Maintain gentle eye contact",
-                "Use warm, encouraging facial expressions",
-                "Keep body language open and relaxed",
-                "Respect their personal space"
-            ],
-            "validation_techniques": [
-                "Accept all responses as valuable",
-                "Don't correct or argue with their reality",
-                "Focus on emotions rather than facts",
-                "Celebrate any engagement or participation"
-            ]
-        }
-    
-    def _create_safety_monitoring_guide(self) -> Dict[str, List[str]]:
-        """Create safety monitoring guide."""
-        
-        return {
-            "physical_safety": [
-                "Watch for signs of fatigue or discomfort",
-                "Ensure they can see and hear clearly",
-                "Monitor for any allergic reactions",
-                "Keep pathways clear and safe"
-            ],
-            "emotional_safety": [
-                "Watch for signs of distress or anxiety",
-                "Be prepared to stop activities that upset them",
-                "Provide comfort and reassurance as needed",
-                "Respect their choices and preferences"
-            ],
-            "cognitive_safety": [
-                "Don't pressure them to remember specific details",
-                "Avoid correcting their memories or stories",
-                "Provide gentle guidance without frustration",
-                "Accept their current abilities and limitations"
-            ]
-        }
-    
-    def _create_response_assessment_guide(self) -> Dict[str, str]:
-        """Create response assessment guide."""
-        
-        return {
-            "successful_session": "Any positive engagement, smiles, or participation",
-            "partially_successful": "Some positive moments, even if brief",
-            "neutral_session": "No negative reactions, some attention or cooperation",
-            "unsuccessful_session": "Negative reactions, distress, or request to stop",
-            "learning_from_all": "Every session provides information about their preferences"
-        }
-    
-    def _create_feedback_collection_guide(self) -> Dict[str, str]:
-        """Create feedback collection guide."""
-        
-        return {
-            "immediate_feedback": "Note their immediate responses during activities",
-            "overall_session": "Assess how the entire session went",
-            "what_worked": "Document specific elements that generated positive responses",
-            "what_to_avoid": "Note anything that caused negative reactions",
-            "future_modifications": "Ideas for how to improve next time"
-        }
-    
-    def _create_future_planning_guide(self) -> Dict[str, str]:
-        """Create future planning guide."""
-        
-        return {
-            "successful_elements": "Plan to repeat activities that worked well",
-            "modifications": "Adjust activities based on today's responses",
-            "new_explorations": "Try variations of successful activities",
-            "timing_adjustments": "Consider different times of day if needed",
-            "gradual_progression": "Slowly build on successful experiences"
-        }
-    
-    def _create_documentation_suggestions(self) -> List[str]:
-        """Create documentation suggestions."""
-        
-        return [
-            "Keep simple notes about what activities work best",
-            "Note optimal times of day for different activities",
-            "Record favorite music, foods, or conversation topics",
-            "Document any activities or topics to avoid",
-            "Track changes in preferences over time"
-        ]
-    
-    def _create_troubleshooting_guide(self) -> Dict[str, List[str]]:
-        """Create troubleshooting guide."""
-        
-        return {
-            "activity_rejection": [
-                "Try the same activity at a different time",
-                "Modify the activity to be simpler or shorter",
-                "Offer choices between two activities",
-                "Respect their 'no' and try something else"
-            ],
-            "confusion_or_agitation": [
-                "Lower your voice and speak more slowly",
-                "Remove distracting elements from environment",
-                "Offer simple, familiar comfort activities",
-                "Consider if they have unmet basic needs"
-            ],
-            "lack_of_response": [
-                "Give more time for processing",
-                "Try a different sensory approach",
-                "Check if they can see/hear clearly",
-                "Consider if they're tired or not feeling well"
-            ]
-        }
-    
-    def _create_emergency_response_guide(self) -> Dict[str, List[str]]:
-        """Create emergency response guide."""
-        
-        return {
-            "if_they_become_distressed": [
-                "Stop the current activity immediately",
-                "Speak in calm, reassuring tones",
-                "Offer comfort items or familiar objects",
-                "Consider calling family member or healthcare provider"
-            ],
-            "if_they_seem_unwell": [
-                "Check for basic needs (hunger, thirst, bathroom)",
-                "Look for signs of pain or discomfort",
-                "Take vital signs if possible",
-                "Contact healthcare provider if concerned"
-            ],
-            "if_you_feel_overwhelmed": [
-                "Take a break if possible",
-                "Call family member or friend for support",
-                "Remember that challenging moments are normal",
-                "Seek professional help if needed"
-            ]
-        }
-    
-    def _create_help_seeking_guide(self) -> Dict[str, str]:
-        """Create help seeking guide."""
-        
-        return {
-            "when_to_call_doctor": "Any concerning changes in behavior, appetite, or health",
-            "when_to_seek_family_support": "When you need a break or additional help",
-            "when_to_contact_emergency_services": "Any serious health or safety concerns",
-            "ongoing_support_resources": "Support groups, respite care, counseling services",
-            "remember": "Asking for help is a sign of good caregiving, not weakness"
         }
