@@ -1,11 +1,12 @@
 """
-Agent 1: Information Consolidator - FIXED VERSION
-Role: Package all session data for cultural intelligence processing
-Follows Responsible Development Guide principles
+Agent 1: Information Consolidator - SIMPLIFIED VERSION
+File: backend/multi_tool_agent/agents/information_consolidator_agent.py
+
+Simplified to extract cultural heritage directly from input, calculate age from birth_year,
+and parse additional_context for preferences. No database lookups - just in-memory processing.
 """
 
 from typing import Dict, Any, Optional, List
-import json
 import logging
 from datetime import datetime
 from google.adk.agents import Agent
@@ -14,408 +15,357 @@ logger = logging.getLogger(__name__)
 
 class InformationConsolidatorAgent(Agent):
     """
-    Agent 1: Information Consolidator
+    Agent 1: Information Consolidator - SIMPLIFIED
     
-    Purpose: Package all session data for cultural intelligence processing
-    Input: Patient profile, request type, feedback history  
-    Output: Structured summary with demographics, request details, feedback patterns
-    
-    Privacy-First Principles:
-    - Only processes minimal, non-PII data
-    - Respects caregiver authority
-    - No cultural assumptions made
+    SIMPLIFICATIONS:
+    - Extract cultural heritage directly from input
+    - Calculate age from birth_year 
+    - Parse additional_context and caregiver_notes for preferences
+    - No database lookups - just in-memory processing
+    - Focus on the curl input structure format
     """
     
     def __init__(self):
         super().__init__(
-            name="information_consolidator",
-            description="Consolidates session data while respecting privacy and caregiver authority"
+            name="information_consolidator_simplified",
+            description="Consolidates patient information with direct extraction approach"
         )
-    
-    def _safe_string(self, value: Any, max_length: Optional[int] = None) -> str:
-        """
-        Safely convert value to string and handle None values.
-        
-        Args:
-            value: Any value that might be None
-            max_length: Optional maximum length to truncate to
-            
-        Returns:
-            Safe string value, never None
-        """
-        if value is None:
-            return ""
-        str_value = str(value).strip()
-        if max_length:
-            return str_value[:max_length]
-        return str_value
+        logger.info("Information Consolidator Agent initialized in simplified mode")
     
     async def run(self, 
                   patient_profile: Dict[str, Any],
-                  request_type: str,
-                  session_id: Optional[str] = None,
-                  feedback_history: Optional[Dict[str, Any]] = None,
-                  photo_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                  request_type: str = "dashboard",
+                  feedback_data: Optional[Dict[str, Any]] = None,
+                  photo_data: Optional[Dict[str, Any]] = None,
+                  session_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Consolidate all session information for cultural intelligence processing.
+        Consolidate patient information using direct extraction.
         
         Args:
-            patient_profile: Basic patient info (first name, birth year/month, general location)
-            request_type: Type of request (meal, conversation, music, video, dashboard)
-            session_id: Optional session identifier for preference continuity
-            feedback_history: Previous feedback and blocked content
-            photo_data: Optional uploaded photo for analysis
+            patient_profile: Direct patient information from request
+            request_type: Type of request (dashboard, activity, etc.)
+            feedback_data: Optional feedback history
+            photo_data: Optional photo data
+            session_id: Optional session identifier
             
         Returns:
-            Consolidated information package for next agents
+            Consolidated information package
         """
         
         try:
-            logger.info(f"Consolidating information for request type: {request_type}")
+            logger.info(f"Consolidating information for {request_type} request")
             
-            # Extract and validate basic patient information (Privacy-First)
-            basic_info = self._extract_basic_info(patient_profile)
+            # STEP 1: Extract cultural heritage directly
+            cultural_heritage = self._extract_cultural_heritage(patient_profile)
             
-            # Process request context
-            request_context = self._process_request_context(request_type)
+            # STEP 2: Calculate age from birth_year
+            age_info = self._extract_age_information(patient_profile)
             
-            # Consolidate feedback patterns (respecting blocks)
-            feedback_patterns = self._consolidate_feedback(feedback_history)
+            # STEP 3: Extract location context
+            location = self._extract_location_context(patient_profile)
             
-            # Handle photo data if present
+            # STEP 4: Parse preferences from additional context
+            preferences = self._parse_preferences(patient_profile)
+            
+            # STEP 5: Process feedback patterns
+            feedback_patterns = self._process_feedback_patterns(feedback_data or {})
+            
+            # STEP 6: Process photo context
             photo_context = self._process_photo_context(photo_data)
             
-            # Build consolidated package
+            # STEP 7: Build consolidated information
             consolidated_info = {
-                "session_metadata": {
-                    "session_id": session_id,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "request_type": request_type,
-                    "has_photo": bool(photo_data)
+                "patient_profile": {
+                    "cultural_heritage": cultural_heritage,
+                    "birth_year": patient_profile.get("birth_year"),
+                    "age": age_info.get("current_age"),
+                    "age_demographic": age_info.get("age_demographic"),
+                    "location": location,
+                    "preferences": preferences,
+                    "additional_context": patient_profile.get("additional_context", ""),
+                    "caregiver_notes": patient_profile.get("caregiver_notes", "")
                 },
-                "basic_demographics": basic_info,
-                "request_context": request_context,
+                "request_context": {
+                    "request_type": request_type,
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    "timestamp": datetime.now().isoformat()
+                },
                 "feedback_patterns": feedback_patterns,
                 "photo_context": photo_context,
-                "processing_notes": {
-                    "privacy_compliance": "minimal_data_only",
-                    "caregiver_authority": "respected",
-                    "cultural_assumptions": "none_made"
+                "session_metadata": {
+                    "data_sources": ["direct_input"],
+                    "cultural_heritage_source": "patient_profile",
+                    "age_calculation_method": "birth_year" if patient_profile.get("birth_year") else "direct",
+                    "preferences_source": "additional_context_parsing",
+                    "consolidation_timestamp": datetime.now().isoformat()
                 }
             }
             
-            # Validate consolidation meets privacy standards
+            # STEP 8: Validate privacy compliance
             self._validate_privacy_compliance(consolidated_info)
             
-            logger.info("Information consolidation completed successfully")
+            logger.info(f"Information consolidated: {cultural_heritage} heritage, {age_info.get('current_age')} years old")
+            
             return {"consolidated_info": consolidated_info}
             
         except Exception as e:
-            logger.error(f"Error in information consolidation: {str(e)}")
-            # Return safe fallback that maintains privacy
-            return self._create_fallback_consolidation(request_type)
+            logger.error(f"❌ Information consolidation failed: {e}")
+            return self._create_fallback_consolidation(patient_profile, request_type)
     
-    def _extract_basic_info(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract only essential, non-PII information.
-        Follows Responsible Development Guide privacy principles.
-        """
-        # Only extract minimal, privacy-safe information using safe string conversion
-        basic_info = {
-            "first_name_or_nickname": self._safe_string(patient_profile.get("first_name"), 20),
-            "birth_context": {
-                "birth_year": self._validate_birth_year(patient_profile.get("birth_year")),
-                "birth_month": self._validate_birth_month(patient_profile.get("birth_month")),
-                "age_range": self._calculate_age_range(patient_profile.get("birth_year"))
-            },
-            "general_location": {
-                "city_region": self._safe_string(patient_profile.get("city"), 50),
-                "state_region": self._safe_string(patient_profile.get("state"), 30)
-            },
-            "cultural_sharing": {
-                "heritage_info": self._safe_string(patient_profile.get("cultural_heritage"), 500),
-                "languages": self._safe_string(patient_profile.get("languages"), 200),
-                "spiritual_traditions": self._safe_string(patient_profile.get("spiritual_traditions"), 300),
-                "additional_context": self._safe_string(patient_profile.get("additional_context"), 1000)
-            },
-            "caregiver_notes": self._safe_string(patient_profile.get("caregiver_notes"), 500)
-        }
+    def _extract_cultural_heritage(self, patient_profile: Dict[str, Any]) -> str:
+        """Extract cultural heritage directly from patient profile."""
         
-        return basic_info
+        heritage = patient_profile.get("cultural_heritage")
+        
+        if heritage:
+            heritage_clean = heritage.strip()
+            logger.info(f"Cultural heritage extracted: {heritage_clean}")
+            return heritage_clean
+        
+        # Fallback to American if not specified
+        logger.warning("No cultural heritage specified, defaulting to American")
+        return "American"
     
-    def _validate_birth_year(self, birth_year: Any) -> Optional[int]:
-        """Validate birth year for adult care (removes age bias)."""
-        try:
-            year = int(birth_year) if birth_year else None
-            current_year = datetime.now().year
-            
-            if not year:
-                return None
-            
-            # Calculate approximate age
-            approximate_age = current_year - year
-            
-            # This app is designed for adult care - check for 16+ years old
-            if approximate_age < 16:
-                logger.info(f"Age appears to be {approximate_age} - CareConnect is designed for adult care (16+)")
-                return None
-            
-            # Accept all adults including super-seniors over 100
-            # Reasonable birth year range: 1900 to current year - 16
-            if 1900 <= year <= (current_year - 16):
-                return year
-                
-            # Log if birth year seems unusual but don't reject
-            if year < 1900:
-                logger.info(f"Birth year {year} indicates super-senior over 125 - accepting with note")
-                return year
-            
-            return None
-        except (ValueError, TypeError):
-            return None
-    
-    def _validate_birth_month(self, birth_month: Any) -> Optional[str]:
-        """Validate birth month for seasonal cultural context."""
-        try:
-            if isinstance(birth_month, str) and birth_month.lower() in [
-                "january", "february", "march", "april", "may", "june",
-                "july", "august", "september", "october", "november", "december"
-            ]:
-                return birth_month.lower()
-            return None
-        except (AttributeError, TypeError):
-            return None
-    
-    def _calculate_age_range(self, birth_year: Optional[int]) -> str:
-        """Calculate broad age range for demographic context (all adults)."""
-        if not birth_year:
-            return "age_unknown"
+    def _extract_age_information(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate age information from birth_year or direct age."""
         
-        current_year = datetime.now().year
-        age = current_year - birth_year
+        birth_year = patient_profile.get("birth_year")
+        current_year = 2024
         
-        # Broad age ranges supporting all adults with dementia
-        if age >= 100:
-            return "super_senior_100_plus"
-        elif age >= 85:
-            return "senior_85_99"
-        elif age >= 70:
-            return "older_adult_70_84"
-        elif age >= 55:
-            return "mature_adult_55_69"
-        elif age >= 40:
-            return "middle_aged_40_54"
-        elif age >= 25:
-            return "young_adult_25_39"
-        elif age >= 16:
-            return "adult_16_24"
-        else:
-            return "under_adult_age"  # Indicates app designed for 16+
-    
-    def _process_request_context(self, request_type: str) -> Dict[str, Any]:
-        """Process the type of request to provide context for cultural intelligence."""
-        
-        valid_request_types = ["meal", "conversation", "music", "video", "dashboard", "photo_analysis"]
-        
-        if request_type not in valid_request_types:
-            request_type = "dashboard"  # Safe fallback
-        
-        context_mapping = {
-            "meal": {
-                "domain": "culinary",
-                "sensory_focus": ["taste", "smell", "touch"],
-                "cultural_aspects": ["family_traditions", "comfort_foods", "regional_cuisine"],
-                "caregiver_goal": "shared_meal_experience"
-            },
-            "conversation": {
-                "domain": "social",
-                "sensory_focus": ["auditory", "emotional"],
-                "cultural_aspects": ["memories", "stories", "local_history"],
-                "caregiver_goal": "meaningful_connection"
-            },
-            "music": {
-                "domain": "auditory",
-                "sensory_focus": ["auditory", "emotional", "movement"],
-                "cultural_aspects": ["era_music", "cultural_genres", "dance_traditions"],
-                "caregiver_goal": "emotional_engagement"
-            },
-            "video": {
-                "domain": "visual_auditory",
-                "sensory_focus": ["visual", "auditory"],
-                "cultural_aspects": ["era_entertainment", "familiar_shows", "cultural_content"],
-                "caregiver_goal": "shared_viewing_experience"
-            },
-            "dashboard": {
-                "domain": "multi_sensory",
-                "sensory_focus": ["all_senses"],
-                "cultural_aspects": ["daily_routines", "varied_activities", "cultural_preferences"],
-                "caregiver_goal": "comprehensive_daily_support"
-            },
-            "photo_analysis": {
-                "domain": "visual_memory",
-                "sensory_focus": ["visual", "emotional", "memory"],
-                "cultural_aspects": ["family_history", "era_indicators", "cultural_markers"],
-                "caregiver_goal": "photo_triggered_engagement"
+        if birth_year:
+            current_age = current_year - birth_year
+            
+            # Map to Qloo age demographics
+            if current_age <= 35:
+                age_demographic = "35_and_younger"
+            elif current_age <= 55:
+                age_demographic = "36_to_55"
+            else:
+                age_demographic = "55_and_older"
+            
+            logger.info(f"Age calculated from birth year {birth_year}: {current_age} → {age_demographic}")
+            
+            return {
+                "birth_year": birth_year,
+                "current_age": current_age,
+                "age_demographic": age_demographic,
+                "calculation_method": "birth_year"
             }
-        }
         
+        # Try direct age
+        age = patient_profile.get("age")
+        if age:
+            if age <= 35:
+                age_demographic = "35_and_younger"
+            elif age <= 55:
+                age_demographic = "36_to_55"
+            else:
+                age_demographic = "55_and_older"
+            
+            return {
+                "current_age": age,
+                "age_demographic": age_demographic,
+                "calculation_method": "direct_age"
+            }
+        
+        # Default fallback
+        logger.warning("No age information found, defaulting to 55_and_older")
         return {
-            "request_type": request_type,
-            "context": context_mapping.get(request_type, context_mapping["dashboard"]),
-            "timestamp": datetime.utcnow().isoformat()
+            "current_age": 75,  # Conservative estimate for dementia care
+            "age_demographic": "55_and_older",
+            "calculation_method": "default_fallback"
         }
     
-    def _consolidate_feedback(self, feedback_history: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Consolidate feedback patterns while respecting blocked content.
-        Implements feedback learning from Responsible Development Guide.
-        """
-        if not feedback_history:
+    def _extract_location_context(self, patient_profile: Dict[str, Any]) -> str:
+        """Extract and combine location information."""
+        
+        city = patient_profile.get("city", "").strip()
+        state = patient_profile.get("state", "").strip()
+        
+        if city and state:
+            location = f"{city}, {state}"
+        elif city:
+            location = city
+        elif state:
+            location = state
+        else:
+            location = "United States"  # Default
+        
+        logger.info(f"Location context: {location}")
+        return location
+    
+    def _parse_preferences(self, patient_profile: Dict[str, Any]) -> List[str]:
+        """Parse preferences from additional_context and caregiver_notes."""
+        
+        preferences = []
+        
+        # Parse additional_context
+        additional_context = patient_profile.get("additional_context", "").lower()
+        if additional_context:
+            if "music" in additional_context:
+                preferences.append("music")
+            if "cook" in additional_context:
+                preferences.append("cooking")
+            if "family" in additional_context:
+                preferences.append("family activities")
+            if "read" in additional_context:
+                preferences.append("reading")
+            if "garden" in additional_context:
+                preferences.append("gardening")
+        
+        # Parse caregiver_notes
+        caregiver_notes = patient_profile.get("caregiver_notes", "").lower()
+        if caregiver_notes:
+            if "music" in caregiver_notes:
+                preferences.append("music")
+            if "cook" in caregiver_notes:
+                preferences.append("cooking")
+            if "family" in caregiver_notes:
+                preferences.append("family activities")
+        
+        # Remove duplicates
+        preferences = list(set(preferences))
+        
+        logger.info(f"Parsed preferences: {preferences}")
+        return preferences
+    
+    def _process_feedback_patterns(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process feedback data into patterns for future agents."""
+        
+        if not feedback_data:
             return {
                 "has_feedback": False,
                 "blocked_content": {},
-                "positive_patterns": {},
-                "negative_patterns": {},
-                "preference_indicators": {}
+                "positive_patterns": [],
+                "negative_patterns": []
             }
         
-        # Extract blocked content (respects caregiver authority)
-        blocked_content = feedback_history.get("blocked_content", {})
+        # Extract blocked content
+        blocked_content = feedback_data.get("blocked_content", {})
         
-        # Extract positive feedback patterns
-        positive_patterns = self._extract_positive_patterns(feedback_history.get("positive_feedback", []))
+        # Extract feedback history
+        feedback_history = feedback_data.get("feedback_history", [])
         
-        # Extract negative patterns (without blocking)
-        negative_patterns = self._extract_negative_patterns(feedback_history.get("negative_feedback", []))
+        positive_patterns = []
+        negative_patterns = []
         
-        # Extract preference indicators
-        preference_indicators = feedback_history.get("preferences", {})
+        for feedback in feedback_history:
+            if feedback.get("rating") == "positive":
+                positive_patterns.append(feedback.get("content_type", "unknown"))
+            elif feedback.get("rating") == "negative":
+                negative_patterns.append(feedback.get("content_type", "unknown"))
         
         return {
             "has_feedback": True,
             "blocked_content": blocked_content,
-            "positive_patterns": positive_patterns,
-            "negative_patterns": negative_patterns,
-            "preference_indicators": preference_indicators,
-            "feedback_count": len(feedback_history.get("all_feedback", []))
+            "positive_patterns": list(set(positive_patterns)),
+            "negative_patterns": list(set(negative_patterns)),
+            "feedback_count": len(feedback_history)
         }
-    
-    def _extract_positive_patterns(self, positive_feedback: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract patterns from successful suggestions."""
-        patterns = {
-            "successful_music_genres": [],
-            "successful_food_types": [],
-            "successful_conversation_topics": [],
-            "successful_video_content": [],
-            "cultural_connections_that_worked": []
-        }
-        
-        for feedback in positive_feedback:
-            content_type = feedback.get("content_type", "")
-            content_details = feedback.get("content_details", {})
-            
-            if content_type == "music":
-                patterns["successful_music_genres"].append(content_details.get("genre"))
-            elif content_type == "food":
-                patterns["successful_food_types"].append(content_details.get("cuisine_type"))
-            elif content_type == "conversation":
-                patterns["successful_conversation_topics"].append(content_details.get("topic_category"))
-            elif content_type == "video":
-                patterns["successful_video_content"].append(content_details.get("content_category"))
-            
-            # Extract cultural connections that worked
-            if content_details.get("cultural_connection"):
-                patterns["cultural_connections_that_worked"].append(content_details["cultural_connection"])
-        
-        return patterns
-    
-    def _extract_negative_patterns(self, negative_feedback: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract patterns from unsuccessful suggestions (not blocked)."""
-        patterns = {
-            "timing_issues": [],
-            "complexity_issues": [],
-            "sensory_issues": [],
-            "cultural_mismatches": []
-        }
-        
-        for feedback in negative_feedback:
-            feedback_reason = feedback.get("reason", "")
-            
-            if "time" in feedback_reason.lower() or "timing" in feedback_reason.lower():
-                patterns["timing_issues"].append(feedback.get("context", ""))
-            elif "complex" in feedback_reason.lower() or "difficult" in feedback_reason.lower():
-                patterns["complexity_issues"].append(feedback.get("context", ""))
-            elif any(sense in feedback_reason.lower() for sense in ["loud", "bright", "overwhelming"]):
-                patterns["sensory_issues"].append(feedback.get("context", ""))
-            elif "cultural" in feedback_reason.lower() or "not their style" in feedback_reason.lower():
-                patterns["cultural_mismatches"].append(feedback.get("context", ""))
-        
-        return patterns
     
     def _process_photo_context(self, photo_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process photo data context for Agent 5 (Photo Cultural Analyzer)."""
+        """Process photo data context for Agent 5."""
+        
         if not photo_data:
             return {"has_photo": False}
         
         return {
             "has_photo": True,
             "photo_metadata": {
-                "upload_timestamp": photo_data.get("timestamp", datetime.utcnow().isoformat()),
+                "upload_timestamp": photo_data.get("timestamp", datetime.now().isoformat()),
                 "photo_type": photo_data.get("type", "family_photo"),
-                "caregiver_description": self._safe_string(photo_data.get("description"), 200)
+                "caregiver_description": photo_data.get("description", "")[:200]  # Limit length
             },
             "photo_processing_ready": True
         }
     
     def _validate_privacy_compliance(self, consolidated_info: Dict[str, Any]) -> None:
-        """
-        Validate that consolidated information meets privacy standards.
-        Raises exception if any PII detected.
-        """
-        # Check for full names (longer than reasonable first name)
-        first_name = consolidated_info.get("basic_demographics", {}).get("first_name_or_nickname", "")
-        if len(first_name.split()) > 2:  # Likely full name
-            logger.warning("Potential full name detected, truncating to first name only")
-            consolidated_info["basic_demographics"]["first_name_or_nickname"] = first_name.split()[0]
+        """Validate that consolidated information meets privacy standards."""
         
-        # Check for specific addresses (not allowed)
-        location_info = str(consolidated_info.get("basic_demographics", {}).get("general_location", {}))
-        pii_indicators = ["street", "apartment", "apt", "unit", "address", "zip", "postal"]
-        if any(indicator in location_info.lower() for indicator in pii_indicators):
-            logger.warning("Potential address information detected, removing")
-            consolidated_info["basic_demographics"]["general_location"] = {
-                "city_region": "location_removed_for_privacy",
-                "state_region": ""
-            }
+        # Check for any personally identifiable information that shouldn't be there
+        patient_profile = consolidated_info.get("patient_profile", {})
         
-        logger.info("Privacy compliance validation passed")
+        # These fields should not contain PII
+        restricted_fields = ["additional_context", "caregiver_notes"]
+        
+        for field in restricted_fields:
+            content = patient_profile.get(field, "")
+            if content:
+                # Basic check for potential PII patterns (names, addresses, etc.)
+                content_lower = content.lower()
+                if any(word in content_lower for word in ["ssn", "social security", "phone", "address"]):
+                    logger.warning(f"Potential PII detected in {field}")
+        
+        logger.info("Privacy compliance validation completed")
     
-    def _create_fallback_consolidation(self, request_type: str) -> Dict[str, Any]:
-        """Create safe fallback when consolidation fails."""
+    def _create_fallback_consolidation(self, 
+                                     patient_profile: Dict[str, Any], 
+                                     request_type: str) -> Dict[str, Any]:
+        """Create fallback consolidation when extraction fails."""
+        
+        logger.warning("Creating fallback consolidation")
+        
         return {
             "consolidated_info": {
-                "session_metadata": {
-                    "session_id": None,
-                    "timestamp": datetime.utcnow().isoformat(),
+                "patient_profile": {
+                    "cultural_heritage": "American",
+                    "age": 75,
+                    "age_demographic": "55_and_older",
+                    "location": "United States",
+                    "preferences": ["family activities"],
+                    "additional_context": patient_profile.get("additional_context", ""),
+                    "caregiver_notes": patient_profile.get("caregiver_notes", "")
+                },
+                "request_context": {
                     "request_type": request_type,
-                    "has_photo": False,
-                    "processing_mode": "fallback"
+                    "session_id": f"fallback_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    "timestamp": datetime.now().isoformat()
                 },
-                "basic_demographics": {
-                    "first_name_or_nickname": "",
-                    "birth_context": {"age_range": "age_unknown"},
-                    "general_location": {"city_region": "", "state_region": ""},
-                    "cultural_sharing": {},
-                    "caregiver_notes": ""
-                },
-                "request_context": self._process_request_context(request_type),
                 "feedback_patterns": {"has_feedback": False},
                 "photo_context": {"has_photo": False},
-                "processing_notes": {
-                    "privacy_compliance": "minimal_data_only",
-                    "caregiver_authority": "respected",
-                    "cultural_assumptions": "none_made",
-                    "mode": "fallback_safe_defaults"
+                "session_metadata": {
+                    "data_sources": ["fallback"],
+                    "consolidation_timestamp": datetime.now().isoformat()
                 }
             }
         }
+
+# Test function
+def test_information_consolidator():
+    """Test the simplified information consolidator."""
+    
+    agent = InformationConsolidatorAgent()
+    
+    # Test data matching the curl example
+    test_patient_profile = {
+        "cultural_heritage": "Italian-American",
+        "birth_year": 1945,
+        "city": "Brooklyn",
+        "state": "New York",
+        "additional_context": "Loves music and cooking"
+    }
+    
+    # Run the test
+    import asyncio
+    
+    async def run_test():
+        result = await agent.run(
+            patient_profile=test_patient_profile,
+            request_type="dashboard"
+        )
+        
+        consolidated = result.get("consolidated_info", {})
+        patient = consolidated.get("patient_profile", {})
+        
+        print("Information Consolidator Test Results:")
+        print(f"Heritage: {patient.get('cultural_heritage')}")
+        print(f"Age: {patient.get('age')} ({patient.get('age_demographic')})")
+        print(f"Location: {patient.get('location')}")
+        print(f"Preferences: {patient.get('preferences')}")
+        
+        return result
+    
+    return asyncio.run(run_test())
+
+if __name__ == "__main__":
+    test_information_consolidator()

@@ -1,549 +1,341 @@
 """
-Agent 2: Cultural Profile Builder
-Role: Transform patient information into cultural intelligence framework
-Follows Responsible Development Guide principles - NO cultural assumptions
+Agent 2: Cultural Profile Builder - ENHANCED VERSION
+File: backend/multi_tool_agent/agents/cultural_profile_agent.py
+
+Enhanced to use cultural mappings and create Qloo tag mappings for Agent 3.
 """
 
-from typing import Dict, Any, Optional, List, Set
-import re
+from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 from google.adk.agents import Agent
+
+# Import our cultural mappings
+from backend.config.cultural_mappings import get_heritage_tags, get_interest_tags, get_age_demographic
 
 logger = logging.getLogger(__name__)
 
 class CulturalProfileBuilderAgent(Agent):
     """
-    Agent 2: Cultural Profile Builder
+    Agent 2: Cultural Profile Builder - ENHANCED
     
-    Purpose: Transform patient information into cultural intelligence framework
-    Input: Consolidated information from Agent 1
-    Output: Rich cultural profile with era mapping, heritage context, sensory preferences
-    
-    Anti-Bias Principles:
-    - NO cultural assumptions or stereotypes
-    - Individual preferences override demographic patterns
-    - Open-ended cultural processing, not predetermined categories
-    - Era context without generational assumptions
+    ENHANCEMENTS:
+    - Uses cultural heritage mappings to create Qloo tags
+    - Maps interests to additional tags
+    - Creates enhanced cultural context
+    - Provides ready-to-use tag mappings for Agent 3
+    - No complex bias prevention - just reliable mapping
     """
     
     def __init__(self):
         super().__init__(
-            name="cultural_profile_builder",
-            description="Builds cultural intelligence framework without assumptions or stereotypes"
+            name="cultural_profile_builder_enhanced",
+            description="Creates enhanced cultural profiles with Qloo tag mappings"
         )
+        logger.info("Cultural Profile Builder Agent initialized with mapping enhancements")
     
     async def run(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Build cultural profile from consolidated information.
+        Create enhanced cultural profile with Qloo tag mappings.
         
         Args:
-            consolidated_info: Output from Agent 1 (Information Consolidator)
+            consolidated_info: Output from Agent 1
             
         Returns:
-            Cultural profile framework for Qloo API integration
+            Enhanced cultural profile with tag mappings
         """
         
         try:
-            logger.info("Building cultural profile without assumptions")
+            logger.info("Building enhanced cultural profile with tag mappings")
             
-            # Extract basic demographics safely
-            demographics = consolidated_info.get("basic_demographics", {})
+            # Extract basic information
+            patient_profile = consolidated_info.get("patient_profile", {})
             request_context = consolidated_info.get("request_context", {})
-            feedback_patterns = consolidated_info.get("feedback_patterns", {})
             
-            # Build era context (factual, no assumptions)
-            era_context = self._build_era_context(demographics.get("birth_context", {}))
+            # STEP 1: Extract cultural heritage
+            heritage = self._extract_heritage(patient_profile, request_context)
             
-            # Process cultural sharing (open-ended, no categories)
-            cultural_elements = self._process_cultural_sharing(demographics.get("cultural_sharing", {}))
+            # STEP 2: Extract interests and preferences
+            interests = self._extract_interests(patient_profile)
             
-            # Map to sensory domains (broad possibilities)
-            sensory_mapping = self._create_sensory_mapping(request_context, cultural_elements)
+            # STEP 3: Extract era context
+            era_context = self._extract_era_context(patient_profile)
             
-            # Build Qloo query framework (anti-bias)
-            qloo_framework = self._build_qloo_framework(era_context, cultural_elements, demographics)
+            # STEP 4: Map heritage to Qloo tags
+            heritage_tags = get_heritage_tags(heritage)
             
-            # Integrate feedback patterns (individual trumps demographics)
-            preference_indicators = self._integrate_feedback_patterns(feedback_patterns)
+            # STEP 5: Map interests to additional tags
+            interest_tags = get_interest_tags(interests)
             
-            # Create cultural profile
+            # STEP 6: Build comprehensive cultural elements
+            cultural_elements = self._build_cultural_elements(
+                heritage=heritage,
+                interests=interests,
+                era_context=era_context,
+                heritage_tags=heritage_tags,
+                interest_tags=interest_tags
+            )
+            
+            # STEP 7: Create Qloo tag mappings for Agent 3
+            qloo_tag_mappings = self._create_qloo_tag_mappings(heritage_tags, interest_tags)
+            
+            # STEP 8: Build final cultural profile
             cultural_profile = {
-                "profile_metadata": {
-                    "created_timestamp": datetime.utcnow().isoformat(),
-                    "processing_approach": "individual_first_no_assumptions",
-                    "cultural_bias_prevention": "active"
-                },
-                "era_context": era_context,
                 "cultural_elements": cultural_elements,
-                "sensory_mapping": sensory_mapping,
-                "qloo_framework": qloo_framework,
-                "preference_indicators": preference_indicators,
-                "anti_bias_notes": {
-                    "heritage_approach": "open_ended_no_categories",
-                    "era_approach": "factual_context_no_assumptions",
-                    "individual_priority": "preferences_override_demographics"
+                "qloo_tag_mappings": qloo_tag_mappings,
+                "era_context": era_context,
+                "metadata": {
+                    "heritage_source": heritage,
+                    "interests_found": len(interests),
+                    "heritage_tags_mapped": len(heritage_tags),
+                    "interest_tags_mapped": len(interest_tags),
+                    "profile_generation_timestamp": datetime.now().isoformat(),
+                    "agent_version": "enhanced_with_mappings"
                 }
             }
             
-            # Validate no stereotypes were introduced
-            self._validate_anti_bias_compliance(cultural_profile)
+            logger.info(f"Cultural profile built: {heritage} heritage with {len(interests)} interests")
             
-            logger.info("Cultural profile built successfully without assumptions")
             return {"cultural_profile": cultural_profile}
             
         except Exception as e:
-            logger.error(f"Error building cultural profile: {str(e)}")
-            return self._create_fallback_cultural_profile(consolidated_info)
+            logger.error(f"❌ Cultural Profile Builder failed: {e}")
+            return self._create_fallback_profile()
     
-    def _build_era_context(self, birth_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Build factual era context without generational assumptions.
-        """
-        birth_year = birth_context.get("birth_year")
-        birth_month = birth_context.get("birth_month")
-        age_range = birth_context.get("age_range", "age_unknown")
+    def _extract_heritage(self, patient_profile: Dict[str, Any], request_context: Dict[str, Any]) -> str:
+        """Extract cultural heritage from patient information."""
+        
+        # Try patient profile first
+        heritage = patient_profile.get("cultural_heritage")
+        if heritage:
+            return heritage.strip()
+        
+        # Try request context
+        heritage = request_context.get("cultural_heritage")
+        if heritage:
+            return heritage.strip()
+        
+        # Default
+        logger.warning("No cultural heritage specified, using American")
+        return "American"
+    
+    def _extract_interests(self, patient_profile: Dict[str, Any]) -> List[str]:
+        """Extract interests and preferences from patient information."""
+        
+        interests = []
+        
+        # Extract from additional_context
+        additional_context = patient_profile.get("additional_context", "")
+        if additional_context:
+            context_lower = additional_context.lower()
+            
+            # Look for specific interest keywords
+            interest_keywords = [
+                "music", "cooking", "reading", "gardening", "dancing", 
+                "movies", "travel", "sports", "arts", "crafts", "family"
+            ]
+            
+            for keyword in interest_keywords:
+                if keyword in context_lower:
+                    interests.append(keyword)
+        
+        # Extract from caregiver_notes
+        caregiver_notes = patient_profile.get("caregiver_notes", "")
+        if caregiver_notes:
+            notes_lower = caregiver_notes.lower()
+            
+            if "music" in notes_lower:
+                interests.append("music")
+            if "cook" in notes_lower:
+                interests.append("cooking")
+            if "family" in notes_lower:
+                interests.append("family activities")
+        
+        # Remove duplicates
+        interests = list(set(interests))
+        
+        logger.info(f"Extracted interests: {interests}")
+        return interests
+    
+    def _extract_era_context(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract era and generational context."""
+        
+        birth_year = patient_profile.get("birth_year")
         
         if not birth_year:
-            return {
-                "has_era_context": False,
-                "age_range": age_range,
-                "approach": "no_era_assumptions"
-            }
+            return {"has_era_context": False}
         
-        # Factual era mapping (no cultural assumptions)
-        era_context = {
+        current_year = 2024
+        age = current_year - birth_year
+        
+        # Calculate key decades
+        childhood_decade = ((birth_year + 10) // 10) * 10  # Approximate childhood decade
+        teen_decade = ((birth_year + 15) // 10) * 10       # Approximate teen decade
+        young_adult_decade = ((birth_year + 25) // 10) * 10  # Approximate young adult decade
+        
+        return {
             "has_era_context": True,
             "birth_year": birth_year,
-            "birth_month": birth_month,
-            "age_range": age_range,
-            "decades_lived": self._calculate_decades_lived(birth_year),
-            "historical_periods": self._map_historical_periods(birth_year),
-            "cultural_eras": self._map_cultural_eras(birth_year),
-            "seasonal_context": self._get_seasonal_context(birth_month),
-            "approach": "factual_no_assumptions"
+            "current_age": age,
+            "age_demographic": get_age_demographic(birth_year),
+            "childhood_decade": childhood_decade,
+            "teen_decade": teen_decade,
+            "young_adult_decade": young_adult_decade,
+            "formative_decades": [childhood_decade, teen_decade, young_adult_decade],
+            "generation_context": self._get_generation_context(birth_year)
         }
-        
-        return era_context
     
-    def _calculate_decades_lived(self, birth_year: int) -> List[str]:
-        """Calculate which decades person has lived through (factual)."""
-        current_year = datetime.now().year
-        decades = []
+    def _get_generation_context(self, birth_year: int) -> str:
+        """Get generational context for cultural understanding."""
         
-        # Start from birth decade
-        start_decade = (birth_year // 10) * 10
-        current_decade = (current_year // 10) * 10
-        
-        decade = start_decade
-        while decade <= current_decade:
-            decades.append(f"{decade}s")
-            decade += 10
-        
-        return decades
+        if birth_year <= 1928:
+            return "Silent Generation"
+        elif birth_year <= 1945:
+            return "Greatest Generation"
+        elif birth_year <= 1964:
+            return "Baby Boomer"
+        elif birth_year <= 1980:
+            return "Generation X"
+        elif birth_year <= 1996:
+            return "Millennial"
+        else:
+            return "Generation Z"
     
-    def _map_historical_periods(self, birth_year: int) -> List[str]:
-        """Map to broad historical periods (factual, no cultural assumptions)."""
-        periods = []
+    def _build_cultural_elements(self, 
+                                heritage: str,
+                                interests: List[str],
+                                era_context: Dict[str, Any],
+                                heritage_tags: Dict[str, str],
+                                interest_tags: List[str]) -> Dict[str, Any]:
+        """Build comprehensive cultural elements structure."""
         
-        # Factual historical periods
-        historical_mapping = {
-            "pre_wwii": (1900, 1939),
-            "wwii_era": (1939, 1945),
-            "post_war_boom": (1945, 1960),
-            "cultural_revolution_60s": (1960, 1970),
-            "modern_era": (1970, 1990),
-            "digital_transition": (1990, 2010),
-            "digital_native": (2010, 2025)
-        }
+        # Create heritage keywords for context
+        heritage_keywords = [heritage]
+        if "-" in heritage:
+            heritage_keywords.extend(heritage.split("-"))
+        heritage_keywords.append("family traditions")
         
-        for period, (start_year, end_year) in historical_mapping.items():
-            # Check if they lived through this period (age 5+ for memories)
-            if birth_year + 5 <= end_year and birth_year <= start_year:
-                periods.append(period)
+        # Map interests to preference categories
+        cuisine_preferences = ["comfort food"]
+        music_preferences = []
+        activity_preferences = []
         
-        return periods
-    
-    def _map_cultural_eras(self, birth_year: int) -> Dict[str, List[str]]:
-        """Map to cultural eras without stereotypical assumptions."""
+        for interest in interests:
+            if interest in ["cooking"]:
+                cuisine_preferences.append("home cooking")
+            elif interest in ["music"]:
+                music_preferences.append("traditional")
+            elif interest in ["family"]:
+                activity_preferences.append("family time")
+            else:
+                activity_preferences.append(interest)
         
-        # Factual cultural periods (no assumptions about what they liked)
-        cultural_eras = {
-            "music_eras_lived": [],
-            "entertainment_eras": [],
-            "technology_eras": [],
-            "social_movements": []
-        }
-        
-        current_year = datetime.now().year
-        
-        # Music eras (factual periods, not preference assumptions)
-        music_mapping = {
-            "swing_big_band": (1930, 1950),
-            "early_rock_roll": (1950, 1960),
-            "folk_protest": (1960, 1970),
-            "disco_funk": (1970, 1980),
-            "mtv_generation": (1980, 1990),
-            "grunge_alternative": (1990, 2000),
-            "digital_music": (2000, 2010),
-            "streaming_era": (2010, 2025)
-        }
-        
-        for era, (start, end) in music_mapping.items():
-            # They were between ages 10-30 during this era (formative years)
-            if (birth_year + 10 <= end) and (birth_year + 30 >= start):
-                cultural_eras["music_eras_lived"].append(era)
-        
-        # Entertainment eras
-        entertainment_mapping = {
-            "radio_golden_age": (1930, 1950),
-            "early_television": (1950, 1970),
-            "cable_expansion": (1970, 1990),
-            "home_video": (1980, 2000),
-            "internet_content": (1995, 2010),
-            "streaming_services": (2010, 2025)
-        }
-        
-        for era, (start, end) in entertainment_mapping.items():
-            if (birth_year + 5 <= end) and (birth_year <= start + 20):
-                cultural_eras["entertainment_eras"].append(era)
-        
-        return cultural_eras
-    
-    def _get_seasonal_context(self, birth_month: Optional[str]) -> Dict[str, Any]:
-        """Get seasonal context for cultural elements."""
-        if not birth_month:
-            return {"has_seasonal_context": False}
-        
-        seasonal_mapping = {
-            "winter": ["december", "january", "february"],
-            "spring": ["march", "april", "may"],
-            "summer": ["june", "july", "august"],
-            "fall": ["september", "october", "november"]
-        }
-        
-        season = None
-        for season_name, months in seasonal_mapping.items():
-            if birth_month in months:
-                season = season_name
-                break
+        # Add heritage-based preferences
+        heritage_base = heritage.split("-")[0] if "-" in heritage else heritage
+        if heritage_base.lower() != "american":
+            cuisine_preferences.append(heritage_base.lower())
+            music_preferences.append("traditional")
         
         return {
-            "has_seasonal_context": True,
-            "birth_season": season,
-            "birth_month": birth_month,
-            "seasonal_cultural_elements": self._get_seasonal_cultural_elements(season)
+            "heritage": heritage,
+            "heritage_keywords": heritage_keywords,
+            "cuisine_preferences": list(set(cuisine_preferences)),
+            "music_preferences": list(set(music_preferences)) or ["classical"],
+            "activity_preferences": list(set(activity_preferences)) or ["family activities"],
+            "interests": interests,
+            "era_informed": era_context.get("has_era_context", False)
         }
     
-    def _get_seasonal_cultural_elements(self, season: str) -> List[str]:
-        """Get seasonal cultural elements (broad possibilities)."""
-        seasonal_elements = {
-            "winter": ["holiday_traditions", "comfort_foods", "indoor_activities", "warm_gathering_spaces"],
-            "spring": ["renewal_themes", "fresh_foods", "outdoor_activities", "growth_metaphors"],
-            "summer": ["outdoor_celebrations", "fresh_produce", "travel_memories", "light_activities"],
-            "fall": ["harvest_themes", "transition_times", "cozy_environments", "reflection_activities"]
-        }
+    def _create_qloo_tag_mappings(self, heritage_tags: Dict[str, str], interest_tags: List[str]) -> Dict[str, Any]:
+        """Create ready-to-use Qloo tag mappings for Agent 3."""
         
-        return seasonal_elements.get(season, [])
-    
-    def _process_cultural_sharing(self, cultural_sharing: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Process cultural sharing information without assumptions.
-        Open-ended approach respecting individual complexity.
-        """
-        heritage_info = cultural_sharing.get("heritage_info", "").strip()
-        languages = cultural_sharing.get("languages", "").strip()
-        spiritual_traditions = cultural_sharing.get("spiritual_traditions", "").strip()
-        additional_context = cultural_sharing.get("additional_context", "").strip()
+        # Base mappings from heritage
+        mappings = heritage_tags.copy()
         
-        # Extract cultural keywords without making assumptions
-        cultural_keywords = self._extract_cultural_keywords(heritage_info, languages, spiritual_traditions, additional_context)
-        
-        # Process languages (factual)
-        language_elements = self._process_languages(languages)
-        
-        # Process spiritual/cultural traditions (open-ended)
-        tradition_elements = self._process_traditions(spiritual_traditions)
-        
-        # Process heritage information (no stereotypes)
-        heritage_elements = self._process_heritage(heritage_info)
-        
-        # Additional context processing
-        additional_elements = self._process_additional_context(additional_context)
+        # Enhance with interest tags if available
+        if interest_tags:
+            # Add first interest tag as additional signal
+            mappings["additional_interest"] = interest_tags[0]
         
         return {
-            "has_cultural_info": bool(heritage_info or languages or spiritual_traditions or additional_context),
-            "cultural_keywords": cultural_keywords,
-            "language_elements": language_elements,
-            "tradition_elements": tradition_elements,
-            "heritage_elements": heritage_elements,
-            "additional_elements": additional_elements,
-            "processing_approach": "open_ended_no_assumptions",
-            "complexity_respected": "mixed_heritage_welcomed"
+            "cuisine": mappings.get("cuisine"),
+            "music": mappings.get("music"), 
+            "movies": mappings.get("movies"),
+            "additional_tags": interest_tags,
+            "mapping_source": "cultural_heritage_with_interests"
         }
     
-    def _extract_cultural_keywords(self, *text_inputs) -> Set[str]:
-        """Extract cultural keywords without assumptions."""
-        all_text = " ".join(filter(None, text_inputs)).lower()
+    def _create_fallback_profile(self) -> Dict[str, Any]:
+        """Create fallback cultural profile when extraction fails."""
         
-        # Extract meaningful cultural terms (no assumptions about what they mean)
-        cultural_patterns = [
-            r'\b(\w+)[\s\-]?american\b',  # X-American heritage
-            r'\b(\w+)[\s\-]?heritage\b',  # X heritage
-            r'\b(\w+)[\s\-]?tradition\b', # X tradition
-            r'\b(\w+)[\s\-]?culture\b',   # X culture
-            r'\b(\w+)[\s\-]?family\b',    # X family
-            r'\b(\w+)[\s\-]?background\b', # X background
-            r'\b(\w+)[\s\-]?roots\b',     # X roots
-            r'\b(\w+)[\s\-]?community\b', # X community
-        ]
+        logger.warning("Creating fallback cultural profile")
         
-        keywords = set()
-        for pattern in cultural_patterns:
-            matches = re.findall(pattern, all_text)
-            keywords.update(matches)
-        
-        # Also extract standalone cultural/geographic terms
-        potential_cultural_terms = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b', " ".join(text_inputs))
-        
-        # Filter for likely cultural terms (simple heuristic)
-        for term in potential_cultural_terms:
-            if len(term) > 3 and term.lower() not in ['the', 'and', 'but', 'they', 'were', 'have', 'with']:
-                keywords.add(term.lower())
-        
-        return keywords
-    
-    def _process_languages(self, languages: str) -> Dict[str, Any]:
-        """Process language information factually."""
-        if not languages:
-            return {"has_languages": False}
-        
-        # Simple language extraction
-        language_list = [lang.strip() for lang in re.split(r'[,;]+', languages) if lang.strip()]
-        
-        return {
-            "has_languages": True,
-            "languages": language_list,
-            "multilingual": len(language_list) > 1,
-            "primary_language": language_list[0] if language_list else None
-        }
-    
-    def _process_traditions(self, spiritual_traditions: str) -> Dict[str, Any]:
-        """Process spiritual/cultural traditions without assumptions."""
-        if not spiritual_traditions:
-            return {"has_traditions": False}
-        
-        # Extract tradition keywords
-        tradition_keywords = self._extract_cultural_keywords(spiritual_traditions)
-        
-        return {
-            "has_traditions": True,
-            "tradition_text": spiritual_traditions[:200],  # Limit for privacy
-            "tradition_keywords": list(tradition_keywords),
-            "approach": "open_ended_respectful"
-        }
-    
-    def _process_heritage(self, heritage_info: str) -> Dict[str, Any]:
-        """Process heritage information without stereotypes."""
-        if not heritage_info:
-            return {"has_heritage": False}
-        
-        # Extract heritage keywords
-        heritage_keywords = self._extract_cultural_keywords(heritage_info)
-        
-        return {
-            "has_heritage": True,
-            "heritage_text": heritage_info[:200],  # Limit for privacy
-            "heritage_keywords": list(heritage_keywords),
-            "complexity_note": "mixed_heritage_respected",
-            "approach": "individual_not_stereotypical"
-        }
-    
-    def _process_additional_context(self, additional_context: str) -> Dict[str, Any]:
-        """Process additional context provided by caregiver."""
-        if not additional_context:
-            return {"has_additional": False}
-        
-        # Extract any additional cultural elements
-        additional_keywords = self._extract_cultural_keywords(additional_context)
-        
-        return {
-            "has_additional": True,
-            "context_text": additional_context[:300],  # Limit for privacy
-            "additional_keywords": list(additional_keywords),
-            "source": "caregiver_provided"
-        }
-    
-    def _create_sensory_mapping(self, request_context: Dict[str, Any], cultural_elements: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Map cultural elements to sensory domains for multi-sensory experiences.
-        """
-        request_type = request_context.get("request_type", "dashboard")
-        context = request_context.get("context", {})
-        sensory_focus = context.get("sensory_focus", ["all_senses"])
-        
-        # Cultural elements that could map to different senses
-        cultural_keywords = cultural_elements.get("cultural_keywords", set())
-        heritage_keywords = cultural_elements.get("heritage_elements", {}).get("heritage_keywords", [])
-        language_elements = cultural_elements.get("language_elements", {})
-        
-        sensory_mapping = {
-            "primary_senses": sensory_focus,
-            "cultural_sensory_connections": {
-                "auditory": {
-                    "music_cultural_keywords": list(cultural_keywords),
-                    "language_connections": language_elements,
-                    "potential_genres": []  # Will be filled by Qloo
-                },
-                "gustatory": {
-                    "cuisine_cultural_keywords": list(heritage_keywords),
-                    "potential_cuisines": [],  # Will be filled by Qloo
-                    "dietary_considerations": []
-                },
-                "visual": {
-                    "cultural_imagery_keywords": list(cultural_keywords),
-                    "potential_content": [],  # Will be filled by Qloo
-                    "visual_themes": []
-                },
-                "olfactory": {
-                    "scent_cultural_connections": list(heritage_keywords),
-                    "potential_aromatherapy": [],
-                    "cooking_scents": []
-                },
-                "tactile": {
-                    "texture_cultural_connections": list(cultural_keywords),
-                    "craft_traditions": [],
-                    "comfort_objects": []
-                }
-            },
-            "cross_sensory_themes": self._identify_cross_sensory_themes(cultural_elements),
-            "approach": "broad_possibilities_no_assumptions"
+        fallback_tags = {
+            "cuisine": "urn:tag:cuisine:comfort",
+            "music": "urn:tag:genre:music:popular",
+            "movies": "urn:tag:genre:media:family"
         }
         
-        return sensory_mapping
-    
-    def _identify_cross_sensory_themes(self, cultural_elements: Dict[str, Any]) -> List[str]:
-        """Identify themes that could work across multiple senses."""
-        themes = []
-        
-        cultural_keywords = cultural_elements.get("cultural_keywords", set())
-        
-        # Broad thematic connections (no stereotypes)
-        for keyword in cultural_keywords:
-            if any(food_word in keyword for food_word in ['food', 'cooking', 'meal', 'kitchen']):
-                themes.append("culinary_experiences")
-            if any(music_word in keyword for music_word in ['music', 'song', 'dance', 'instrument']):
-                themes.append("musical_experiences")
-            if any(family_word in keyword for family_word in ['family', 'tradition', 'celebration']):
-                themes.append("family_traditions")
-            if any(place_word in keyword for place_word in ['home', 'neighborhood', 'city', 'country']):
-                themes.append("place_connections")
-        
-        return themes
-    
-    def _build_qloo_framework(self, era_context: Dict[str, Any], cultural_elements: Dict[str, Any], demographics: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Build framework for Qloo API calls without cultural assumptions.
-        """
-        age_range = demographics.get("birth_context", {}).get("age_range", "age_unknown")
-        general_location = demographics.get("general_location", {})
-        
-        # Build Qloo query parameters (individual-first approach)
-        qloo_framework = {
-            "demographic_signals": {
-                "age_range": age_range,
-                "general_location": {
-                    "city_region": general_location.get("city_region", ""),
-                    "state_region": general_location.get("state_region", "")
-                }
-            },
-            "cultural_signals": {
-                "heritage_keywords": cultural_elements.get("heritage_elements", {}).get("heritage_keywords", []),
-                "tradition_keywords": cultural_elements.get("tradition_elements", {}).get("tradition_keywords", []),
-                "language_elements": cultural_elements.get("language_elements", {}).get("languages", []),
-                "additional_keywords": cultural_elements.get("additional_elements", {}).get("additional_keywords", [])
-            },
-            "era_signals": {
-                "birth_year": era_context.get("birth_year"),
-                "decades_lived": era_context.get("decades_lived", []),
-                "cultural_eras": era_context.get("cultural_eras", {}),
-                "historical_periods": era_context.get("historical_periods", [])
-            },
-            "query_approach": {
-                "method": "broad_exploration_no_assumptions",
-                "bias_prevention": "individual_overrides_demographics",
-                "cultural_respect": "open_ended_discovery"
-            }
-        }
-        
-        return qloo_framework
-    
-    def _integrate_feedback_patterns(self, feedback_patterns: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Integrate feedback patterns - individual preferences override everything.
-        """
-        if not feedback_patterns.get("has_feedback"):
-            return {
-                "has_preferences": False,
-                "approach": "open_discovery"
-            }
-        
-        blocked_content = feedback_patterns.get("blocked_content", {})
-        positive_patterns = feedback_patterns.get("positive_patterns", {})
-        negative_patterns = feedback_patterns.get("negative_patterns", {})
-        
-        return {
-            "has_preferences": True,
-            "blocked_content": blocked_content,
-            "successful_patterns": positive_patterns,
-            "avoided_patterns": negative_patterns,
-            "preference_priority": "individual_first",
-            "override_note": "individual_preferences_override_cultural_demographics"
-        }
-    
-    def _validate_anti_bias_compliance(self, cultural_profile: Dict[str, Any]) -> None:
-        """
-        Validate that no cultural stereotypes or assumptions were introduced.
-        """
-        # Check for stereotypical assumptions
-        cultural_elements = cultural_profile.get("cultural_elements", {})
-        qloo_framework = cultural_profile.get("qloo_framework", {})
-        
-        # Ensure no predetermined cultural "packages"
-        heritage_keywords = cultural_elements.get("heritage_elements", {}).get("heritage_keywords", [])
-        
-        # Log if any suspicious patterns detected
-        stereotype_indicators = ["must", "always", "typical", "traditional", "should", "expected"]
-        
-        for element in str(cultural_profile).lower().split():
-            if element in stereotype_indicators:
-                logger.warning(f"Potential stereotype language detected: {element}")
-        
-        # Ensure individual approach is maintained
-        if not cultural_profile.get("anti_bias_notes", {}).get("individual_priority"):
-            logger.warning("Individual priority not properly documented")
-        
-        logger.info("Anti-bias compliance validation completed")
-    
-    def _create_fallback_cultural_profile(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create safe fallback cultural profile."""
         return {
             "cultural_profile": {
-                "profile_metadata": {
-                    "created_timestamp": datetime.utcnow().isoformat(),
-                    "processing_approach": "safe_fallback_no_assumptions",
-                    "cultural_bias_prevention": "active"
+                "cultural_elements": {
+                    "heritage": "American",
+                    "heritage_keywords": ["American", "family traditions"],
+                    "cuisine_preferences": ["comfort food"],
+                    "music_preferences": ["popular"],
+                    "activity_preferences": ["family activities"],
+                    "interests": [],
+                    "era_informed": False
                 },
-                "era_context": {"has_era_context": False, "approach": "no_assumptions"},
-                "cultural_elements": {"has_cultural_info": False, "approach": "open_discovery"},
-                "sensory_mapping": {"primary_senses": ["all_senses"], "approach": "broad_exploration"},
-                "qloo_framework": {"query_approach": {"method": "general_discovery", "bias_prevention": "active"}},
-                "preference_indicators": {"has_preferences": False, "approach": "open_discovery"},
-                "anti_bias_notes": {
-                    "heritage_approach": "no_assumptions_made",
-                    "era_approach": "no_generational_stereotypes",
-                    "individual_priority": "preferences_over_demographics",
-                    "fallback_mode": True
+                "qloo_tag_mappings": fallback_tags,
+                "era_context": {"has_era_context": False},
+                "metadata": {
+                    "heritage_source": "fallback",
+                    "profile_generation_timestamp": datetime.now().isoformat(),
+                    "agent_version": "fallback"
                 }
             }
         }
+
+# Test function
+def test_cultural_profile_builder():
+    """Test the enhanced cultural profile builder."""
+    
+    agent = CulturalProfileBuilderAgent()
+    
+    # Test data matching the curl example
+    test_consolidated_info = {
+        "patient_profile": {
+            "cultural_heritage": "Italian-American",
+            "birth_year": 1945,
+            "additional_context": "Loves music and cooking",
+            "city": "Brooklyn",
+            "state": "New York"
+        },
+        "request_context": {
+            "request_type": "dashboard"
+        }
+    }
+    
+    # Run the test
+    import asyncio
+    
+    async def run_test():
+        result = await agent.run(test_consolidated_info)
+        
+        profile = result.get("cultural_profile", {})
+        elements = profile.get("cultural_elements", {})
+        mappings = profile.get("qloo_tag_mappings", {})
+        
+        print("Cultural Profile Builder Test Results:")
+        print(f"Heritage: {elements.get('heritage')}")
+        print(f"Interests: {elements.get('interests')}")
+        print(f"Era context: {profile.get('era_context', {}).get('has_era_context')}")
+        print(f"Qloo mappings: {mappings}")
+        
+        return result
+    
+    return asyncio.run(run_test())
+
+if __name__ == "__main__":
+    test_cultural_profile_builder()

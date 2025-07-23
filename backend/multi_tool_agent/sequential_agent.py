@@ -1,189 +1,81 @@
 """
-Fixed CareConnect Sequential Agent
+Sequential Agent Coordinator - UPDATED VERSION
 File: backend/multi_tool_agent/sequential_agent.py
 
-Orchestrates all 7 agents without inheriting from SequentialAgent
+Updated to handle the simplified agent pipeline with proper data flow.
+Ensures cultural mappings flow through the pipeline correctly.
 """
 
 import logging
 from typing import Dict, Any, Optional
+from datetime import datetime
 
-# Configure logger
+# Import all agents
+from backend.multi_tool_agent.agents.information_consolidator_agent import InformationConsolidatorAgent
+from backend.multi_tool_agent.agents.cultural_profile_agent import CulturalProfileBuilderAgent  
+from backend.multi_tool_agent.agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
+from backend.multi_tool_agent.agents.sensory_content_generator_agent import SensoryContentGeneratorAgent
+from backend.multi_tool_agent.agents.photo_cultural_analyzer_agent import PhotoCulturalAnalyzerAgent
+from backend.multi_tool_agent.agents.mobile_synthesizer_agent import MobileSynthesizerAgent
+from backend.multi_tool_agent.agents.feedback_learning_agent import FeedbackLearningAgent
+
 logger = logging.getLogger(__name__)
 
-# Import individual agents from agents subdirectory with error handling
-try:
-    from .agents.information_consolidator_agent import InformationConsolidatorAgent
-    logger.info("✅ InformationConsolidatorAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import InformationConsolidatorAgent: {e}")
-    InformationConsolidatorAgent = None
-
-try:
-    from .agents.cultural_profile_agent import CulturalProfileBuilderAgent
-    logger.info("✅ CulturalProfileBuilderAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import CulturalProfileBuilderAgent: {e}")
-    CulturalProfileBuilderAgent = None
-
-try:
-    from .agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
-    logger.info("✅ QlooCulturalIntelligenceAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import QlooCulturalIntelligenceAgent: {e}")
-    QlooCulturalIntelligenceAgent = None
-
-try:
-    from .agents.sensory_content_generator_agent import SensoryContentGeneratorAgent
-    logger.info("✅ SensoryContentGeneratorAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import SensoryContentGeneratorAgent: {e}")
-    SensoryContentGeneratorAgent = None
-
-try:
-    from .agents.photo_cultural_analyzer_agent import PhotoCulturalAnalyzerAgent
-    logger.info("✅ PhotoCulturalAnalyzerAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import PhotoCulturalAnalyzerAgent: {e}")
-    PhotoCulturalAnalyzerAgent = None
-
-try:
-    from .agents.mobile_synthesizer_agent import MobileSynthesizerAgent
-    logger.info("✅ MobileSynthesizerAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import MobileSynthesizerAgent: {e}")
-    MobileSynthesizerAgent = None
-
-try:
-    from .agents.feedback_learning_agent import FeedbackLearningSystemAgent
-    logger.info("✅ FeedbackLearningSystemAgent imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Failed to import FeedbackLearningSystemAgent: {e}")
-    FeedbackLearningSystemAgent = None
-
-class CareConnectAgent:
+class SequentialAgentCoordinator:
     """
-    CareConnect Sequential Agent - Main Orchestrator
+    Coordinates the execution of all 7 agents in the CareConnect pipeline.
     
-    Coordinates all 7 agents in the dementia care cultural intelligence pipeline:
-    1. Information Consolidator → consolidated_info
-    2. Cultural Profile Builder → cultural_profile  
-    3. Qloo Cultural Intelligence → qloo_intelligence
-    4. Sensory Content Generator → sensory_content
-    5. Photo Cultural Analyzer → photo_analysis
-    6. Mobile Synthesizer → mobile_experience
-    7. Feedback Learning System → updated_preferences
-    
-    Follows Responsible Development Guide principles throughout.
+    UPDATED FOR SIMPLIFIED APPROACH:
+    - Handles new cultural heritage → tag mapping flow
+    - Processes curl input format
+    - Ensures proper data flow between simplified agents
+    - Adds better error handling for missing Qloo results
     """
     
-    def __init__(self, tools: Dict[str, Any]):
-        """
-        Initialize CareConnect Sequential Agent with required tools.
+    def __init__(self, 
+                 qloo_tool=None, 
+                 youtube_tool=None, 
+                 gemini_tool=None,
+                 vision_ai_tool=None,
+                 session_storage_tool=None):
+        """Initialize all agents with available tools."""
         
-        Args:
-            tools: Dictionary containing all required tools for agents
-                - qloo_tool: Qloo API interface
-                - youtube_tool: YouTube search interface  
-                - gemini_tool: Gemini recipe generator
-                - vision_ai_tool: Vision AI analyzer
-                - session_storage_tool: Session storage manager
-        """
+        # Initialize agents
+        self.agent1 = InformationConsolidatorAgent()
+        self.agent2 = CulturalProfileBuilderAgent()
         
-        self.name = "careconnect_pipeline"
-        self.description = "Complete CareConnect dementia care cultural intelligence pipeline"
-        
-        # Validate tools input
-        if not isinstance(tools, dict):
-            raise TypeError(f"Expected tools to be dict, got {type(tools)}")
-        
-        # Store tools dictionary
-        self.tools = tools
-        
-        # Extract tools with safe access
-        qloo_tool = tools.get("qloo_tool")
-        youtube_tool = tools.get("youtube_tool")
-        gemini_tool = tools.get("gemini_tool")
-        vision_ai_tool = tools.get("vision_ai_tool")
-        session_storage_tool = tools.get("session_storage_tool")
-        
-        # Initialize all agents with error handling
-        self.agent1 = None
-        self.agent2 = None
-        self.agent3 = None
-        self.agent4 = None
-        self.agent5 = None
-        self.agent6 = None
-        self.agent7 = None
-        
-        # Agent 1: Information Consolidator (no tools required)
-        if InformationConsolidatorAgent:
-            try:
-                self.agent1 = InformationConsolidatorAgent()
-                logger.info("✅ Agent 1 (Information Consolidator) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 1: {e}")
-        
-        # Agent 2: Cultural Profile Builder (no tools required)
-        if CulturalProfileBuilderAgent:
-            try:
-                self.agent2 = CulturalProfileBuilderAgent()
-                logger.info("✅ Agent 2 (Cultural Profile Builder) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 2: {e}")
-        
-        # Agent 3: Qloo Cultural Intelligence (requires qloo_tool)
-        if QlooCulturalIntelligenceAgent and qloo_tool:
-            try:
-                self.agent3 = QlooCulturalIntelligenceAgent(qloo_tool)
-                logger.info("✅ Agent 3 (Qloo Cultural Intelligence) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 3: {e}")
-        elif not qloo_tool:
+        # Agent 3 requires qloo_tool
+        if qloo_tool:
+            self.agent3 = QlooCulturalIntelligenceAgent(qloo_tool)
+        else:
+            self.agent3 = None
             logger.warning("⚠️  Agent 3 disabled: qloo_tool not available")
         
-        # Agent 4: Sensory Content Generator (requires youtube_tool and gemini_tool)
-        if SensoryContentGeneratorAgent and youtube_tool and gemini_tool:
-            try:
-                self.agent4 = SensoryContentGeneratorAgent(youtube_tool, gemini_tool)
-                logger.info("✅ Agent 4 (Sensory Content Generator) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 4: {e}")
+        # Agent 4 requires youtube_tool and gemini_tool
+        if youtube_tool and gemini_tool:
+            self.agent4 = SensoryContentGeneratorAgent(youtube_tool, gemini_tool)
         else:
-            missing_tools = []
-            if not youtube_tool:
-                missing_tools.append("youtube_tool")
-            if not gemini_tool:
-                missing_tools.append("gemini_tool")
-            if missing_tools:
-                logger.warning(f"⚠️  Agent 4 disabled: {', '.join(missing_tools)} not available")
+            self.agent4 = None
+            missing = []
+            if not youtube_tool: missing.append("youtube_tool")
+            if not gemini_tool: missing.append("gemini_tool") 
+            logger.warning(f"⚠️  Agent 4 disabled: {', '.join(missing)} not available")
         
-        # Agent 5: Photo Cultural Analyzer (requires vision_ai_tool)
-        if PhotoCulturalAnalyzerAgent and vision_ai_tool:
-            try:
-                self.agent5 = PhotoCulturalAnalyzerAgent(vision_ai_tool)
-                logger.info("✅ Agent 5 (Photo Cultural Analyzer) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 5: {e}")
-        elif not vision_ai_tool:
+        # Agent 5 requires vision_ai_tool
+        if vision_ai_tool:
+            self.agent5 = PhotoCulturalAnalyzerAgent(vision_ai_tool)
+        else:
+            self.agent5 = None
             logger.warning("⚠️  Agent 5 disabled: vision_ai_tool not available")
         
-        # Agent 6: Mobile Synthesizer (no tools required)
-        if MobileSynthesizerAgent:
-            try:
-                self.agent6 = MobileSynthesizerAgent()
-                logger.info("✅ Agent 6 (Mobile Synthesizer) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 6: {e}")
+        # Agent 6 (Mobile Synthesizer) - always available
+        self.agent6 = MobileSynthesizerAgent()
         
-        # Agent 7: Feedback Learning System (requires session_storage_tool)
-        if FeedbackLearningSystemAgent and session_storage_tool:
-            try:
-                self.agent7 = FeedbackLearningSystemAgent(session_storage_tool)
-                logger.info("✅ Agent 7 (Feedback Learning System) initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Agent 7: {e}")
-        elif not session_storage_tool:
+        # Agent 7 requires session_storage_tool
+        if session_storage_tool:
+            self.agent7 = FeedbackLearningAgent(session_storage_tool)
+        else:
+            self.agent7 = None
             logger.warning("⚠️  Agent 7 disabled: session_storage_tool not available")
         
         # Count active agents
@@ -192,27 +84,20 @@ class CareConnectAgent:
                           if agent is not None)
         
         logger.info(f"CareConnect Sequential Agent initialized with {active_agents}/7 agents active")
-        
-        if active_agents < 3:
-            logger.warning("⚠️  Running with minimal agents - some features may be limited")
     
-    async def run(self, 
-                  patient_profile: Dict[str, Any],
-                  request_type: str = "dashboard",
-                  session_id: Optional[str] = None,
-                  feedback_history: Optional[Dict[str, Any]] = None,
-                  photo_data: Optional[Dict[str, Any]] = None,
-                  feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute_pipeline(self,
+                             patient_profile: Dict[str, Any],
+                             request_type: str = "dashboard",
+                             feedback_data: Optional[Dict[str, Any]] = None,
+                             photo_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Execute the complete CareConnect 7-agent pipeline manually.
+        Execute the complete 7-agent pipeline with updated data flow.
         
         Args:
-            patient_profile: Patient information from caregiver
-            request_type: Type of request (dashboard, meal, conversation, etc.)
-            session_id: Session identifier
-            feedback_history: Historical feedback data
-            photo_data: Photo analysis data if provided
-            feedback_data: Current feedback data if provided
+            patient_profile: Patient information (from curl request)
+            request_type: Type of request (dashboard, activity, etc.)
+            feedback_data: Optional feedback history
+            photo_data: Optional photo data
             
         Returns:
             Complete pipeline results with mobile experience
@@ -222,68 +107,37 @@ class CareConnectAgent:
             logger.info(f"Starting CareConnect pipeline for {request_type} request")
             
             pipeline_metadata = {
-                "pipeline_start": "2025-07-22T00:00:00Z",
+                "pipeline_start_time": datetime.now().isoformat(),
+                "request_type": request_type,
                 "agents_executed": 0,
-                "pipeline_status": "running",
-                "active_agents": []
+                "active_agents": [],
+                "pipeline_version": "simplified_tag_based"
             }
             
-            # Initialize default outputs
-            consolidated_info = {}
-            cultural_profile = {}
-            qloo_intelligence = {}
-            sensory_content = {}
-            photo_analysis = {}
-            mobile_experience = {}
-            updated_preferences = {}
+            # AGENT 1: Information Consolidator (Always runs)
+            logger.info("Executing Agent 1: Information Consolidator")
+            agent1_result = await self.agent1.run(
+                patient_profile=patient_profile,
+                request_type=request_type,
+                feedback_data=feedback_data,
+                photo_data=photo_data
+            )
+            consolidated_info = agent1_result.get("consolidated_info", {})
+            pipeline_metadata["agents_executed"] += 1
+            pipeline_metadata["active_agents"].append("information_consolidator")
+            logger.info("✅ Agent 1 completed successfully")
             
-            # AGENT 1: Information Consolidator
-            if self.agent1:
-                try:
-                    logger.info("Executing Agent 1: Information Consolidator")
-                    agent1_result = await self.agent1.run(
-                        patient_profile=patient_profile,
-                        request_type=request_type,
-                        session_id=session_id,
-                        feedback_history=feedback_history,
-                        photo_data=photo_data
-                    )
-                    consolidated_info = agent1_result.get("consolidated_info", {})
-                    pipeline_metadata["agents_executed"] += 1
-                    pipeline_metadata["active_agents"].append("information_consolidator")
-                    logger.info("✅ Agent 1 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 1 failed: {e}")
-            else:
-                logger.warning("⚠️  Agent 1 not available - using basic consolidation")
-                consolidated_info = {
-                    "patient_info": patient_profile,
-                    "request_context": {"type": request_type},
-                    "status": "basic_consolidation"
-                }
+            # AGENT 2: Cultural Profile Builder (Always runs)
+            logger.info("Executing Agent 2: Cultural Profile Builder")
+            agent2_result = await self.agent2.run(
+                consolidated_info=consolidated_info
+            )
+            cultural_profile = agent2_result.get("cultural_profile", {})
+            pipeline_metadata["agents_executed"] += 1
+            pipeline_metadata["active_agents"].append("cultural_profile_builder")
+            logger.info("✅ Agent 2 completed successfully")
             
-            # AGENT 2: Cultural Profile Builder  
-            if self.agent2:
-                try:
-                    logger.info("Executing Agent 2: Cultural Profile Builder")
-                    agent2_result = await self.agent2.run(
-                        consolidated_info=consolidated_info
-                    )
-                    cultural_profile = agent2_result.get("cultural_profile", {})
-                    pipeline_metadata["agents_executed"] += 1
-                    pipeline_metadata["active_agents"].append("cultural_profile_builder")
-                    logger.info("✅ Agent 2 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 2 failed: {e}")
-            else:
-                logger.warning("⚠️  Agent 2 not available - using basic cultural profile")
-                cultural_profile = {
-                    "heritage": patient_profile.get("cultural_heritage"),
-                    "languages": patient_profile.get("languages"),
-                    "status": "basic_profile"
-                }
-            
-            # AGENT 3: Qloo Cultural Intelligence
+            # AGENT 3: Qloo Cultural Intelligence (Conditional)
             if self.agent3:
                 try:
                     logger.info("Executing Agent 3: Qloo Cultural Intelligence")
@@ -297,11 +151,12 @@ class CareConnectAgent:
                     logger.info("✅ Agent 3 completed successfully")
                 except Exception as e:
                     logger.error(f"❌ Agent 3 failed: {e}")
+                    qloo_intelligence = self._create_empty_qloo_intelligence()
             else:
-                logger.warning("⚠️  Agent 3 not available - cultural intelligence disabled")
-                qloo_intelligence = {"status": "disabled", "reason": "qloo_api_unavailable"}
+                logger.warning("⚠️  Agent 3 not available - using empty cultural intelligence")
+                qloo_intelligence = self._create_empty_qloo_intelligence()
             
-            # AGENT 4: Sensory Content Generator
+            # AGENT 4: Sensory Content Generator (Conditional)
             if self.agent4:
                 try:
                     logger.info("Executing Agent 4: Sensory Content Generator")
@@ -316,11 +171,12 @@ class CareConnectAgent:
                     logger.info("✅ Agent 4 completed successfully")
                 except Exception as e:
                     logger.error(f"❌ Agent 4 failed: {e}")
+                    sensory_content = self._create_empty_sensory_content()
             else:
                 logger.warning("⚠️  Agent 4 not available - sensory content disabled")
-                sensory_content = {"status": "disabled", "reason": "tools_unavailable"}
+                sensory_content = self._create_empty_sensory_content()
             
-            # AGENT 5: Photo Cultural Analyzer
+            # AGENT 5: Photo Cultural Analyzer (Conditional)
             if self.agent5 and photo_data:
                 try:
                     logger.info("Executing Agent 5: Photo Cultural Analyzer")
@@ -336,33 +192,31 @@ class CareConnectAgent:
                     logger.info("✅ Agent 5 completed successfully")
                 except Exception as e:
                     logger.error(f"❌ Agent 5 failed: {e}")
+                    photo_analysis = {"status": "failed", "error": str(e)}
             else:
                 reason = "no_photo_data" if not photo_data else "vision_ai_unavailable"
                 logger.info(f"⚠️  Agent 5 skipped: {reason}")
                 photo_analysis = {"status": "skipped", "reason": reason}
             
-            # AGENT 6: Mobile Synthesizer
-            if self.agent6:
-                try:
-                    logger.info("Executing Agent 6: Mobile Synthesizer")
-                    agent6_result = await self.agent6.run(
-                        consolidated_info=consolidated_info,
-                        cultural_profile=cultural_profile,
-                        qloo_intelligence=qloo_intelligence,
-                        sensory_content=sensory_content,
-                        photo_analysis=photo_analysis
-                    )
-                    mobile_experience = agent6_result.get("mobile_experience", {})
-                    pipeline_metadata["agents_executed"] += 1
-                    pipeline_metadata["active_agents"].append("mobile_synthesizer")
-                    logger.info("✅ Agent 6 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 6 failed: {e}")
-            else:
-                logger.warning("⚠️  Agent 6 not available - mobile synthesis disabled")
-                mobile_experience = {"status": "disabled", "reason": "agent_unavailable"}
+            # AGENT 6: Mobile Synthesizer (Always runs)
+            try:
+                logger.info("Executing Agent 6: Mobile Synthesizer")
+                agent6_result = await self.agent6.run(
+                    consolidated_info=consolidated_info,
+                    cultural_profile=cultural_profile,
+                    qloo_intelligence=qloo_intelligence,
+                    sensory_content=sensory_content,
+                    photo_analysis=photo_analysis
+                )
+                mobile_experience = agent6_result.get("mobile_experience", {})
+                pipeline_metadata["agents_executed"] += 1
+                pipeline_metadata["active_agents"].append("mobile_synthesizer")
+                logger.info("✅ Agent 6 completed successfully")
+            except Exception as e:
+                logger.error(f"❌ Agent 6 failed: {e}")
+                mobile_experience = {"status": "failed", "error": str(e)}
             
-            # AGENT 7: Feedback Learning System
+            # AGENT 7: Feedback Learning System (Conditional)
             if self.agent7 and feedback_data:
                 try:
                     logger.info("Executing Agent 7: Feedback Learning System")
@@ -381,45 +235,146 @@ class CareConnectAgent:
                     logger.info("✅ Agent 7 completed successfully")
                 except Exception as e:
                     logger.error(f"❌ Agent 7 failed: {e}")
+                    updated_preferences = {"status": "failed", "error": str(e)}
             else:
                 reason = "no_feedback_data" if not feedback_data else "session_storage_unavailable"
                 logger.info(f"⚠️  Agent 7 skipped: {reason}")
                 updated_preferences = {"status": "skipped", "reason": reason}
             
-            # Compile final results
-            pipeline_metadata["pipeline_status"] = "completed"
-            pipeline_metadata["pipeline_end"] = "2025-07-22T00:00:00Z"
+            # Complete pipeline metadata
+            pipeline_metadata["pipeline_end_time"] = datetime.now().isoformat()
+            pipeline_metadata["total_execution_time"] = "calculated_by_client"
+            pipeline_metadata["pipeline_success"] = True
             
-            final_results = {
+            # Build final response
+            final_response = {
+                "pipeline_results": {
+                    "consolidated_info": consolidated_info,
+                    "cultural_profile": cultural_profile,
+                    "qloo_intelligence": qloo_intelligence,
+                    "sensory_content": sensory_content,
+                    "photo_analysis": photo_analysis,
+                    "mobile_experience": mobile_experience,
+                    "updated_preferences": updated_preferences
+                },
                 "pipeline_metadata": pipeline_metadata,
-                "consolidated_info": consolidated_info,
-                "cultural_profile": cultural_profile,
-                "qloo_intelligence": qloo_intelligence,
-                "sensory_content": sensory_content,
-                "photo_analysis": photo_analysis,
-                "mobile_experience": mobile_experience,
-                "updated_preferences": updated_preferences,
-                "patient_name": patient_profile.get("first_name", "Patient"),
-                "request_type": request_type
+                "status": "success"
             }
             
-            agents_executed = pipeline_metadata["agents_executed"]
-            logger.info(f"🎉 CareConnect pipeline completed: {agents_executed} agents executed")
+            logger.info(f"🎉 CareConnect pipeline completed: {pipeline_metadata['agents_executed']} agents executed")
             
-            return final_results
+            return final_response
             
         except Exception as e:
-            logger.error(f"💥 Pipeline execution failed: {str(e)}")
-            return {
-                "pipeline_metadata": {
-                    "pipeline_status": "failed",
-                    "error": str(e),
-                    "agents_executed": pipeline_metadata.get("agents_executed", 0)
-                },
-                "error": str(e),
-                "patient_name": patient_profile.get("first_name", "Patient"),
-                "request_type": request_type
+            logger.error(f"❌ Pipeline execution failed: {e}")
+            return self._create_pipeline_error_response(str(e))
+    
+    def _create_empty_qloo_intelligence(self) -> Dict[str, Any]:
+        """Create empty Qloo intelligence when Agent 3 is unavailable."""
+        
+        return {
+            "success": False,
+            "cultural_recommendations": {
+                "places": {"available": False, "entities": []},
+                "artists": {"available": False, "entities": []},
+                "movies": {"available": False, "entities": []}
+            },
+            "metadata": {
+                "successful_calls": 0,
+                "total_calls": 0,
+                "approach": "agent_unavailable"
+            },
+            "status": "agent_disabled"
+        }
+    
+    def _create_empty_sensory_content(self) -> Dict[str, Any]:
+        """Create empty sensory content when Agent 4 is unavailable."""
+        
+        return {
+            "content_by_sense": {
+                "auditory": {"sense_type": "auditory", "available": False},
+                "gustatory": {"sense_type": "gustatory", "available": False},
+                "olfactory": {"sense_type": "olfactory", "available": False},
+                "visual": {"sense_type": "visual", "available": False},
+                "tactile": {"sense_type": "tactile", "available": False}
+            },
+            "sensory_summary": {
+                "total_senses_activated": 0,
+                "generation_success": False
+            },
+            "generation_metadata": {
+                "agent_version": "agent_unavailable"
             }
+        }
+    
+    def _create_pipeline_error_response(self, error_message: str) -> Dict[str, Any]:
+        """Create error response when pipeline fails."""
+        
+        return {
+            "pipeline_results": {},
+            "pipeline_metadata": {
+                "pipeline_success": False,
+                "error": error_message,
+                "error_timestamp": datetime.now().isoformat()
+            },
+            "status": "error"
+        }
+    
+    def get_agent_status(self) -> Dict[str, Any]:
+        """Get status of all agents."""
+        
+        return {
+            "agent_1_information_consolidator": "active",
+            "agent_2_cultural_profile_builder": "active", 
+            "agent_3_qloo_cultural_intelligence": "active" if self.agent3 else "disabled",
+            "agent_4_sensory_content_generator": "active" if self.agent4 else "disabled",
+            "agent_5_photo_cultural_analyzer": "active" if self.agent5 else "disabled",
+            "agent_6_mobile_synthesizer": "active",
+            "agent_7_feedback_learning_system": "active" if self.agent7 else "disabled",
+            "total_active_agents": sum(1 for agent in [self.agent1, self.agent2, self.agent3, 
+                                                     self.agent4, self.agent5, self.agent6, self.agent7] 
+                                     if agent is not None)
+        }
 
-# Backward compatibility alias
-CareConnectSequentialAgent = CareConnectAgent
+# Test function
+async def test_sequential_agent():
+    """Test the updated sequential agent coordinator."""
+    
+    # Create coordinator (without tools for basic testing)
+    coordinator = SequentialAgentCoordinator()
+    
+    # Test data matching curl example
+    test_patient_profile = {
+        "cultural_heritage": "Italian-American",
+        "birth_year": 1945,
+        "city": "Brooklyn", 
+        "state": "New York",
+        "additional_context": "Loves music and cooking"
+    }
+    
+    # Run pipeline
+    logger.info("Testing sequential agent pipeline...")
+    result = await coordinator.execute_pipeline(
+        patient_profile=test_patient_profile,
+        request_type="dashboard"
+    )
+    
+    # Display results
+    metadata = result.get("pipeline_metadata", {})
+    print("Sequential Agent Test Results:")
+    print(f"Agents executed: {metadata.get('agents_executed')}")
+    print(f"Active agents: {metadata.get('active_agents')}")
+    print(f"Success: {metadata.get('pipeline_success')}")
+    
+    # Show cultural profile results
+    cultural_profile = result.get("pipeline_results", {}).get("cultural_profile", {})
+    if cultural_profile:
+        elements = cultural_profile.get("cultural_elements", {})
+        print(f"Heritage: {elements.get('heritage')}")
+        print(f"Tag mappings: {cultural_profile.get('qloo_tag_mappings', {})}")
+    
+    return result
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(test_sequential_agent())

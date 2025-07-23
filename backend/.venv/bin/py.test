@@ -1,8 +1,8 @@
-#!/Users/tamargrafana/Documents/qloo/backend/.venv/bin/python3.13
+#!/Users/tamargrafana/Documents/qloo/backend/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
-from mcp.cli import app
+from pytest import console_main
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(app())
+    sys.exit(console_main())

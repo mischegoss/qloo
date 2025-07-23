@@ -1,517 +1,279 @@
 """
-Fixed Agent 3: Qloo Cultural Intelligence Agent - COMPLETE VERSION
+Agent 3: Qloo Cultural Intelligence - SIMPLIFIED VERSION
 File: backend/multi_tool_agent/agents/qloo_cultural_intelligence_agent.py
 
-Generates cross-domain cultural recommendations using proper Qloo API integration
+Complete rewrite using simple tag-based approach.
+Removes all complex entity searching and keyword extraction.
 """
 
-from typing import Dict, Any, Optional, List
-import asyncio
+from typing import Dict, Any
 import logging
 from datetime import datetime
 from google.adk.agents import Agent
 
-# Configure logger
+# Import our new cultural mappings
+from backend.config.cultural_mappings import get_heritage_tags, get_age_demographic, get_interest_tags
+
 logger = logging.getLogger(__name__)
 
 class QlooCulturalIntelligenceAgent(Agent):
     """
-    Agent 3: Qloo Cultural Intelligence Agent - COMPLETE VERSION
+    Agent 3: Qloo Cultural Intelligence - SIMPLIFIED
     
-    Purpose: Generate cross-domain cultural recommendations using Qloo API
-    Input: consolidated_info + cultural_profile
-    Output: Qloo cultural intelligence with recommendations
+    MAJOR SIMPLIFICATION:
+    - Uses direct cultural heritage → tag mappings
+    - Makes exactly 3 simple Qloo API calls
+    - No complex entity searching
+    - No keyword extraction complexity
+    - No fallback strategies
     
-    Tools: qloo_insights_api
-    
-    Key Features:
-    1. Two-stage API pattern (search → insights)
-    2. Simplified parameter structure
-    3. Robust error handling with meaningful fallbacks
-    4. Proper rate limiting
-    5. Smart cultural keyword extraction
-    6. Circuit breaker for failed queries
+    NEW APPROACH:
+    - Extract heritage from consolidated info
+    - Map heritage to predefined Qloo tags  
+    - Make 3 direct tag-based insights calls
+    - Return simple, structured results
     """
     
     def __init__(self, qloo_tool):
         super().__init__(
-            name="qloo_cultural_intelligence",
-            description="Generates cross-domain cultural recommendations using fixed Qloo API integration"
+            name="qloo_cultural_intelligence_simplified",
+            description="Generates cross-domain cultural recommendations using simplified tag-based approach"
         )
-        # Store tool reference to avoid Pydantic field errors
-        self._qloo_tool_ref = qloo_tool
-        logger.info("Qloo Cultural Intelligence Agent initialized with full functionality")
+        self._qloo_tool = qloo_tool
+        logger.info("Qloo Cultural Intelligence Agent initialized with simplified approach")
     
     async def run(self, 
                   consolidated_info: Dict[str, Any],
                   cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate cross-domain cultural intelligence using FIXED Qloo API calls.
+        Generate cultural intelligence using simplified tag-based Qloo calls.
         
         Args:
             consolidated_info: Output from Agent 1
             cultural_profile: Output from Agent 2
             
         Returns:
-            Dictionary containing qloo_intelligence with cultural recommendations
+            Simple cultural recommendations from Qloo
         """
         
         try:
-            logger.info("🚀 Starting Qloo cultural intelligence generation")
+            logger.info("Starting simplified Qloo cultural intelligence")
             
-            # Extract context and cultural information
-            request_context = consolidated_info.get("request_context", {})
-            feedback_patterns = consolidated_info.get("feedback_patterns", {})
-            blocked_content = feedback_patterns.get("blocked_content", {})
-            cultural_elements = cultural_profile.get("cultural_elements", {})
+            # STEP 1: Extract simple inputs
+            heritage = self._extract_heritage(consolidated_info, cultural_profile)
+            age_demographic = self._extract_age_demographic(consolidated_info)
             
-            # Test Qloo API connection first
-            try:
-                qloo_tool = self._qloo_tool_ref
-                logger.info("Testing Qloo API connection...")
-            except Exception as e:
-                logger.error(f"❌ Qloo tool access failed: {e}")
-                return self._create_fallback_response(cultural_elements, "tool_access_failed")
+            logger.info(f"Heritage: {heritage}, Age: {age_demographic}")
             
-            # Extract cultural keywords smartly by entity type
-            cultural_keywords_by_type = self._extract_cultural_keywords(cultural_elements)
-            logger.info(f"🔍 Extracted cultural keywords by type: {cultural_keywords_by_type}")
+            # STEP 2: Map heritage to Qloo tags
+            heritage_tags = get_heritage_tags(heritage)
             
-            # Extract demographic signals
-            demographic_signals = self._extract_demographic_signals(consolidated_info)
-            logger.info(f"👥 Demographic signals: {list(demographic_signals.keys())}")
+            logger.info(f"Mapped to tags: {heritage_tags}")
             
-            # Execute FIXED cultural recommendations
-            qloo_results = await self._execute_qloo_queries(
-                cultural_keywords_by_type, 
-                demographic_signals
+            # STEP 3: Make 3 simple Qloo API calls
+            qloo_results = await self._qloo_tool.make_three_cultural_calls(
+                heritage_tags=heritage_tags,
+                age_demographic=age_demographic
             )
             
-            # Process results with intelligent fallbacks
-            processed_results = self._process_qloo_results(
-                qloo_results, 
-                cultural_elements, 
-                blocked_content
+            # STEP 4: Format results for Agent 4 consumption
+            formatted_response = self._format_simple_response(
+                qloo_results=qloo_results,
+                heritage=heritage,
+                heritage_tags=heritage_tags,
+                age_demographic=age_demographic
             )
             
-            # Build comprehensive response
-            response = self._build_cultural_intelligence_response(
-                processed_results,
-                cultural_elements,
-                qloo_results
-            )
+            logger.info(f"Qloo intelligence complete: {qloo_results.get('successful_calls', 0)}/3 calls successful")
             
-            logger.info("✅ Qloo cultural intelligence generation completed successfully")
-            return response
+            return formatted_response
             
         except Exception as e:
-            logger.error(f"💥 Qloo agent critical error: {str(e)}")
-            return self._create_fallback_response(
-                cultural_profile.get("cultural_elements", {}), 
-                f"agent_error: {str(e)}"
-            )
+            logger.error(f"❌ Qloo Cultural Intelligence failed: {e}")
+            return self._create_fallback_response()
     
-    def _extract_cultural_keywords(self, cultural_elements: Dict[str, Any]) -> Dict[str, List[str]]:
-        """
-        Extract meaningful cultural keywords for Qloo searches, organized by entity type.
-        """
-        keywords_by_type = {
-            "place": [],
-            "artist": [], 
-            "movie": []
-        }
+    def _extract_heritage(self, consolidated_info: Dict[str, Any], cultural_profile: Dict[str, Any]) -> str:
+        """Extract cultural heritage from available data."""
         
-        # Heritage elements
-        heritage = cultural_elements.get("heritage_elements", {})
-        heritage_keywords = heritage.get("heritage_keywords", [])
+        # Try cultural profile first
+        heritage = cultural_profile.get("cultural_elements", {}).get("heritage")
+        if heritage:
+            return heritage
         
-        # Tradition elements
-        traditions = cultural_elements.get("tradition_elements", {})
-        tradition_keywords = traditions.get("tradition_keywords", [])
+        # Try consolidated info patient profile
+        patient_profile = consolidated_info.get("patient_profile", {})
+        heritage = patient_profile.get("cultural_heritage")
+        if heritage:
+            return heritage
         
-        # Language elements
-        languages = cultural_elements.get("language_elements", {}).get("languages", [])
+        # Try request context
+        request_context = consolidated_info.get("request_context", {})
+        heritage = request_context.get("cultural_heritage")
+        if heritage:
+            return heritage
         
-        # Additional keywords
-        additional = cultural_elements.get("additional_elements", {}).get("additional_keywords", [])
-        
-        # Combine all cultural indicators
-        all_cultural_terms = []
-        all_cultural_terms.extend([k.strip().lower() for k in heritage_keywords if k and len(k.strip()) > 2])
-        all_cultural_terms.extend([k.strip().lower() for k in tradition_keywords if k and len(k.strip()) > 2])
-        all_cultural_terms.extend([lang.strip().lower() for lang in languages if lang and len(lang.strip()) > 2])
-        all_cultural_terms.extend([k.strip().lower() for k in additional if k and len(k.strip()) > 2])
-        
-        # Remove duplicates
-        unique_terms = list(set(all_cultural_terms))
-        
-        # Generate smart search terms for each entity type
-        for term in unique_terms[:3]:  # Limit to top 3 cultural terms
-            
-            # PLACES: Focus on restaurants, locations, destinations
-            if term in ["italian", "italy"]:
-                keywords_by_type["place"].extend(["Italian restaurants", "Italy", "Rome"])
-            elif term in ["mexican", "mexico"]:
-                keywords_by_type["place"].extend(["Mexican restaurants", "Mexico", "Taco"])
-            elif term in ["chinese", "china"]:
-                keywords_by_type["place"].extend(["Chinese restaurants", "China", "Beijing"])
-            elif term in ["french", "france"]:
-                keywords_by_type["place"].extend(["French restaurants", "France", "Paris"])
-            elif term in ["indian", "india"]:
-                keywords_by_type["place"].extend(["Indian restaurants", "India", "Curry"])
-            elif term in ["japanese", "japan"]:
-                keywords_by_type["place"].extend(["Japanese restaurants", "Japan", "Sushi"])
-            else:
-                keywords_by_type["place"].append(f"{term} restaurants")
-            
-            # ARTISTS: Focus on music, cultural performers, traditional artists  
-            if term in ["italian", "italy"]:
-                keywords_by_type["artist"].extend(["Italian opera", "Pavarotti", "classical Italian music"])
-            elif term in ["mexican", "mexico"]:
-                keywords_by_type["artist"].extend(["Mexican folk music", "mariachi", "Vicente Fernandez"])
-            elif term in ["chinese", "china"]:
-                keywords_by_type["artist"].extend(["Chinese traditional music", "Chinese opera", "Lang Lang"])
-            elif term in ["french", "france"]:
-                keywords_by_type["artist"].extend(["French chanson", "Edith Piaf", "French classical"])
-            elif term in ["indian", "india"]:
-                keywords_by_type["artist"].extend(["Indian classical music", "Bollywood music", "Ravi Shankar"])
-            elif term in ["japanese", "japan"]:
-                keywords_by_type["artist"].extend(["Japanese traditional music", "classical Japanese", "shamisen"])
-            elif "music" in term or "song" in term:
-                keywords_by_type["artist"].append(term)
-            else:
-                keywords_by_type["artist"].append(f"{term} music")
-            
-            # MOVIES: Focus on cinema, cultural films
-            if term in ["italian", "italy"]:
-                keywords_by_type["movie"].extend(["Italian cinema", "Federico Fellini", "Italian films"])
-            elif term in ["mexican", "mexico"]:
-                keywords_by_type["movie"].extend(["Mexican cinema", "Mexican films", "Alejandro Iñárritu"])
-            elif term in ["chinese", "china"]:
-                keywords_by_type["movie"].extend(["Chinese cinema", "Zhang Yimou", "Chinese films"])
-            elif term in ["french", "france"]:
-                keywords_by_type["movie"].extend(["French cinema", "French New Wave", "Jean-Luc Godard"])
-            elif term in ["indian", "india"]:
-                keywords_by_type["movie"].extend(["Bollywood", "Indian cinema", "Satyajit Ray"])
-            elif term in ["japanese", "japan"]:
-                keywords_by_type["movie"].extend(["Japanese cinema", "Akira Kurosawa", "Studio Ghibli"])
-            else:
-                keywords_by_type["movie"].append(f"{term} films")
-        
-        # Limit to 3 search terms per entity type for API efficiency
-        for entity_type in keywords_by_type:
-            keywords_by_type[entity_type] = keywords_by_type[entity_type][:3]
-        
-        return keywords_by_type
+        # Default fallback
+        logger.warning("No cultural heritage found, using American fallback")
+        return "American"
     
-    def _extract_demographic_signals(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract demographic signals for Qloo API.
-        """
-        demographic_patterns = consolidated_info.get("demographic_patterns", {})
+    def _extract_age_demographic(self, consolidated_info: Dict[str, Any]) -> str:
+        """Extract and convert age to Qloo demographic."""
         
-        signals = {}
+        # Try to get birth year from patient profile
+        patient_profile = consolidated_info.get("patient_profile", {})
+        birth_year = patient_profile.get("birth_year")
         
-        # Age range
-        age_range = demographic_patterns.get("age_range", "")
-        if age_range and age_range != "age_unknown":
-            signals["age_range"] = age_range
+        if birth_year:
+            return get_age_demographic(birth_year)
         
-        # Location
-        general_location = demographic_patterns.get("general_location", {})
-        if general_location:
-            signals["general_location"] = general_location
+        # Try to get age directly
+        age = patient_profile.get("age")
+        if age:
+            birth_year = 2024 - age
+            return get_age_demographic(birth_year)
         
-        # Gender (if relevant)
-        gender = demographic_patterns.get("gender", "")
-        if gender and gender != "gender_unknown":
-            signals["gender"] = gender
-        
-        return signals
+        # Default to older adult demographic
+        logger.warning("No age information found, defaulting to 55_and_older")
+        return "55_and_older"
     
-    async def _execute_qloo_queries(self, 
-                                   cultural_keywords_by_type: Dict[str, List[str]],
-                                   demographic_signals: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Execute Qloo queries using two-stage pattern with smart search terms.
-        """
-        results = {}
-        
-        # Check if we have any keywords to search
-        total_keywords = sum(len(keywords) for keywords in cultural_keywords_by_type.values())
-        if total_keywords == 0:
-            logger.warning("No cultural keywords available for Qloo queries")
-            return {"success": False, "error": "no_keywords"}
-        
-        # Map our internal types to Qloo entity types
-        entity_type_mapping = {
-            "place": "urn:entity:place",
-            "artist": "urn:entity:artist", 
-            "movie": "urn:entity:movie"
-        }
-        
-        try:
-            qloo_tool = self._qloo_tool_ref
-            
-            # Test if the tool has the required methods
-            if not hasattr(qloo_tool, 'search_entities'):
-                logger.error("❌ QlooInsightsAPI missing search_entities method")
-                return {"success": False, "error": "method_not_available"}
-            
-            if not hasattr(qloo_tool, 'get_insights'):
-                logger.error("❌ QlooInsightsAPI missing get_insights method")
-                return {"success": False, "error": "method_not_available"}
-            
-            for internal_type, qloo_entity_type in entity_type_mapping.items():
-                keywords = cultural_keywords_by_type.get(internal_type, [])
-                
-                if not keywords:
-                    logger.info(f"No keywords for {internal_type}, skipping")
-                    continue
-                
-                for keyword in keywords[:2]:  # Limit to 2 keywords per entity type
-                    try:
-                        logger.info(f"Searching for '{keyword}' in {qloo_entity_type}")
-                        
-                        # Stage 1: Search for entities using the smart keywords
-                        search_result = await qloo_tool.search_entities(
-                            query=keyword,
-                            entity_types=[qloo_entity_type.replace("urn:entity:", "")],
-                            limit=3
-                        )
-                        
-                        if search_result.get("success") and search_result.get("results"):
-                            entities = search_result["results"][:2]  # Limit entities
-                            
-                            # Stage 2: Get insights for found entities
-                            for entity in entities:
-                                entity_id = entity.get("id")
-                                entity_name = entity.get("name", "Unknown")
-                                
-                                if entity_id:
-                                    logger.info(f"Getting insights for entity: {entity_name} (ID: {entity_id})")
-                                    
-                                    params = {
-                                        "filter.type": qloo_entity_type,
-                                        "signal.interests.entities": entity_id,
-                                        "take": 5
-                                    }
-                                    
-                                    # Add demographic signals if available
-                                    if demographic_signals.get("age_range"):
-                                        params["signal.demographics.age"] = demographic_signals["age_range"]
-                                    
-                                    insights_result = await qloo_tool.get_insights(params)
-                                    
-                                    if insights_result.get("success"):
-                                        result_key = f"{internal_type}_{keyword.replace(' ', '_')}"
-                                        results[result_key] = insights_result
-                                        logger.info(f"✅ Qloo insights successful for {entity_name}")
-                                    else:
-                                        logger.warning(f"❌ Insights failed for {entity_name}")
-                                    
-                                    # Rate limiting
-                                    await asyncio.sleep(1.0)
-                        else:
-                            logger.warning(f"No entities found for '{keyword}' in {qloo_entity_type}")
-                        
-                        # Rate limiting between searches
-                        await asyncio.sleep(0.5)
-                        
-                    except Exception as e:
-                        logger.error(f"❌ Qloo query failed for {qloo_entity_type}/{keyword}: {e}")
-                        continue
-            
-            successful_queries = len([r for r in results.values() if r.get("success")])
-            logger.info(f"Qloo queries completed: {successful_queries} successful")
-            
-            return {
-                "success": successful_queries > 0,
-                "results": results,
-                "total_queries": successful_queries
-            }
-            
-        except Exception as e:
-            logger.error(f"Qloo queries failed: {str(e)}")
-            return {"success": False, "error": str(e)}
-    
-    def _process_qloo_results(self, 
-                             qloo_results: Dict[str, Any],
-                             cultural_elements: Dict[str, Any],
-                             blocked_content: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Process Qloo results with intelligent filtering.
-        """
-        processed = {
-            "places": [],
-            "artists": [],
-            "movies": [],
-            "recommendations_count": 0
-        }
-        
-        if not qloo_results.get("success"):
-            logger.warning("No successful Qloo results to process")
-            return processed
-        
-        results = qloo_results.get("results", {})
-        
-        for query_key, result in results.items():
-            if not result.get("success"):
-                continue
-                
-            entities = result.get("results", {}).get("entities", [])
-            
-            for entity in entities[:3]:  # Limit entities per query
-                entity_name = entity.get("name", "Unknown")
-                entity_type = entity.get("type", "")
-                
-                # Filter blocked content
-                if self._is_blocked_content(entity_name, blocked_content):
-                    continue
-                
-                # Categorize by entity type
-                recommendation = {
-                    "name": entity_name,
-                    "qloo_id": entity.get("id"),
-                    "description": entity.get("description", ""),
-                    "popularity": entity.get("popularity", 0),
-                    "cultural_relevance": self._calculate_cultural_relevance(entity, cultural_elements)
-                }
-                
-                if "place" in entity_type.lower():
-                    processed["places"].append(recommendation)
-                elif "artist" in entity_type.lower():
-                    processed["artists"].append(recommendation)
-                elif "movie" in entity_type.lower():
-                    processed["movies"].append(recommendation)
-        
-        # Calculate total recommendations
-        processed["recommendations_count"] = (
-            len(processed["places"]) + 
-            len(processed["artists"]) + 
-            len(processed["movies"])
-        )
-        
-        logger.info(f"Processed {processed['recommendations_count']} Qloo recommendations")
-        return processed
-    
-    def _is_blocked_content(self, entity_name: str, blocked_content: Dict[str, Any]) -> bool:
-        """Check if content is blocked by user preferences."""
-        if not blocked_content:
-            return False
-        
-        entity_lower = entity_name.lower()
-        
-        for category, blocked_items in blocked_content.items():
-            if isinstance(blocked_items, list):
-                for blocked_item in blocked_items:
-                    if blocked_item.lower() in entity_lower:
-                        return True
-        
-        return False
-    
-    def _calculate_cultural_relevance(self, entity: Dict[str, Any], cultural_elements: Dict[str, Any]) -> float:
-        """Calculate cultural relevance score (0.0 to 1.0)."""
-        relevance = 0.5  # Base relevance
-        
-        entity_name = entity.get("name", "").lower()
-        entity_desc = entity.get("description", "").lower()
-        
-        # Check for cultural keyword matches
-        heritage_keywords = cultural_elements.get("heritage_elements", {}).get("heritage_keywords", [])
-        for keyword in heritage_keywords:
-            if keyword.lower() in entity_name or keyword.lower() in entity_desc:
-                relevance += 0.2
-        
-        # Cap at 1.0
-        return min(relevance, 1.0)
-    
-    def _build_cultural_intelligence_response(self, 
-                                            processed_results: Dict[str, Any],
-                                            cultural_elements: Dict[str, Any],
-                                            qloo_results: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Build comprehensive cultural intelligence response.
-        """
-        return {
-            "qloo_intelligence": {
-                "cultural_recommendations": {
-                    "places": processed_results.get("places", []),
-                    "artists": processed_results.get("artists", []),
-                    "movies": processed_results.get("movies", [])
-                },
-                "recommendation_metadata": {
-                    "total_recommendations": processed_results.get("recommendations_count", 0),
-                    "qloo_queries_successful": qloo_results.get("total_queries", 0),
-                    "cultural_keywords_used": len(cultural_elements.get("heritage_elements", {}).get("heritage_keywords", [])),
-                    "generation_timestamp": datetime.now().isoformat()
-                },
-                "cultural_context": {
-                    "heritage_elements": cultural_elements.get("heritage_elements", {}),
-                    "cultural_themes": self._extract_cultural_themes(cultural_elements),
-                    "recommendation_approach": "individual_preferences_first"
-                },
-                "status": "success" if processed_results.get("recommendations_count", 0) > 0 else "limited_results",
-                "fallback_used": False
-            }
-        }
-    
-    def _extract_cultural_themes(self, cultural_elements: Dict[str, Any]) -> List[str]:
-        """Extract high-level cultural themes."""
-        themes = []
-        
-        cultural_keywords = set()
-        
-        # Collect all cultural keywords
-        heritage = cultural_elements.get("heritage_elements", {})
-        cultural_keywords.update(heritage.get("heritage_keywords", []))
-        
-        traditions = cultural_elements.get("tradition_elements", {})
-        cultural_keywords.update(traditions.get("tradition_keywords", []))
-        
-        # Broad thematic connections
-        for keyword in cultural_keywords:
-            if any(food_word in keyword.lower() for food_word in ['food', 'cooking', 'meal', 'kitchen']):
-                themes.append("culinary_experiences")
-            if any(music_word in keyword.lower() for music_word in ['music', 'song', 'dance', 'instrument']):
-                themes.append("musical_experiences")
-            if any(family_word in keyword.lower() for family_word in ['family', 'tradition', 'celebration']):
-                themes.append("family_traditions")
-            if any(place_word in keyword.lower() for place_word in ['home', 'neighborhood', 'city', 'country']):
-                themes.append("place_connections")
-        
-        return list(set(themes))  # Remove duplicates
-    
-    def _create_fallback_response(self, cultural_elements: Dict[str, Any], error_reason: str) -> Dict[str, Any]:
-        """
-        Create fallback response when Qloo API fails.
-        """
-        logger.warning(f"Using fallback response due to: {error_reason}")
+    def _format_simple_response(self, 
+                               qloo_results: Dict[str, Any],
+                               heritage: str,
+                               heritage_tags: Dict[str, str],
+                               age_demographic: str) -> Dict[str, Any]:
+        """Format Qloo results into simple structure for Agent 4."""
         
         return {
             "qloo_intelligence": {
-                "cultural_recommendations": {
-                    "places": [],
-                    "artists": [],
-                    "movies": []
-                },
-                "recommendation_metadata": {
-                    "total_recommendations": 0,
-                    "qloo_queries_successful": 0,
-                    "cultural_keywords_used": 0,
+                "success": qloo_results.get("success", False),
+                "cultural_recommendations": qloo_results.get("cultural_recommendations", {}),
+                "metadata": {
+                    "heritage_used": heritage,
+                    "age_demographic": age_demographic,
+                    "heritage_tags": heritage_tags,
+                    "successful_calls": qloo_results.get("successful_calls", 0),
+                    "total_calls": qloo_results.get("total_calls", 3),
+                    "total_results": qloo_results.get("total_results", 0),
                     "generation_timestamp": datetime.now().isoformat(),
-                    "error_reason": error_reason
+                    "approach": "simplified_tag_based"
                 },
-                "cultural_context": {
-                    "heritage_elements": cultural_elements.get("heritage_elements", {}),
-                    "cultural_themes": [],
-                    "recommendation_approach": "fallback_mode"
+                "cross_domain_connections": self._create_cross_domain_connections(qloo_results),
+                "status": "success" if qloo_results.get("success") else "api_failure"
+            }
+        }
+    
+    def _create_cross_domain_connections(self, qloo_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Create simple cross-domain connections from Qloo results."""
+        
+        cultural_recs = qloo_results.get("cultural_recommendations", {})
+        
+        connections = {
+            "available": False,
+            "themes": [],
+            "suggested_combinations": []
+        }
+        
+        # Simple connection logic
+        available_categories = [cat for cat, data in cultural_recs.items() if data.get("available")]
+        
+        if len(available_categories) >= 2:
+            connections["available"] = True
+            connections["themes"] = available_categories
+            
+            # Create simple combination suggestions
+            if "places" in available_categories and "music" in available_categories:
+                connections["suggested_combinations"].append({
+                    "type": "dining_with_music",
+                    "description": "Combine cultural dining with matching music"
+                })
+            
+            if "movies" in available_categories and "places" in available_categories:
+                connections["suggested_combinations"].append({
+                    "type": "movie_and_meal",
+                    "description": "Watch cultural films with themed snacks"
+                })
+        
+        return connections
+    
+    def _create_fallback_response(self) -> Dict[str, Any]:
+        """Create fallback response when Qloo fails."""
+        
+        return {
+            "qloo_intelligence": {
+                "success": False,
+                "cultural_recommendations": {
+                    "places": {"available": False, "error": "api_failure", "entities": []},
+                    "artists": {"available": False, "error": "api_failure", "entities": []},
+                    "movies": {"available": False, "error": "api_failure", "entities": []}
                 },
-                "status": "fallback",
-                "fallback_used": True,
-                "fallback_reason": error_reason
+                "metadata": {
+                    "heritage_used": "unknown",
+                    "age_demographic": "55_and_older",
+                    "successful_calls": 0,
+                    "total_calls": 0,
+                    "total_results": 0,
+                    "generation_timestamp": datetime.now().isoformat(),
+                    "approach": "fallback_due_to_api_failure"
+                },
+                "cross_domain_connections": {"available": False},
+                "status": "fallback_used"
             }
         }
 
-# Export the agent class
-__all__ = ["QlooCulturalIntelligenceAgent"]
+# Test function for the simplified agent
+async def test_simplified_agent():
+    """Test the simplified Qloo agent."""
+    import os
+    from backend.multi_tool_agent.tools.qloo_tools import QlooInsightsAPI
+    
+    # Setup
+    api_key = os.getenv("QLOO_API_KEY")
+    if not api_key:
+        print("❌ No QLOO_API_KEY found")
+        return
+    
+    qloo_tool = QlooInsightsAPI(api_key)
+    agent = QlooCulturalIntelligenceAgent(qloo_tool)
+    
+    # Test data matching the curl example
+    consolidated_info = {
+        "patient_profile": {
+            "cultural_heritage": "Italian-American",
+            "birth_year": 1945,
+            "additional_context": "Loves music and cooking"
+        },
+        "request_context": {
+            "request_type": "dashboard"
+        }
+    }
+    
+    cultural_profile = {
+        "cultural_elements": {
+            "heritage": "Italian-American"
+        }
+    }
+    
+    # Run the agent
+    print("Testing simplified Qloo Cultural Intelligence Agent...")
+    result = await agent.run(consolidated_info, cultural_profile)
+    
+    # Display results
+    qloo_intel = result.get("qloo_intelligence", {})
+    print(f"\nResults:")
+    print(f"Success: {qloo_intel.get('success')}")
+    print(f"Heritage: {qloo_intel.get('metadata', {}).get('heritage_used')}")
+    print(f"Age demographic: {qloo_intel.get('metadata', {}).get('age_demographic')}")
+    print(f"Successful calls: {qloo_intel.get('metadata', {}).get('successful_calls')}/3")
+    print(f"Total results: {qloo_intel.get('metadata', {}).get('total_results')}")
+    
+    # Show sample recommendations
+    recommendations = qloo_intel.get("cultural_recommendations", {})
+    for category, data in recommendations.items():
+        if data.get("available"):
+            print(f"\n{category.title()}: {data.get('entity_count', 0)} results")
+            for entity in data.get("entities", [])[:2]:
+                print(f"  - {entity.get('name', 'Unknown')}")
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(test_simplified_agent())
