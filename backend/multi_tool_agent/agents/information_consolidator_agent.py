@@ -8,7 +8,7 @@ Fixed to handle None/null values safely from JSON input
 from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
-
+from google.adk.agents import Agent
 
 logger = logging.getLogger(__name__)
 

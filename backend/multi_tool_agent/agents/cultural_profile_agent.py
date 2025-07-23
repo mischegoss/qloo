@@ -8,6 +8,7 @@ Enhanced to use cultural mappings and create Qloo tag mappings for Agent 3.
 from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
+from google.adk.agents import Agent
 
 
 # Import our cultural mappings

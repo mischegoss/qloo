@@ -1,22 +1,21 @@
 # CareConnect Backend Requirements - Updated for Qloo integration
 
 # Core FastAPI stack - compatible versions
-fastapi==0.104.1
-uvicorn==0.24.0
-pydantic==2.5.0
+fastapi==0.116.1 # Previously updated
+uvicorn==0.34.0
+pydantic==2.11.1
 
 # Environment and configuration
 python-dotenv==1.0.0
 
 # HTTP client libraries
-httpx==0.25.2
-requests==2.31.0
+httpx>=0.28.1
+requests==2.32.4
 aiohttp==3.9.0
 
 # Google APIs
 google-cloud-vision==3.4.5
-google-generativeai==0.3.2
-
+google-adk==1.7.0
 
 # Logging and utilities
 structlog==23.2.0
@@ -26,10 +25,10 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 
 # CORS support
-python-multipart==0.0.6
+python-multipart>=0.0.9
 
 # Date/time utilities
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0 # <--- UPDATED THIS LINE
 
 # JSON handling
 orjson==3.9.10

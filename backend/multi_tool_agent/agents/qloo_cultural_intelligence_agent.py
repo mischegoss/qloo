@@ -9,7 +9,7 @@ Removes all complex entity searching and keyword extraction.
 from typing import Dict, Any
 import logging
 from datetime import datetime
-
+from google.adk.agents import Agent
 
 # Import our new cultural mappings
 from config.cultural_mappings import get_heritage_tags, get_age_demographic, get_interest_tags
