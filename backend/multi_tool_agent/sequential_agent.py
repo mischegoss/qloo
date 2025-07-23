@@ -141,7 +141,7 @@ class CareConnectAgent:
         # Agent 4: Sensory Content Generator (requires youtube_tool and gemini_tool)
         if SensoryContentGeneratorAgent and youtube_tool and gemini_tool:
             try:
-                self.agent4 = SensoryContentGeneratorAgent(youtube_tool, gemini_tool)
+                self.agent4 = SensoryContentGeneratorAgent(gemini_tool, youtube_tool)
                 logger.info("✅ Agent 4 (Sensory Content Generator) initialized")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Agent 4: {e}")

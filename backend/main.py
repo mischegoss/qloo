@@ -1,5 +1,5 @@
 """
-Complete Fixed main.py with Debug Endpoint
+Complete Fixed main.py with Photo Analysis Endpoint
 File: backend/main.py
 
 Main FastAPI application for CareConnect Cultural Intelligence API
@@ -9,6 +9,7 @@ import os
 import logging
 import time
 import json
+import base64
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -55,7 +56,7 @@ class Config:
 
 config = Config()
 
-# Request models (keep your existing ones)
+# Request models
 class PatientProfile(BaseModel):
     first_name: str
     birth_year: Optional[int] = None
@@ -78,7 +79,7 @@ class PhotoAnalysisRequest(BaseModel):
     patient_profile: PatientProfile
     session_id: Optional[str] = None
 
-# NEW: Demo Patient Manager
+# Demo Patient Manager
 class DemoPatientManager:
     """Simple patient data manager for hackathon demo"""
     
@@ -312,7 +313,7 @@ async def debug_imports():
             "message": "Failed to import individual agent classes"
         }
 
-# ===== NEW UI ENDPOINTS =====
+# ===== UI ENDPOINTS =====
 
 @app.get("/patients")
 async def get_patients():
@@ -495,7 +496,7 @@ async def upload_photo(patient_id: str, file: UploadFile = File(...)):
         logger.error(f"Photo upload failed: {e}")
         raise HTTPException(status_code=500, detail=f"Photo upload failed: {str(e)}")
 
-# ===== YOUR EXISTING ENDPOINTS =====
+# ===== CORE API ENDPOINTS =====
 
 @app.get("/health")
 async def health_check():
@@ -581,7 +582,7 @@ async def analyze_photo(
     patient_profile: str = None,
     session_id: str = None
 ):
-    """Analyze a photo for cultural context."""
+    """Analyze a photo using the full cultural intelligence pipeline with Agent 5."""
     global careconnect_agent
     
     if not careconnect_agent:
@@ -591,8 +592,9 @@ async def analyze_photo(
         )
     
     try:
-        # Read uploaded file
-        photo_data = await file.read()
+        # Read and encode photo as base64
+        photo_bytes = await file.read()
+        photo_base64 = base64.b64encode(photo_bytes).decode()
         
         # Parse patient profile if provided
         if patient_profile:
@@ -601,24 +603,44 @@ async def analyze_photo(
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Invalid patient_profile JSON")
         else:
-            profile_dict = {"first_name": "Anonymous"}
+            profile_dict = {
+                "first_name": "Anonymous", 
+                "cultural_heritage": "American", 
+                "birth_year": 1950
+            }
         
-        # Process photo analysis
+        # Create photo_data as SEPARATE parameter (KEY FIX!)
+        photo_data = {
+            "has_photo": True,
+            "photo_metadata": {
+                "image_bytes": photo_base64,
+                "mime_type": file.content_type,
+                "description": f"Uploaded photo: {file.filename}",
+                "filename": file.filename
+            }
+        }
+        
+        # Debug logging
+        logger.info(f"DEBUG: Processing photo analysis for {profile_dict.get('cultural_heritage', 'Unknown')} heritage")
+        logger.info(f"DEBUG: Photo size: {len(photo_base64)} chars, MIME: {file.content_type}")
+        
+        # Run the full pipeline with photo_data as separate parameter
         result = await careconnect_agent.run(
             patient_profile=profile_dict,
             request_type="photo_analysis",
-            session_id=session_id,
-            photo_data={
-                "filename": file.filename,
-                "content": photo_data,
-                "content_type": file.content_type
-            }
+            session_id=session_id or f"photo_session_{int(time.time())}",
+            photo_data=photo_data  # ✅ Pass as separate parameter
         )
         
         return {
             "success": True,
             "filename": file.filename,
             "session_id": session_id,
+            "photo_analysis": result.get("photo_analysis", {}),
+            "cultural_context": result.get("cultural_profile", {}),
+            "conversation_starters": result.get("mobile_experience", {}).get("conversation_starters", []),
+            "memory_triggers": result.get("photo_analysis", {}).get("memory_triggers", []),
+            "era_analysis": result.get("photo_analysis", {}).get("era_analysis", {}),
             "result": result,
             "timestamp": "2025-01-23T00:00:00Z"
         }
@@ -650,7 +672,8 @@ async def root():
         "version": "1.0.0",
         "documentation": "/docs",
         "health_check": "/health",
-        "tools_status": "/tools/status"
+        "tools_status": "/tools/status",
+        "photo_analysis": "/analyze-photo"
     }
 
 if __name__ == "__main__":
