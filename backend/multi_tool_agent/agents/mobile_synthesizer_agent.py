@@ -7,7 +7,7 @@ Fixes: Proper content population, comprehensive fallback content, robust error h
 from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
-from google.adk.agents import Agent
+
 
 logger = logging.getLogger(__name__)
 

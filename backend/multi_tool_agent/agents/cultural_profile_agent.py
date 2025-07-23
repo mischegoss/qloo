@@ -8,10 +8,10 @@ Enhanced to use cultural mappings and create Qloo tag mappings for Agent 3.
 from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
-from google.adk.agents import Agent
+
 
 # Import our cultural mappings
-from backend.config.cultural_mappings import get_heritage_tags, get_interest_tags, get_age_demographic
+from config.cultural_mappings import get_heritage_tags, get_interest_tags, get_age_demographic
 
 logger = logging.getLogger(__name__)
 
