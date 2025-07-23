@@ -87,3 +87,7 @@ dist/
 *.tmp
 *.temp
 .cache/
+
+# Ignore all virtual environments
+.venv/
+backend/.venv/
