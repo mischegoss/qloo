@@ -1,0 +1,80 @@
+{
+  "demo_patient": {
+    "first_name": "Maria",
+    "birth_year": 1945,
+    "birth_month": "March",
+    "cultural_heritage": "Italian-American",
+    "city": "Brooklyn",
+    "state": "New York",
+    "additional_context": "Loves music and cooking",
+    "caregiver_notes": "Enjoys family activities and traditional Italian recipes",
+    "photo_library": [
+      "static/demo/images/maria_sample_wedding.jpg",
+      "static/demo/images/maria_sample_family.jpg"
+    ],
+    "photo_analyses": {
+      "static/demo/images/maria_sample_wedding.jpg": {
+        "vision_analysis": {
+          "objects": [
+            "dress",
+            "flowers",
+            "church",
+            "people"
+          ],
+          "labels": [
+            "wedding",
+            "celebration",
+            "formal wear",
+            "ceremony"
+          ],
+          "people": [
+            "bride",
+            "groom"
+          ],
+          "activities": [
+            "celebration",
+            "ceremony"
+          ],
+          "settings": [
+            "church",
+            "indoor"
+          ]
+        },
+        "processed_date": "2025-01-23T00:00:00Z"
+      },
+      "static/demo/images/maria_sample_family.jpg": {
+        "vision_analysis": {
+          "objects": [
+            "people",
+            "table",
+            "food",
+            "kitchen"
+          ],
+          "labels": [
+            "family",
+            "gathering",
+            "cooking",
+            "home"
+          ],
+          "people": [
+            "family_members"
+          ],
+          "activities": [
+            "cooking",
+            "gathering"
+          ],
+          "settings": [
+            "kitchen",
+            "home",
+            "indoor"
+          ]
+        },
+        "processed_date": "2025-01-23T00:00:00Z"
+      }
+    },
+    "feedback_points": 3,
+    "demo_dislikes": [],
+    "last_photo_shown": null,
+    "photo_rotation_index": 0
+  }
+}
