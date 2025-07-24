@@ -5,6 +5,7 @@ File: backend/multi_tool_agent/sequential_agent.py
 
 import logging
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -103,12 +104,23 @@ class CareConnectAgent:
             if self.agent1:
                 try:
                     logger.info("Executing Agent 1: Information Consolidator")
+                    
+                    # FIXED: Prepare photo_data for Agent 1 (it expects photo_data, not photo_of_the_day)
+                    photo_data = None
+                    if photo_of_the_day and photo_analysis:
+                        photo_data = {
+                            "photo_url": photo_of_the_day,
+                            "analysis": photo_analysis,
+                            "type": "family_photo",
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    
                     agent1_result = await self.agent1.run(
                         patient_profile=patient_profile,
                         request_type=request_type,
                         session_id=session_id,
                         feedback_data=feedback_data,
-                        photo_of_the_day=photo_of_the_day
+                        photo_data=photo_data  # FIXED: Use photo_data instead of photo_of_the_day
                     )
                     consolidated_info = agent1_result.get("consolidated_info", {})
                     logger.info("✅ Agent 1 completed successfully")

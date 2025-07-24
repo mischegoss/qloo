@@ -71,7 +71,7 @@ class GeminiRecipeGenerator:
                             },
                             "safety_note": {
                                 "type": "string",
-                                "description": "Any handling considerations"
+                                "description": "Safety tip for this ingredient"
                             }
                         },
                         "required": ["item", "amount", "location", "safety_note"]
@@ -79,7 +79,7 @@ class GeminiRecipeGenerator:
                 },
                 "instructions": {
                     "type": "array",
-                    "maxItems": 8,
+                    "maxItems": 6,
                     "items": {
                         "type": "object",
                         "properties": {
@@ -89,26 +89,22 @@ class GeminiRecipeGenerator:
                             },
                             "instruction": {
                                 "type": "string",
-                                "description": "One simple action only - be very specific"
+                                "description": "Clear, simple instruction"
                             },
                             "time": {
                                 "type": "string",
-                                "description": "Exact time (2 minutes, 5 minutes)"
+                                "description": "Time for this step"
                             },
                             "what_to_look_for": {
                                 "type": "string",
-                                "description": "Visual, smell, or sound cue"
+                                "description": "Visual or sensory cues"
                             },
                             "safety_note": {
-                                "type": "string", 
-                                "description": "Any safety consideration for this step"
-                            },
-                            "rest_break": {
-                                "type": "boolean",
-                                "description": "If needed after this step"
+                                "type": "string",
+                                "description": "Safety reminder for this step"
                             }
                         },
-                        "required": ["step", "instruction", "time", "what_to_look_for", "safety_note", "rest_break"]
+                        "required": ["step", "instruction", "time", "what_to_look_for", "safety_note"]
                     }
                 },
                 "caregiver_notes": {
@@ -116,42 +112,19 @@ class GeminiRecipeGenerator:
                     "items": {
                         "type": "string"
                     },
-                    "description": "Guidance for caregivers"
+                    "description": "Tips for caregivers"
                 },
-                "sensory_engagement": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Sensory experiences to notice together"
-                },
-                "success_indicators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "How to know each step is working correctly"
-                },
-                "cultural_context": {
-                    "type": "string",
-                    "description": "Why this recipe connects to heritage and memories"
-                },
-                "memory_connection_potential": {
-                    "type": "string",
-                    "description": "How this might trigger positive food memories"
+                "dementia_optimized": {
+                    "type": "boolean",
+                    "description": "Always true for dementia care recipes"
                 }
             },
-            "required": [
-                "name", "description", "total_time", "difficulty",
-                "ingredients", "instructions", "caregiver_notes",
-                "sensory_engagement", "success_indicators", 
-                "cultural_context", "memory_connection_potential"
-            ]
+            "required": ["name", "description", "total_time", "difficulty", "ingredients", "instructions", "caregiver_notes", "dementia_optimized"]
         }
     
     async def generate_recipe(self, prompt: str) -> Optional[Dict[str, Any]]:
         """
-        Generate a dementia-optimized recipe using structured JSON output.
+        Generate a dementia-optimized recipe using Gemini 2.5 Flash with structured JSON output.
         
         Args:
             prompt: Recipe generation prompt with dementia-specific requirements
@@ -176,9 +149,9 @@ class GeminiRecipeGenerator:
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 2048,
-                    "response_mime_type": "application/json",  # KEY: Request JSON output
-                    "response_schema": self._get_dementia_recipe_schema()  # KEY: Define structure
+                    "maxOutputTokens": 4096,  # INCREASED from 2048 to prevent truncation
+                    "response_mime_type": "application/json",
+                    "response_schema": self._get_dementia_recipe_schema()
                 },
                 "safetySettings": [
                     {
@@ -200,37 +173,34 @@ class GeminiRecipeGenerator:
                 ]
             }
             
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=payload, timeout=30.0)
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload)
                 response.raise_for_status()
                 
-                response_data = response.json()
+                result = response.json()
                 logger.info("Gemini API response received successfully")
+                logger.info(f"DEBUG: Raw Gemini response structure: {list(result.keys())}")
                 
-                # Debug: Log the raw response structure
-                logger.info(f"DEBUG: Raw Gemini response structure: {list(response_data.keys())}")
-                
-                # Check for candidates
-                if not response_data.get("candidates"):
+                # Check if we have candidates
+                if not result.get("candidates"):
                     logger.error("No candidates in Gemini response")
-                    logger.info(f"DEBUG: Full response: {response_data}")
+                    logger.info(f"DEBUG: Full response: {result}")
                     return None
                 
-                candidate = response_data["candidates"][0]
+                candidate = result["candidates"][0]
                 
-                # Check for content
-                if not candidate.get("content"):
-                    logger.error("No content in Gemini candidate")
-                    logger.info(f"DEBUG: Candidate structure: {list(candidate.keys())}")
-                    
-                    # Check if blocked by safety filters
-                    if candidate.get("finishReason") == "SAFETY":
-                        logger.warning("Recipe generation blocked by Gemini safety filters")
-                        safety_ratings = candidate.get("safetyRatings", [])
-                        for rating in safety_ratings:
-                            logger.warning(f"Safety: {rating.get('category')} - {rating.get('probability')}")
-                    
+                # Check for safety blocks
+                if candidate.get("finishReason") == "SAFETY":
+                    logger.warning("Recipe generation blocked by Gemini safety filters")
+                    safety_ratings = candidate.get("safetyRatings", [])
+                    for rating in safety_ratings:
+                        logger.warning(f"Safety: {rating.get('category')} - {rating.get('probability')}")
                     return None
+                
+                # Check for max tokens reached
+                if candidate.get("finishReason") == "MAX_TOKENS":
+                    logger.warning("Recipe generation hit token limit - response may be truncated")
+                    # Continue processing but log the warning
                 
                 # Check for parts
                 if not candidate["content"].get("parts"):
@@ -248,8 +218,32 @@ class GeminiRecipeGenerator:
                 logger.info("Gemini recipe generation successful")
                 logger.info(f"DEBUG: JSON content length: {len(json_content)} characters")
                 
-                # Parse the JSON response directly
+                # Enhanced JSON parsing with better error handling
                 try:
+                    # First, let's clean up any potential formatting issues
+                    json_content = json_content.strip()
+                    
+                    # Check if JSON is complete (should end with '}')
+                    if not json_content.endswith('}'):
+                        logger.warning("JSON response appears to be truncated")
+                        logger.info(f"DEBUG: Last 100 chars: ...{json_content[-100:]}")
+                        
+                        # Try to fix common truncation issues
+                        if json_content.endswith('",'):
+                            json_content = json_content[:-1] + '"'
+                        elif json_content.endswith(','):
+                            json_content = json_content[:-1]
+                        
+                        # Try to close the JSON properly
+                        if not json_content.endswith('}'):
+                            # Count open braces vs close braces
+                            open_braces = json_content.count('{')
+                            close_braces = json_content.count('}')
+                            
+                            # Add missing closing braces
+                            for _ in range(open_braces - close_braces):
+                                json_content += '}'
+                    
                     recipe_data = json.loads(json_content)
                     logger.info("✅ Successfully parsed structured JSON recipe")
                     
@@ -265,7 +259,30 @@ class GeminiRecipeGenerator:
                         
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON response: {e}")
-                    logger.info(f"DEBUG: Raw content that failed to parse: {json_content[:200]}...")
+                    logger.error(f"DEBUG: Error position - Line: {e.lineno}, Column: {e.colno}")
+                    
+                    # Log more context around the error
+                    lines = json_content.split('\n')
+                    if e.lineno <= len(lines):
+                        error_line = lines[e.lineno - 1] if e.lineno > 0 else ""
+                        logger.error(f"DEBUG: Error line {e.lineno}: {error_line}")
+                        
+                        # Show surrounding lines for context
+                        start_line = max(0, e.lineno - 3)
+                        end_line = min(len(lines), e.lineno + 2)
+                        context_lines = lines[start_line:end_line]
+                        logger.error(f"DEBUG: Context around error:")
+                        for i, line in enumerate(context_lines, start=start_line + 1):
+                            marker = " >>> " if i == e.lineno else "     "
+                            logger.error(f"DEBUG:{marker}{i}: {line}")
+                    
+                    # Log the full raw content for debugging (in chunks to avoid log size limits)
+                    logger.error("DEBUG: Full JSON content that failed to parse:")
+                    chunk_size = 1000
+                    for i in range(0, len(json_content), chunk_size):
+                        chunk = json_content[i:i + chunk_size]
+                        logger.error(f"DEBUG: Chunk {i//chunk_size + 1}: {chunk}")
+                    
                     return None
                 
         except httpx.TimeoutException:
