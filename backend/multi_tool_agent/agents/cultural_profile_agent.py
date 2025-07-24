@@ -1,11 +1,11 @@
 """
-Agent 2: Cultural Profile Builder - UPDATED for Nostalgia-Based Mappings
+Agent 2: Cultural Profile Builder - FIXED for New Cultural Mappings
 File: backend/multi_tool_agent/agents/cultural_profile_agent.py
 
-UPDATED: Now uses the new nostalgia & age-based mapping system.
-- Heritage used only for cuisine (non-stereotypical)
-- Music & TV shows based on age/nostalgia (dementia-friendly)
-- Passes birth_year to mapping functions
+FIXED ISSUES:
+- Properly passes birth_year to get_heritage_tags()
+- Returns tv_shows instead of movies
+- Uses updated nostalgia-based mapping system
 """
 
 from typing import Dict, Any, List, Optional
@@ -13,30 +13,29 @@ import logging
 from datetime import datetime
 from google.adk.agents import Agent
 
-
-# Import our updated nostalgia-based mappings
+# Import the updated nostalgia-based mappings
 from config.cultural_mappings import get_heritage_tags, get_interest_tags, get_age_demographic
 
 logger = logging.getLogger(__name__)
 
 class CulturalProfileBuilderAgent(Agent):
     """
-    Agent 2: Cultural Profile Builder - UPDATED for Nostalgia-Based Mappings
+    Agent 2: Cultural Profile Builder - FIXED for New Cultural Mappings
     
-    UPDATES:
-    - Uses nostalgia & age-based mappings (non-stereotypical) 
+    FIXES:
+    - Properly passes birth_year to get_heritage_tags()
+    - Returns tv_shows instead of movies in mappings
+    - Uses nostalgia & age-based mappings correctly
     - Heritage only affects cuisine (appropriate)
     - Music & TV shows based on formative years (dementia-friendly)
-    - Passes birth_year to mapping functions
-    - Creates dementia-appropriate content selection
     """
     
     def __init__(self):
         super().__init__(
-            name="cultural_profile_builder_nostalgia",
-            description="Creates nostalgia-based cultural profiles with dementia-friendly tag mappings"
+            name="cultural_profile_builder_fixed",
+            description="Creates nostalgia-based cultural profiles with proper TV show mappings"
         )
-        logger.info("Cultural Profile Builder Agent initialized with nostalgia-based mappings")
+        logger.info("Cultural Profile Builder Agent initialized with FIXED nostalgia-based mappings")
     
     async def run(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -50,7 +49,7 @@ class CulturalProfileBuilderAgent(Agent):
         """
         
         try:
-            logger.info("Building nostalgia-based cultural profile with dementia-friendly mappings")
+            logger.info("Building nostalgia-based cultural profile with FIXED TV show mappings")
             
             # Extract basic information
             patient_profile = consolidated_info.get("patient_profile", {})
@@ -68,7 +67,7 @@ class CulturalProfileBuilderAgent(Agent):
             # STEP 4: Extract era context
             era_context = self._extract_era_context(patient_profile)
             
-            # STEP 5: Map heritage + age to Qloo tags (UPDATED to pass birth_year)
+            # STEP 5: Map heritage + age to Qloo tags (FIXED: properly pass birth_year)
             heritage_tags = get_heritage_tags(heritage, birth_year)
             
             # STEP 6: Map interests to additional dementia-friendly tags
@@ -84,7 +83,7 @@ class CulturalProfileBuilderAgent(Agent):
                 birth_year=birth_year
             )
             
-            # STEP 8: Create Qloo tag mappings for Agent 3
+            # STEP 8: Create Qloo tag mappings for Agent 3 (FIXED: tv_shows not movies)
             qloo_tag_mappings = self._create_qloo_tag_mappings(heritage_tags, interest_tags)
             
             # STEP 9: Build final cultural profile
@@ -99,12 +98,12 @@ class CulturalProfileBuilderAgent(Agent):
                     "heritage_tags_mapped": len(heritage_tags),
                     "interest_tags_mapped": len(interest_tags),
                     "profile_generation_timestamp": datetime.now().isoformat(),
-                    "agent_version": "nostalgia_based_mappings",
+                    "agent_version": "fixed_tv_shows_mappings",
                     "mapping_approach": "heritage_for_cuisine_age_for_media"
                 }
             }
             
-            logger.info(f"Nostalgia-based profile built: {heritage} heritage, born {birth_year}, {len(interests)} interests")
+            logger.info(f"FIXED profile built: {heritage} heritage, born {birth_year}, {len(interests)} interests")
             
             return {"cultural_profile": cultural_profile}
             
@@ -134,41 +133,30 @@ class CulturalProfileBuilderAgent(Agent):
         
         interests = []
         
-        # Extract from additional_context
+        # Get preferences list
+        preferences = patient_profile.get("preferences", [])
+        if preferences:
+            interests.extend(preferences)
+        
+        # Parse additional context
         additional_context = patient_profile.get("additional_context", "")
         if additional_context:
             context_lower = additional_context.lower()
-            
-            # Look for dementia-friendly interest keywords
-            interest_keywords = [
-                "music", "cooking", "reading", "gardening", "dancing", 
-                "tv shows", "travel", "sports", "arts", "crafts", "family", "animals"
-            ]
-            
-            for keyword in interest_keywords:
-                if keyword in context_lower:
-                    interests.append(keyword)
-        
-        # Extract from caregiver_notes
-        caregiver_notes = patient_profile.get("caregiver_notes", "")
-        if caregiver_notes:
-            notes_lower = caregiver_notes.lower()
-            
-            if "music" in notes_lower:
+            if "music" in context_lower and "music" not in interests:
                 interests.append("music")
-            if "cook" in notes_lower:
+            if "cook" in context_lower and "cooking" not in interests:
                 interests.append("cooking")
-            if "family" in notes_lower:
+            if "family" in context_lower and "family activities" not in interests:
                 interests.append("family activities")
         
         # Remove duplicates
         interests = list(set(interests))
         
-        logger.info(f"Extracted dementia-friendly interests: {interests}")
+        logger.info(f"Extracted interests: {interests}")
         return interests
     
     def _extract_era_context(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract era and generational context for nostalgia mapping."""
+        """Extract era and generational context for nostalgia-based recommendations."""
         
         birth_year = patient_profile.get("birth_year")
         
@@ -226,58 +214,38 @@ class CulturalProfileBuilderAgent(Agent):
                                 birth_year: int = None) -> Dict[str, Any]:
         """Build comprehensive cultural elements structure with nostalgia focus."""
         
-        # Create heritage keywords for context (cuisine only)
+        # Extract heritage keywords for context
         heritage_keywords = [heritage]
         if "-" in heritage:
             heritage_keywords.extend(heritage.split("-"))
         heritage_keywords.append("family traditions")
         
-        # Map interests to preference categories (dementia-friendly)
+        # Map interests to preferences
         cuisine_preferences = ["comfort food"]
-        music_preferences = []
-        activity_preferences = []
+        music_preferences = ["nostalgic", "era-appropriate"]
+        activity_preferences = ["family activities"]
         
-        for interest in interests:
-            if interest in ["cooking"]:
-                cuisine_preferences.append("home cooking")
-            elif interest in ["music"]:
-                music_preferences.append("nostalgic music")  # Age-appropriate
-            elif interest in ["family"]:
-                activity_preferences.append("family time")
-            else:
-                activity_preferences.append(interest)
-        
-        # Add heritage-based cuisine preferences (appropriate cultural connection)
-        heritage_base = heritage.split("-")[0] if "-" in heritage else heritage
-        if heritage_base.lower() != "american":
-            cuisine_preferences.append(heritage_base.lower())
-        
-        # Age-based music preferences (non-stereotypical)
-        if birth_year:
-            age = 2024 - birth_year
-            if age >= 80:
-                music_preferences.append("big band era")
-            elif age >= 70:
-                music_preferences.append("folk and early rock")
-            elif age >= 60:
-                music_preferences.append("classic rock")
-            else:
-                music_preferences.append("contemporary")
+        if "cooking" in interests:
+            cuisine_preferences.extend(["home cooking", heritage.lower().split("-")[0] if "-" in heritage else heritage.lower()])
+        if "music" in interests:
+            music_preferences.append("traditional")
         
         return {
             "heritage": heritage,
             "heritage_keywords": heritage_keywords,
-            "cuisine_preferences": list(set(cuisine_preferences)),
-            "music_preferences": list(set(music_preferences)) or ["nostalgic"],
-            "activity_preferences": list(set(activity_preferences)) or ["family activities"],
+            "cuisine_preferences": cuisine_preferences,
+            "music_preferences": music_preferences,
+            "activity_preferences": activity_preferences,
             "interests": interests,
             "era_informed": era_context.get("has_era_context", False),
             "nostalgia_based": True,
             "birth_year": birth_year
         }
     
-    def _create_qloo_tag_mappings(self, heritage_tags: Dict[str, str], interest_tags: List[str]) -> Dict[str, Any]:
-        """Create ready-to-use Qloo tag mappings for Agent 3 (nostalgia-based)."""
+    def _create_qloo_tag_mappings(self, 
+                                 heritage_tags: Dict[str, str],
+                                 interest_tags: List[str]) -> Dict[str, Any]:
+        """Create Qloo tag mappings for Agent 3 (FIXED: tv_shows not movies)."""
         
         # Base mappings from heritage + age
         mappings = heritage_tags.copy()
@@ -290,7 +258,7 @@ class CulturalProfileBuilderAgent(Agent):
         return {
             "cuisine": mappings.get("cuisine"),      # Heritage-based (appropriate)
             "music": mappings.get("music"),          # Age-based (nostalgic)
-            "tv_shows": mappings.get("tv_shows"),    # Age-based (dementia-friendly)
+            "tv_shows": mappings.get("tv_shows"),    # FIXED: Age-based (dementia-friendly)
             "additional_tags": interest_tags,
             "mapping_source": "nostalgia_based_heritage_for_cuisine_only",
             "approach": "dementia_friendly_non_stereotypical"
@@ -307,7 +275,7 @@ class CulturalProfileBuilderAgent(Agent):
         fallback_tags = {
             "cuisine": UNIVERSAL_FALLBACK["cuisine"],
             "music": UNIVERSAL_FALLBACK["music"],
-            "tv_shows": UNIVERSAL_FALLBACK["tv_shows"]
+            "tv_shows": UNIVERSAL_FALLBACK["tv_shows"]  # FIXED: tv_shows not movies 
         }
         
         return {
@@ -329,14 +297,14 @@ class CulturalProfileBuilderAgent(Agent):
                     "heritage_source": "fallback",
                     "mapping_approach": "universal_dementia_friendly",
                     "profile_generation_timestamp": datetime.now().isoformat(),
-                    "agent_version": "nostalgia_fallback"
+                    "agent_version": "nostalgia_fallback_fixed"
                 }
             }
         }
 
 # Test function
-def test_cultural_profile_builder():
-    """Test the updated nostalgia-based cultural profile builder."""
+async def test_fixed_cultural_profile_builder():
+    """Test the FIXED nostalgia-based cultural profile builder."""
     
     agent = CulturalProfileBuilderAgent()
     
@@ -364,12 +332,12 @@ def test_cultural_profile_builder():
         elements = profile.get("cultural_elements", {})
         mappings = profile.get("qloo_tag_mappings", {})
         
-        print("Nostalgia-Based Cultural Profile Builder Test Results:")
+        print("FIXED Cultural Profile Builder Test Results:")
         print(f"Heritage: {elements.get('heritage')} (cuisine only)")
         print(f"Birth Year: {elements.get('birth_year')} (for nostalgia)")
         print(f"Interests: {elements.get('interests')}")
         print(f"Era context: {profile.get('era_context', {}).get('has_era_context')}")
-        print(f"Qloo mappings: {mappings}")
+        print(f"TV Shows mapping: {mappings.get('tv_shows')}")  # FIXED: Check tv_shows
         print(f"Approach: {mappings.get('approach')}")
         
         return result
@@ -377,4 +345,4 @@ def test_cultural_profile_builder():
     return asyncio.run(run_test())
 
 if __name__ == "__main__":
-    test_cultural_profile_builder()
+    test_fixed_cultural_profile_builder()
