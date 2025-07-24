@@ -1,8 +1,12 @@
 """
-Enhanced Sensory Content Generator Agent with Theme-Aware Recipe Selection
+Sensory Content Generator Agent with LIMITED API Calls - RATE LIMITING SOLUTION
 File: backend/multi_tool_agent/agents/sensory_content_generator_agent.py
 
-Agent 4: Uses pre-made recipes from JSON + light Gemini customization + theme awareness
+FIXES:
+- Only use FIRST/BEST result from Qloo (not all results)
+- Only make ONE YouTube call per dashboard refresh
+- Only make ONE Gemini call per dashboard refresh (with caching)
+- Early exit strategies to prevent unnecessary API calls
 """
 
 import logging
@@ -12,40 +16,25 @@ import random
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-# Configure logger FIRST
+# Configure logger
 logger = logging.getLogger(__name__)
-
-# Import theme manager for theme-aware filtering (FIXED import path)
-try:
-    # Try direct import path first (working path)
-    import sys
-    import os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-    from config.theme_config import theme_manager
-    logger.info("✅ Sensory Content Generator: theme_manager imported successfully")
-    logger.info(f"🔍 DEBUG: theme_manager object: {theme_manager}")
-    logger.info(f"🔍 DEBUG: theme_manager methods: {[m for m in dir(theme_manager) if not m.startswith('_')]}")
-except ImportError as e:
-    logger.error(f"❌ Sensory Content Generator: Failed to import theme_manager: {e}")
-    theme_manager = None
-except Exception as e:
-    logger.error(f"❌ Sensory Content Generator: Error with theme_manager: {e}")
-    theme_manager = None
 
 class SensoryContentGeneratorAgent:
     """
-    Agent 4: Sensory Content Generator with Theme-Aware Recipe Selection
+    Agent 4: Sensory Content Generator with LIMITED API calls to prevent rate limiting.
     
-    Uses pre-made recipes from backend/config/recipes.json and applies:
-    1. Theme-aware recipe filtering (NEW)
-    2. Light cultural customization via Gemini (IMPROVED - no cultural prefixes)
+    RATE LIMITING FIXES:
+    - Uses ONLY the first/best Qloo result (not multiple)
+    - Makes maximum 1 YouTube call per dashboard refresh
+    - Makes maximum 1 Gemini call per dashboard refresh
+    - Leverages daily caching in both APIs
     """
     
     def __init__(self, gemini_tool, youtube_tool):
         self.gemini_tool = gemini_tool
         self.youtube_tool = youtube_tool
         self.recipes_data = self._load_recipes_json()
-        logger.info("Sensory Content Generator initialized with theme-aware recipe selection")
+        logger.info("Sensory Content Generator initialized with LIMITED API calls")
     
     def _load_recipes_json(self) -> List[Dict[str, Any]]:
         """Load simple recipes from JSON file."""
@@ -81,386 +70,459 @@ class SensoryContentGeneratorAgent:
                   cultural_profile: Dict[str, Any], 
                   qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate comprehensive sensory content with theme-aware recipe selection.
+        Generate sensory content with LIMITED API calls to prevent rate limiting.
         
-        Args:
-            consolidated_info: Output from Agent 1 (now includes daily_theme)
-            cultural_profile: Output from Agent 2
-            qloo_intelligence: Output from Agent 3
-            
-        Returns:
-            Comprehensive sensory content including recipes and YouTube links
+        RATE LIMITING STRATEGY:
+        - Extract ONLY first/best results from Qloo
+        - Make maximum 1 YouTube API call
+        - Make maximum 1 Gemini API call  
+        - Use caching for daily consistency
         """
         
         try:
-            logger.info("🍳 Agent 4: Generating sensory content with theme awareness")
+            logger.info("🎵 Agent 4: Starting LIMITED sensory content generation")
             
-            # Extract daily theme (NEW - additive)
-            daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
-            theme_name = daily_theme.get("name", "General")
-            
-            # DEBUG: Log theme extraction
-            logger.info(f"🔍 DEBUG Agent 4: consolidated_info keys: {list(consolidated_info.keys())}")
-            logger.info(f"🔍 DEBUG Agent 4: daily_theme structure: {consolidated_info.get('daily_theme', 'MISSING')}")
-            logger.info(f"🔍 DEBUG Agent 4: extracted theme name: {theme_name}")
-            
-            # Extract patient and cultural info (existing logic)
+            # Extract key information
             patient_profile = consolidated_info.get("patient_profile", {})
-            heritage = cultural_profile.get("heritage_analysis", {}).get("primary_heritage", "universal")
+            heritage = patient_profile.get("cultural_heritage", "American")
+            age = patient_profile.get("age", 75)
+            birth_year = patient_profile.get("birth_year")
+            if birth_year:
+                age = 2024 - birth_year
             
-            logger.info(f"🎯 Theme: {theme_name}, Heritage: {heritage}")
+            qloo_recommendations = qloo_intelligence.get("cultural_recommendations", {})
             
-            # 1. SELECT RECIPES with theme awareness (NEW)
-            selected_recipes = await self._select_theme_aware_recipes(daily_theme, patient_profile)
+            # RATE LIMITING: Extract ONLY first/best results from Qloo
+            first_artist = self._get_first_qloo_result(qloo_recommendations, "artists")
+            first_tv_show = self._get_first_qloo_result(qloo_recommendations, "tv_shows")
+            first_place = self._get_first_qloo_result(qloo_recommendations, "places")
             
-            # 2. CUSTOMIZE selected recipes (IMPROVED - no cultural prefixes)
-            customized_recipes = await self._customize_recipes_with_gemini(
-                selected_recipes, heritage, daily_theme, patient_profile
-            )
+            logger.info(f"LIMITED extraction - Artist: {first_artist.get('name') if first_artist else 'None'}")
+            logger.info(f"LIMITED extraction - TV: {first_tv_show.get('name') if first_tv_show else 'None'}")
+            logger.info(f"LIMITED extraction - Place: {first_place.get('name') if first_place else 'None'}")
             
-            # 3. GENERATE YOUTUBE links for recipes (existing logic)
-            recipes_with_youtube = await self._add_youtube_links_to_recipes(customized_recipes)
+            # Generate content for each sense with LIMITED API calls
+            sensory_content = {}
             
-            # 4. CREATE sensory recommendations (existing logic)
-            sensory_recommendations = self._create_sensory_recommendations(
-                daily_theme, heritage, patient_profile
-            )
+            # TASTE: ONE Gemini call maximum with caching
+            sensory_content["gustatory"] = await self._generate_limited_recipe(heritage, age)
             
-            # 5. BUILD comprehensive response
-            sensory_content = {
-                "recipes": recipes_with_youtube,
-                "theme_context": {
-                    "daily_theme": daily_theme,
-                    "theme_applied": True,
-                    "theme_filtering_used": len(selected_recipes) > 0
-                },
-                "sensory_recommendations": sensory_recommendations,
-                "youtube_integration": {
-                    "recipes_with_videos": len([r for r in recipes_with_youtube if r.get("youtube_url")]),
-                    "total_recipes": len(recipes_with_youtube)
-                },
-                "generation_metadata": {
-                    "timestamp": datetime.now().isoformat(),
-                    "theme_aware_selection": True,
-                    "cultural_customization": "light_without_prefixes",
-                    "agent_version": "4.1_theme_aware"
+            # SOUND: ONE YouTube call maximum with caching
+            sensory_content["auditory"] = await self._generate_limited_music_content(heritage, first_artist)
+            
+            # SIGHT: Use Qloo data only (no additional API calls)
+            sensory_content["visual"] = self._generate_visual_from_qloo_only(first_tv_show, heritage)
+            
+            # SMELL & TOUCH: No API calls (static data)
+            sensory_content["olfactory"] = self._generate_olfactory_content(heritage)
+            sensory_content["tactile"] = self._generate_tactile_content(heritage)
+            
+            return {
+                "sensory_content": {
+                    "content_by_sense": sensory_content,
+                    "sensory_summary": self._create_sensory_summary(sensory_content),
+                    "generation_metadata": {
+                        "heritage_used": heritage,
+                        "age_optimized_for": age,
+                        "rate_limiting_applied": True,
+                        "max_api_calls": {
+                            "youtube": 1,
+                            "gemini": 1,
+                            "qloo": 0  # Already called by Agent 3
+                        },
+                        "generation_timestamp": datetime.now().isoformat(),
+                        "agent_version": "limited_api_calls"
+                    }
                 }
             }
             
-            logger.info(f"✅ Agent 4 completed: {len(recipes_with_youtube)} recipes generated with theme '{theme_name}'")
-            
-            return {"sensory_content": sensory_content}
-            
         except Exception as e:
             logger.error(f"❌ Agent 4 failed: {e}")
-            return self._create_fallback_sensory_content(consolidated_info)
+            return self._create_fallback_sensory_content(consolidated_info, cultural_profile)
     
-    async def _select_theme_aware_recipes(self, 
-                                        daily_theme: Dict[str, Any],
-                                        patient_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        NEW: Select recipes with theme awareness while maintaining variety.
+    def _get_first_qloo_result(self, qloo_recommendations: Dict[str, Any], category: str) -> Optional[Dict[str, Any]]:
+        """Extract ONLY the first/best result from Qloo to limit downstream API calls."""
         
-        Args:
-            daily_theme: Current daily theme configuration
-            patient_profile: Patient preferences and restrictions
-            
-        Returns:
-            Theme-filtered and prioritized recipes
-        """
+        category_data = qloo_recommendations.get(category, {})
         
-        # Start with all available recipes
-        available_recipes = self.recipes_data.copy()
+        if category_data.get("available") and category_data.get("entities"):
+            entities = category_data["entities"]
+            if entities:
+                first_result = entities[0]  # Take ONLY the first result
+                logger.info(f"Using first {category} result: {first_result.get('name', 'Unknown')}")
+                return first_result
         
-        # If theme filtering available, use it
-        if daily_theme and daily_theme.get("recipe_keywords") and theme_manager:
-            logger.info(f"🎯 Filtering recipes by theme: {daily_theme['name']}")
-            try:
-                theme_filtered = theme_manager.filter_recipes_by_theme(available_recipes, daily_theme)
-                
-                # Use theme-filtered recipes but ensure we have enough variety
-                if len(theme_filtered) >= 3:
-                    selected_recipes = theme_filtered[:5]  # Top 5 theme-matched recipes
-                else:
-                    # Mix theme-matched with general recipes for variety
-                    selected_recipes = theme_filtered + available_recipes[:3]
-            except Exception as e:
-                logger.error(f"❌ Theme filtering failed: {e}")
-                selected_recipes = available_recipes
-        else:
-            # No theme filtering - use all recipes
-            logger.warning(f"⚠️ No theme filtering available - theme_manager: {theme_manager is not None}, daily_theme: {daily_theme.get('name', 'None')}, keywords: {daily_theme.get('recipe_keywords', 'None')}")
-            selected_recipes = available_recipes
-        
-        # Shuffle for variety while respecting theme priority
-        random.shuffle(selected_recipes)
-        
-        logger.info(f"Selected {len(selected_recipes)} recipes for customization")
-        return selected_recipes[:6]  # Limit to 6 for processing efficiency
+        logger.info(f"No {category} results available from Qloo")
+        return None
     
-    async def _customize_recipes_with_gemini(self, 
-                                           recipes: List[Dict[str, Any]],
-                                           heritage: str,
-                                           daily_theme: Dict[str, Any],
-                                           patient_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_limited_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
         """
-        IMPROVED: Customize recipes via Gemini WITHOUT adding cultural prefixes.
+        Generate recipe with LIMITED Gemini calls (maximum 1 per day via caching).
+        """
         
-        Args:
-            recipes: Selected recipes to customize
-            heritage: Cultural heritage (for context only)
-            daily_theme: Daily theme for context
-            patient_profile: Patient information
+        try:
+            logger.info(f"LIMITED recipe generation for {heritage} heritage")
             
-        Returns:
-            Customized recipes with enhanced descriptions
-        """
+            # Step 1: Select appropriate base recipe (no API call)
+            base_recipe = self._select_base_recipe(heritage, age)
+            
+            # Step 2: ONE Gemini call maximum (cached daily)
+            customized_recipe = await self._apply_limited_customization(base_recipe, heritage, age)
+            
+            # Step 3: Format response
+            if customized_recipe:
+                recipe_elements = [{
+                    "content_type": "customized_recipe",
+                    "name": customized_recipe.get("name", base_recipe["name"]),
+                    "description": customized_recipe.get("description", f"Simple {heritage} comfort recipe"),
+                    "total_time": customized_recipe.get("total_time", "20 minutes"),
+                    "difficulty": "very_easy",
+                    "ingredients": customized_recipe.get("ingredients", base_recipe["ingredients"]),
+                    "instructions": customized_recipe.get("instructions", base_recipe["instructions"]),
+                    "cultural_context": customized_recipe.get("cultural_context", f"Traditional {heritage} comfort food"),
+                    "heritage_connection": customized_recipe.get("heritage_connection", base_recipe.get("notes", "")),
+                    "source": "recipes_json_limited_customization",
+                    "base_recipe": base_recipe["name"]
+                }]
+                
+                return {
+                    "sense_type": "gustatory", 
+                    "available": True,
+                    "elements": recipe_elements,
+                    "api_calls_made": 1 if customized_recipe else 0,
+                    "caching_used": True
+                }
+            else:
+                # Use base recipe without customization
+                logger.info("Using base recipe without Gemini customization")
+                return self._format_base_recipe(base_recipe, heritage)
+                
+        except Exception as e:
+            logger.error(f"LIMITED recipe generation failed: {e}")
+            return self._format_base_recipe(random.choice(self.recipes_data), heritage)
+    
+    async def _apply_limited_customization(self, base_recipe: Dict[str, Any], heritage: str, age: int) -> Optional[Dict[str, Any]]:
+        """Apply customization with LIMITED Gemini calls (cached daily)."""
         
-        if not recipes or not self.gemini_tool:
-            logger.warning("No recipes to customize or Gemini unavailable")
-            return recipes
+        try:
+            customization_prompt = f"""
+            Take this simple recipe and make small cultural customizations for a {age}-year-old {heritage} person:
+            
+            Base Recipe: {base_recipe['name']}
+            Ingredients: {base_recipe['ingredients']}
+            Instructions: {base_recipe['instructions']}
+            Original Notes: {base_recipe.get('notes', '')}
+            
+            Make ONLY these small changes:
+            1. Add 1-2 small ingredients/spices that fit {heritage} heritage (optional additions only)
+            2. Modify ONE instruction to be more culturally relevant
+            3. Add a brief cultural memory connection
+            4. Keep it exactly as simple and safe as the original
+            5. Do not change cooking method (keep microwave-based)
+            
+            Return as JSON with same structure:
+            {{
+                "name": "Modified recipe name (can add heritage reference)",
+                "description": "One sentence about cultural comfort and memory",
+                "total_time": "Same as original",
+                "ingredients": ["Original ingredients with 1-2 optional cultural additions"],
+                "instructions": ["Slightly modified instructions"],
+                "cultural_context": "Why this connects to {heritage} heritage",
+                "heritage_connection": "How this might trigger positive food memories"
+            }}
+            """
+            
+            # ONE Gemini call maximum (with daily caching built into the tool)
+            customized = await self.gemini_tool.generate_recipe(
+                customization_prompt, 
+                heritage=heritage, 
+                base_recipe_name=base_recipe["name"]
+            )
+            
+            if customized and isinstance(customized, dict):
+                logger.info(f"LIMITED Gemini customization successful: {customized.get('name')}")
+                return customized
+            else:
+                logger.info("LIMITED Gemini customization returned invalid format - using base recipe")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"LIMITED Gemini customization failed: {e}")
+            return None
+    
+    async def _generate_limited_music_content(self, heritage: str, first_artist: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate music content with LIMITED YouTube calls (maximum 1)."""
         
-        customized_recipes = []
-        theme_name = daily_theme.get("name", "General")
-        theme_description = daily_theme.get("description", "")
-        
-        for recipe in recipes[:3]:  # Limit to 3 for API efficiency
-            try:
-                # IMPROVED PROMPT: Much shorter to avoid token limits
-                customization_prompt = f"""
-                Enhance this recipe for dementia care with theme: {theme_name}
-
-                Recipe: {recipe.get('name', 'Unnamed Recipe')}
+        try:
+            # If we have a Qloo artist, use it for ONE YouTube search
+            if first_artist and first_artist.get("name"):
+                artist_name = first_artist["name"]
+                logger.info(f"LIMITED YouTube search for first artist: {artist_name}")
                 
-                Add brief nostalgic description (2-3 sentences) and simple caregiver tip.
-                Keep original name exactly: "{recipe.get('name', '')}"
+                # ONE YouTube call maximum (with daily caching built into the tool)
+                youtube_results = await self.youtube_tool.search_music(f"{artist_name} classic songs", max_results=3)
                 
-                JSON format:
-                {{
-                  "name": "{recipe.get('name', '')}",
-                  "nostalgic_description": "Brief sensory description here",
-                  "caregiver_tips": "One simple tip here"
-                }}
-                """
-                
-                # Call Gemini for customization (with proper method handling)
-                try:
-                    if hasattr(self.gemini_tool, 'generate_recipe'):
-                        # Use the specific recipe generation method with shorter prompt
-                        gemini_response = await self.gemini_tool.generate_recipe(customization_prompt)
-                    elif hasattr(self.gemini_tool, 'generate_content'):
-                        gemini_response = await self.gemini_tool.generate_content(customization_prompt)
-                    elif hasattr(self.gemini_tool, 'generate'):
-                        gemini_response = await self.gemini_tool.generate(customization_prompt)
-                    elif hasattr(self.gemini_tool, 'call'):
-                        gemini_response = await self.gemini_tool.call(customization_prompt)
-                    else:
-                        logger.error(f"Gemini tool missing expected methods. Available: {dir(self.gemini_tool)}")
-                        gemini_response = None
-                except Exception as gemini_error:
-                    logger.error(f"Gemini API call failed: {gemini_error}")
-                    gemini_response = None
-                
-                if gemini_response and gemini_response.get("success"):
-                    try:
-                        # Parse JSON response with better error handling
-                        content = gemini_response.get("content", "")
-                        if len(content) < 50:  # Too short, likely truncated
-                            logger.warning(f"Gemini response too short ({len(content)} chars), using original recipe")
-                            customized_data = None
-                        else:
-                            customized_data = json.loads(content)
-                        
-                        if customized_data:
-                            # Build enhanced recipe with simplified data
-                            enhanced_recipe = {
-                                **recipe,  # Keep original recipe data
-                                "name": recipe.get("name"),  # KEEP ORIGINAL NAME
-                                "nostalgic_description": customized_data.get("nostalgic_description", ""),
-                                "caregiver_tips": customized_data.get("caregiver_tips", ""),
-                                "theme_connection": f"Selected for {theme_name} theme",
-                                "customization_applied": True
-                            }
-                            
-                            customized_recipes.append(enhanced_recipe)
-                            logger.info(f"✅ Customized recipe: {enhanced_recipe['name']}")
-                        else:
-                            # Use original recipe
-                            enhanced_recipe = {
-                                **recipe,
-                                "theme_connection": f"Selected for {theme_name} theme",
-                                "customization_applied": False,
-                                "fallback_reason": "gemini_response_too_short"
-                            }
-                            customized_recipes.append(enhanced_recipe)
-                            logger.info(f"📝 Using original recipe: {recipe['name']} (Gemini response insufficient)")
-                        
-                    except json.JSONDecodeError as e:
-                        # Better JSON error handling
-                        logger.warning(f"JSON parse failed for {recipe['name']}: {e}")
-                        logger.debug(f"Failed JSON content: {gemini_response.get('content', 'No content')[:200]}...")
-                        # Use original recipe with theme connection
-                        enhanced_recipe = {
-                            **recipe,
-                            "theme_connection": f"Selected for {theme_name} theme",
-                            "customization_applied": False,
-                            "fallback_reason": "json_parse_error"
-                        }
-                        customized_recipes.append(enhanced_recipe)
-                        logger.info(f"📝 Using original recipe: {recipe['name']} (JSON parse failed)")
-                
-                else:
-                    # Gemini call failed - use original recipe
-                    enhanced_recipe = {
-                        **recipe,
-                        "theme_connection": f"Selected for {theme_name} theme",
-                        "customization_applied": False,
-                        "fallback_reason": "gemini_api_error"
+                if youtube_results and youtube_results.get("items"):
+                    music_elements = []
+                    for item in youtube_results["items"]:  # Use all results from the single call
+                        music_elements.append({
+                            "title": item.get("snippet", {}).get("title", "Classic Song"),
+                            "description": item.get("snippet", {}).get("description", "")[:100],
+                            "id": item.get("id", {}),
+                            "cultural_relevance": "high",
+                            "source": "limited_qloo_youtube",
+                            "artist_source": artist_name
+                        })
+                    
+                    return {
+                        "sense_type": "auditory",
+                        "available": True, 
+                        "elements": music_elements,
+                        "api_calls_made": 1,
+                        "caching_used": True,
+                        "artist_used": artist_name
                     }
-                    customized_recipes.append(enhanced_recipe)
-                    logger.info(f"📝 Using original recipe: {recipe['name']} (Gemini API failed)")
-                
-            except Exception as e:
-                logger.error(f"Error customizing recipe {recipe.get('name', 'unknown')}: {e}")
-                # Always include the original recipe as fallback
-                customized_recipes.append({
-                    **recipe,
-                    "theme_connection": f"Selected for {theme_name} theme",
-                    "customization_applied": False,
-                    "fallback_reason": "customization_error"
-                })
+            
+            # Fallback: No YouTube call, use heritage-based suggestion
+            logger.info("No Qloo artist available - using fallback music suggestion")
+            return {
+                "sense_type": "auditory",
+                "available": True,
+                "elements": [{
+                    "title": f"{heritage} Traditional Music",
+                    "description": f"Gentle traditional {heritage} music",
+                    "source": "heritage_fallback_no_api",
+                    "cultural_relevance": "high"
+                }],
+                "api_calls_made": 0,
+                "fallback_used": True
+            }
         
-        logger.info(f"Customized {len(customized_recipes)} recipes with theme context")
-        return customized_recipes
+        except Exception as e:
+            logger.error(f"LIMITED music content generation failed: {e}")
+            # Return fallback without any API calls
+            return {
+                "sense_type": "auditory",
+                "available": True,
+                "elements": [{
+                    "title": f"{heritage} Music",
+                    "description": "Traditional background music",
+                    "source": "error_fallback_no_api"
+                }],
+                "api_calls_made": 0,
+                "fallback_used": True
+            }
     
-    async def _add_youtube_links_to_recipes(self, recipes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Add YouTube links to recipes using YouTube tool (existing logic)."""
+    def _generate_visual_from_qloo_only(self, first_tv_show: Optional[Dict[str, Any]], heritage: str) -> Dict[str, Any]:
+        """Generate visual content using ONLY Qloo data (no additional API calls)."""
         
-        if not recipes or not self.youtube_tool:
-            return recipes
+        visual_elements = []
         
-        recipes_with_youtube = []
-        
-        for recipe in recipes:
-            try:
-                recipe_name = recipe.get("name", "cooking recipe")
-                search_query = f"how to make {recipe_name} simple recipe"
+        try:
+            # Use the first TV show from Qloo (no additional API calls)
+            if first_tv_show and first_tv_show.get("name"):
+                show_name = first_tv_show["name"]
                 
-                # Search for YouTube video
-                youtube_result = await self.youtube_tool.search_videos(
-                    query=search_query,
-                    max_results=1
-                )
-                
-                # Add YouTube link if found
-                enhanced_recipe = recipe.copy()
-                if youtube_result and youtube_result.get("success") and youtube_result.get("videos"):
-                    video = youtube_result["videos"][0]
-                    enhanced_recipe["youtube_url"] = video.get("url", "")
-                    enhanced_recipe["youtube_title"] = video.get("title", "")
-                    enhanced_recipe["youtube_available"] = True
-                else:
-                    enhanced_recipe["youtube_available"] = False
-                
-                recipes_with_youtube.append(enhanced_recipe)
-                
-            except Exception as e:
-                logger.error(f"Error adding YouTube to {recipe.get('name', 'unknown')}: {e}")
-                # Include recipe without YouTube link
-                recipes_with_youtube.append({
-                    **recipe, 
-                    "youtube_available": False,
-                    "youtube_error": str(e)
+                visual_elements.append({
+                    "content_type": "tv_show",
+                    "title": show_name,
+                    "description": first_tv_show.get("properties", {}).get("description", f"Classic show: {show_name}")[:100],
+                    "cultural_relevance": "high",
+                    "source": "qloo_only_no_additional_api",
+                    "viewing_notes": ["Watch together", "Pause for discussion", "Choose comfortable time"]
                 })
+        except Exception as e:
+            logger.warning(f"TV show visual content failed: {e}")
         
-        return recipes_with_youtube
+        # Add heritage photo suggestions (no API calls)
+        visual_elements.append({
+            "content_type": "photo_collection",
+            "title": f"{heritage} Heritage Photos",
+            "description": f"Traditional images and scenes from {heritage} culture",
+            "suggestions": [
+                f"Traditional {heritage} landscapes",
+                f"{heritage} cultural celebrations", 
+                f"Historical {heritage} photography"
+            ],
+            "cultural_relevance": "high",
+            "source": "heritage_based_no_api"
+        })
+        
+        return {
+            "sense_type": "visual",
+            "available": True if visual_elements else False,
+            "elements": visual_elements,
+            "api_calls_made": 0,
+            "data_source": "qloo_only"
+        }
     
-    def _create_sensory_recommendations(self, 
-                                      daily_theme: Dict[str, Any],
-                                      heritage: str,
-                                      patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Create sensory recommendations based on theme and heritage (enhanced).
-        """
+    def _select_base_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
+        """Select most appropriate base recipe from JSON (no API calls)."""
         
-        theme_name = daily_theme.get("name", "General")
-        
-        # Get sensory focus with fallback
-        if theme_manager and daily_theme:
-            try:
-                sensory_focus = theme_manager.get_theme_sensory_focus(daily_theme)
-            except Exception as e:
-                logger.warning(f"Error getting theme sensory focus: {e}")
-                sensory_focus = "visual"
-        else:
-            sensory_focus = "visual"
-        
-        recommendations = {
-            "theme_sensory_focus": sensory_focus,
-            "recommendations": []
+        # Heritage-based preferences
+        heritage_preferences = {
+            "Italian-American": ["apple", "oatmeal", "bread", "cocoa"],
+            "Mexican-American": ["cinnamon", "cocoa", "banana"],
+            "Irish-American": ["oatmeal", "bread", "cocoa"],
+            "German-American": ["apple", "bread", "cocoa"],
+            "American": ["apple", "oatmeal", "banana", "bread"]
         }
         
-        # Theme-based sensory recommendations
-        if theme_name == "Music":
-            recommendations["recommendations"].extend([
-                {"type": "auditory", "activity": "Listen to nostalgic songs together"},
-                {"type": "kinesthetic", "activity": "Gentle swaying or hand movements to music"}
-            ])
-        elif theme_name == "Food":
-            recommendations["recommendations"].extend([
-                {"type": "olfactory", "activity": "Smell spices and cooking aromas"},
-                {"type": "gustatory", "activity": "Taste small samples of familiar flavors"}
-            ])
-        elif theme_name == "Flowers":
-            recommendations["recommendations"].extend([
-                {"type": "olfactory", "activity": "Smell fresh flowers or herbs"},
-                {"type": "visual", "activity": "Look at colorful flower photos"}
-            ])
-        else:
-            # General recommendations
-            recommendations["recommendations"].extend([
-                {"type": "tactile", "activity": "Touch soft textures or familiar objects"},
-                {"type": "visual", "activity": "Look at meaningful photos together"}
-            ])
+        preferred_keywords = heritage_preferences.get(heritage, heritage_preferences["American"])
         
-        return recommendations
+        # Find recipes matching heritage preferences
+        matching_recipes = []
+        for recipe in self.recipes_data:
+            recipe_text = (recipe["name"] + " " + " ".join(recipe["ingredients"])).lower()
+            if any(keyword in recipe_text for keyword in preferred_keywords):
+                matching_recipes.append(recipe)
+        
+        # If no matches, use any recipe
+        if not matching_recipes:
+            matching_recipes = self.recipes_data
+        
+        # Select random from matching recipes
+        selected = random.choice(matching_recipes)
+        logger.info(f"Selected base recipe: {selected['name']} for {heritage}")
+        return selected
     
-    def _create_fallback_sensory_content(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback sensory content if main processing fails."""
+    def _format_base_recipe(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
+        """Format base recipe without customization (no API calls)."""
         
-        logger.warning("Creating fallback sensory content")
+        recipe_elements = [{
+            "content_type": "base_recipe",
+            "name": f"Simple {heritage} {base_recipe['name']}",
+            "description": f"Comforting {heritage} style {base_recipe['name'].lower()}",
+            "total_time": "20 minutes",
+            "difficulty": "very_easy",
+            "ingredients": base_recipe["ingredients"],
+            "instructions": base_recipe["instructions"],
+            "cultural_context": f"Traditional {heritage} comfort food",
+            "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
+            "source": "recipes_json_base_no_customization"
+        }]
         
-        # Get theme for fallback context
-        daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
-        theme_name = daily_theme.get("name", "Comfort")
+        return {
+            "sense_type": "gustatory",
+            "available": True,
+            "elements": recipe_elements,
+            "api_calls_made": 0,
+            "customization_applied": False
+        }
+    
+    def _generate_olfactory_content(self, heritage: str) -> Dict[str, Any]:
+        """Generate cultural scent experiences (no API calls)."""
         
-        fallback_recipes = self._get_hardcoded_fallback_recipes()
+        heritage_scents = {
+            "Italian-American": ["basil", "oregano", "fresh bread"],
+            "Irish-American": ["fresh bread", "tea", "herbs"],
+            "Mexican-American": ["cinnamon", "vanilla", "lime"],
+            "German-American": ["apple", "pine", "herbs"],
+            "American": ["vanilla", "apple pie", "coffee"]
+        }
+        
+        scents = heritage_scents.get(heritage, heritage_scents["American"])
+        
+        scent_elements = []
+        for scent in scents:
+            scent_elements.append({
+                "scent_type": scent,
+                "description": f"Gentle {scent} aroma",
+                "source_suggestions": [f"{scent} essential oil", f"fresh {scent}", f"{scent} candle"],
+                "cultural_relevance": "traditional",
+                "safety_notes": ["Use mild concentrations", "Check for allergies"]
+            })
+        
+        return {
+            "sense_type": "olfactory",
+            "available": True,
+            "elements": scent_elements,
+            "api_calls_made": 0
+        }
+    
+    def _generate_tactile_content(self, heritage: str) -> Dict[str, Any]:
+        """Generate tactile experiences (no API calls)."""
+        
+        tactile_elements = [
+            {
+                "content_type": "fabric_textures",
+                "title": "Comfort Fabrics",
+                "items": ["soft wool", "cotton", "silk", "fleece"],
+                "cultural_connection": f"Traditional {heritage} textiles",
+                "implementation": "Provide fabric samples to touch and hold"
+            },
+            {
+                "content_type": "sensory_objects", 
+                "title": "Familiar Objects",
+                "items": ["smooth stones", "wooden items", "soft brushes", "textured balls"],
+                "cultural_connection": "Objects that evoke positive memories",
+                "implementation": "Gentle touching and manipulation activities"
+            }
+        ]
+        
+        return {
+            "sense_type": "tactile",
+            "available": True,
+            "elements": tactile_elements,
+            "api_calls_made": 0
+        }
+    
+    def _create_sensory_summary(self, sensory_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Create summary of generated sensory content."""
+        
+        available_senses = [sense for sense, data in sensory_content.items() if data.get("available")]
+        total_elements = sum(len(data.get("elements", [])) for data in sensory_content.values())
+        total_api_calls = sum(data.get("api_calls_made", 0) for data in sensory_content.values())
+        
+        return {
+            "total_senses_activated": len(available_senses),
+            "available_senses": available_senses,
+            "total_content_elements": total_elements,
+            "total_api_calls_made": total_api_calls,
+            "rate_limiting_applied": True,
+            "cross_sensory_potential": len(available_senses) >= 3,
+            "generation_success": len(available_senses) >= 2
+        }
+    
+    def _create_fallback_sensory_content(self, consolidated_info: Dict[str, Any], cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Create fallback sensory content when generation fails (no API calls)."""
+        
+        heritage = consolidated_info.get("patient_profile", {}).get("cultural_heritage", "American")
+        
+        # Use first available recipe as fallback
+        base_recipe = self.recipes_data[0] if self.recipes_data else {
+            "name": "Simple Comfort Food",
+            "ingredients": ["Basic ingredients"],
+            "instructions": ["Simple preparation"]
+        }
         
         return {
             "sensory_content": {
-                "recipes": fallback_recipes,
-                "theme_context": {
-                    "daily_theme": daily_theme,
-                    "theme_applied": False,
-                    "fallback_used": True
+                "content_by_sense": {
+                    "gustatory": self._format_base_recipe(base_recipe, heritage),
+                    "auditory": {
+                        "sense_type": "auditory",
+                        "available": True,
+                        "elements": [{
+                            "title": f"{heritage} Traditional Music",
+                            "description": "Gentle background music",
+                            "source": "fallback_no_api"
+                        }],
+                        "api_calls_made": 0,
+                        "fallback_used": True
+                    }
                 },
-                "sensory_recommendations": {
-                    "theme_sensory_focus": "comfort",
-                    "recommendations": [
-                        {"type": "tactile", "activity": "Hold hands or gentle touch"},
-                        {"type": "auditory", "activity": "Play soft, familiar music"}
-                    ]
-                },
-                "youtube_integration": {
-                    "recipes_with_videos": 0,
-                    "total_recipes": len(fallback_recipes)
+                "sensory_summary": {
+                    "total_senses_activated": 2,
+                    "available_senses": ["gustatory", "auditory"],
+                    "total_api_calls_made": 0,
+                    "generation_success": True,
+                    "rate_limiting_applied": True
                 },
                 "generation_metadata": {
-                    "timestamp": datetime.now().isoformat(),
-                    "theme_aware_selection": False,
-                    "cultural_customization": "fallback",
-                    "agent_version": "4.1_fallback",
-                    "fallback_reason": "main_processing_failed"
+                    "heritage_used": heritage,
+                    "status": "fallback_no_api_calls",
+                    "generation_timestamp": datetime.now().isoformat()
                 }
             }
         }

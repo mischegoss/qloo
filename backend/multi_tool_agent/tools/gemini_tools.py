@@ -1,29 +1,73 @@
 """
-Enhanced Google Gemini AI Tools with Structured JSON Output
+Enhanced Google Gemini AI Tools with Daily Caching - RATE LIMITING SOLUTION
 File: backend/multi_tool_agent/tools/gemini_tools.py
 
-Provides interface to Google Gemini AI for dementia-optimized recipe generation
-with structured JSON schema output for reliable parsing.
+FIXES:
+- Daily caching using in-memory dictionary
+- Cache keys based on daily seed + heritage + recipe
+- Immediate cache returns to avoid API calls
+- Graceful fallback to base recipes if rate limited
 """
 
 import httpx
 import json
 import logging
 from typing import Dict, Any, Optional
+from datetime import date
+import hashlib
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 class GeminiRecipeGenerator:
     """
-    Google Gemini AI tool for dementia-optimized recipe generation.
-    Enhanced with structured JSON output for reliable parsing.
+    Google Gemini AI tool with daily caching to prevent rate limiting.
     """
     
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
-        logger.info("Gemini AI tool initialized with structured JSON output")
+        
+        # DAILY CACHE - Reset each day automatically
+        self._daily_cache = {}
+        self._cache_date = None
+        
+        logger.info("Gemini AI tool initialized with daily caching")
+    
+    def _get_daily_seed(self) -> str:
+        """Get daily seed for cache consistency."""
+        today = date.today()
+        return f"{today.year}-{today.month}-{today.day}"
+    
+    def _get_cache_key(self, heritage: str, recipe_name: str) -> str:
+        """Generate cache key for daily consistency."""
+        daily_seed = self._get_daily_seed()
+        # Create short hash to avoid key length issues
+        content_hash = hashlib.md5(f"{heritage}_{recipe_name}".lower().encode()).hexdigest()[:8]
+        return f"{daily_seed}_recipe_{content_hash}"
+    
+    def _check_and_update_daily_cache(self):
+        """Reset cache if new day."""
+        today = date.today()
+        if self._cache_date != today:
+            logger.info("New day detected - clearing Gemini cache")
+            self._daily_cache = {}
+            self._cache_date = today
+    
+    def _get_from_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Get result from daily cache."""
+        self._check_and_update_daily_cache()
+        result = self._daily_cache.get(cache_key)
+        if result:
+            logger.info(f"Gemini cache HIT: {cache_key}")
+            return result
+        return None
+    
+    def _store_in_cache(self, cache_key: str, result: Dict[str, Any]):
+        """Store result in daily cache."""
+        self._check_and_update_daily_cache()
+        self._daily_cache[cache_key] = result
+        logger.info(f"Gemini cache STORED: {cache_key}")
     
     def _get_dementia_recipe_schema(self) -> Dict[str, Any]:
         """
@@ -122,19 +166,27 @@ class GeminiRecipeGenerator:
             "required": ["name", "description", "total_time", "difficulty", "ingredients", "instructions", "caregiver_notes", "dementia_optimized"]
         }
     
-    async def generate_recipe(self, prompt: str) -> Optional[Dict[str, Any]]:
+    async def generate_recipe(self, prompt: str, heritage: str = "American", base_recipe_name: str = "comfort_food") -> Optional[Dict[str, Any]]:
         """
-        Generate a dementia-optimized recipe using Gemini 2.5 Flash with structured JSON output.
+        Generate a dementia-optimized recipe with daily caching to prevent rate limiting.
         
         Args:
             prompt: Recipe generation prompt with dementia-specific requirements
+            heritage: Heritage for cache key generation
+            base_recipe_name: Base recipe name for cache key generation
             
         Returns:
             Structured recipe data or None if failed
         """
         
+        # Check cache first
+        cache_key = self._get_cache_key(heritage, base_recipe_name)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result:
+            return cached_result
+        
         try:
-            logger.info("Generating recipe with Gemini 2.5 Flash using structured JSON")
+            logger.info(f"Generating recipe with Gemini 2.5 Flash (LIVE API): {heritage} {base_recipe_name}")
             
             # Use gemini-2.5-flash model with structured output
             url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
@@ -149,7 +201,7 @@ class GeminiRecipeGenerator:
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 4096,  # INCREASED from 2048 to prevent truncation
+                    "maxOutputTokens": 4096,
                     "response_mime_type": "application/json",
                     "response_schema": self._get_dementia_recipe_schema()
                 },
@@ -175,58 +227,52 @@ class GeminiRecipeGenerator:
             
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json=payload)
+                
+                if response.status_code == 429:
+                    logger.error("Gemini API rate limit exceeded - returning None")
+                    return None
+                    
                 response.raise_for_status()
                 
                 result = response.json()
                 logger.info("Gemini API response received successfully")
-                logger.info(f"DEBUG: Raw Gemini response structure: {list(result.keys())}")
                 
                 # Check if we have candidates
                 if not result.get("candidates"):
                     logger.error("No candidates in Gemini response")
-                    logger.info(f"DEBUG: Full response: {result}")
                     return None
                 
                 candidate = result["candidates"][0]
                 
-                # Check for safety blocks
+                # Check for safety blocks or rate limits
                 if candidate.get("finishReason") == "SAFETY":
                     logger.warning("Recipe generation blocked by Gemini safety filters")
-                    safety_ratings = candidate.get("safetyRatings", [])
-                    for rating in safety_ratings:
-                        logger.warning(f"Safety: {rating.get('category')} - {rating.get('probability')}")
                     return None
                 
                 # Check for max tokens reached
                 if candidate.get("finishReason") == "MAX_TOKENS":
                     logger.warning("Recipe generation hit token limit - response may be truncated")
-                    # Continue processing but log the warning
                 
                 # Check for parts
                 if not candidate["content"].get("parts"):
                     logger.error("No content parts in Gemini response")
-                    logger.info(f"DEBUG: Content structure: {list(candidate['content'].keys())}")
                     return None
                 
-                # Extract JSON content directly (should be JSON due to response_mime_type)
+                # Extract JSON content directly
                 json_content = candidate["content"]["parts"][0].get("text", "")
                 
                 if not json_content:
                     logger.error("No text content in Gemini response")
                     return None
                 
-                logger.info("Gemini recipe generation successful")
-                logger.info(f"DEBUG: JSON content length: {len(json_content)} characters")
-                
                 # Enhanced JSON parsing with better error handling
                 try:
-                    # First, let's clean up any potential formatting issues
+                    # Clean up any potential formatting issues
                     json_content = json_content.strip()
                     
-                    # Check if JSON is complete (should end with '}')
+                    # Check if JSON is complete
                     if not json_content.endswith('}'):
                         logger.warning("JSON response appears to be truncated")
-                        logger.info(f"DEBUG: Last 100 chars: ...{json_content[-100:]}")
                         
                         # Try to fix common truncation issues
                         if json_content.endswith('",'):
@@ -236,11 +282,9 @@ class GeminiRecipeGenerator:
                         
                         # Try to close the JSON properly
                         if not json_content.endswith('}'):
-                            # Count open braces vs close braces
                             open_braces = json_content.count('{')
                             close_braces = json_content.count('}')
                             
-                            # Add missing closing braces
                             for _ in range(open_braces - close_braces):
                                 json_content += '}'
                     
@@ -251,6 +295,9 @@ class GeminiRecipeGenerator:
                     required_fields = ["name", "ingredients", "instructions"]
                     if all(field in recipe_data for field in required_fields):
                         logger.info(f"✅ Recipe validation passed: {recipe_data.get('name')}")
+                        
+                        # Store in cache before returning
+                        self._store_in_cache(cache_key, recipe_data)
                         return recipe_data
                     else:
                         missing_fields = [f for f in required_fields if f not in recipe_data]
@@ -259,62 +306,50 @@ class GeminiRecipeGenerator:
                         
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON response: {e}")
-                    logger.error(f"DEBUG: Error position - Line: {e.lineno}, Column: {e.colno}")
-                    
-                    # Log more context around the error
-                    lines = json_content.split('\n')
-                    if e.lineno <= len(lines):
-                        error_line = lines[e.lineno - 1] if e.lineno > 0 else ""
-                        logger.error(f"DEBUG: Error line {e.lineno}: {error_line}")
-                        
-                        # Show surrounding lines for context
-                        start_line = max(0, e.lineno - 3)
-                        end_line = min(len(lines), e.lineno + 2)
-                        context_lines = lines[start_line:end_line]
-                        logger.error(f"DEBUG: Context around error:")
-                        for i, line in enumerate(context_lines, start=start_line + 1):
-                            marker = " >>> " if i == e.lineno else "     "
-                            logger.error(f"DEBUG:{marker}{i}: {line}")
-                    
-                    # Log the full raw content for debugging (in chunks to avoid log size limits)
-                    logger.error("DEBUG: Full JSON content that failed to parse:")
-                    chunk_size = 1000
-                    for i in range(0, len(json_content), chunk_size):
-                        chunk = json_content[i:i + chunk_size]
-                        logger.error(f"DEBUG: Chunk {i//chunk_size + 1}: {chunk}")
-                    
                     return None
                 
         except httpx.TimeoutException:
             logger.error("Gemini API request timed out")
             return None
         except httpx.HTTPStatusError as e:
-            logger.error(f"Gemini API HTTP error: {e.response.status_code}")
-            logger.info(f"DEBUG: Error response: {e.response.text}")
+            if e.response.status_code == 429:
+                logger.error("Gemini API rate limit exceeded")
+            else:
+                logger.error(f"Gemini API HTTP error: {e.response.status_code}")
             return None  
         except Exception as e:
             logger.error(f"Gemini recipe generation exception: {e}")
             return None
     
     async def test_connection(self) -> bool:
-        """Test the Gemini API connection with a simple structured request."""
+        """Test the Gemini API connection with a simple cached request."""
         
         try:
             simple_prompt = """Create a very simple 2-ingredient comfort food recipe suitable for dementia care. 
             Focus on safety and simplicity with exact measurements and clear visual cues."""
             
-            result = await self.generate_recipe(simple_prompt)
+            result = await self.generate_recipe(simple_prompt, "test", "connection_test")
             
             if result and isinstance(result, dict) and result.get("name"):
-                logger.info("Gemini structured JSON connection test successful")
+                logger.info("Gemini connection test successful")
                 return True
             else:
-                logger.error("Gemini structured JSON test failed - no valid recipe returned")
+                logger.error("Gemini test failed - no valid recipe returned")
                 return False
                 
         except Exception as e:
             logger.error(f"Gemini connection test failed: {e}")
             return False
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics for debugging."""
+        self._check_and_update_daily_cache()
+        return {
+            "cache_size": len(self._daily_cache),
+            "cache_date": str(self._cache_date),
+            "daily_seed": self._get_daily_seed(),
+            "cached_keys": list(self._daily_cache.keys())
+        }
 
 # Export the main class
 __all__ = ["GeminiRecipeGenerator"]

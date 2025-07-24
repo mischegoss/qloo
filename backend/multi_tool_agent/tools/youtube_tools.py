@@ -1,39 +1,86 @@
 """
-YouTube API Tools
+YouTube API Tools with Daily Caching - RATE LIMITING SOLUTION
 File: backend/multi_tool_agent/tools/youtube_tools.py
 
-Provides interface to YouTube Data API for music and video content discovery
+FIXES:
+- Daily caching using in-memory dictionary
+- Cache keys based on daily seed + search term
+- Immediate cache returns to avoid API calls
+- Graceful fallback if API rate limited
 """
 
 import httpx
 import logging
 from typing import Dict, Any, Optional, List
+from datetime import date
+import hashlib
 
 logger = logging.getLogger(__name__)
 
 class YouTubeAPI:
     """
-    YouTube Data API tool for music and video content discovery.
-    Used by Agent 4: Sensory Content Generator Agent
+    YouTube Data API tool with daily caching to prevent rate limiting.
     """
     
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://www.googleapis.com/youtube/v3"
         
+        # DAILY CACHE - Reset each day automatically
+        self._daily_cache = {}
+        self._cache_date = None
+        
+        logger.info("YouTube API tool initialized with daily caching")
+    
+    def _get_daily_seed(self) -> str:
+        """Get daily seed for cache consistency."""
+        today = date.today()
+        return f"{today.year}-{today.month}-{today.day}"
+    
+    def _get_cache_key(self, search_type: str, query: str) -> str:
+        """Generate cache key for daily consistency."""
+        daily_seed = self._get_daily_seed()
+        # Create short hash to avoid key length issues
+        query_hash = hashlib.md5(query.lower().encode()).hexdigest()[:8]
+        return f"{daily_seed}_{search_type}_{query_hash}"
+    
+    def _check_and_update_daily_cache(self):
+        """Reset cache if new day."""
+        today = date.today()
+        if self._cache_date != today:
+            logger.info("New day detected - clearing YouTube cache")
+            self._daily_cache = {}
+            self._cache_date = today
+    
+    def _get_from_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Get result from daily cache."""
+        self._check_and_update_daily_cache()
+        result = self._daily_cache.get(cache_key)
+        if result:
+            logger.info(f"YouTube cache HIT: {cache_key}")
+            return result
+        return None
+    
+    def _store_in_cache(self, cache_key: str, result: Dict[str, Any]):
+        """Store result in daily cache."""
+        self._check_and_update_daily_cache()
+        self._daily_cache[cache_key] = result
+        logger.info(f"YouTube cache STORED: {cache_key}")
+    
     async def search_music(self, query: str, max_results: int = 5) -> Optional[Dict[str, Any]]:
         """
-        Search YouTube for music content.
-        
-        Args:
-            query: Search query (e.g., "Frank Sinatra best songs classic")
-            max_results: Maximum number of results to return
-            
-        Returns:
-            YouTube search results or None if failed
+        Search YouTube for music content with daily caching.
         """
         
+        # Check cache first
+        cache_key = self._get_cache_key("music", query)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result:
+            return cached_result
+        
         try:
+            logger.info(f"YouTube music search (LIVE API): {query}")
+            
             params = {
                 "part": "snippet",
                 "q": f"{query} music",
@@ -53,9 +100,13 @@ class YouTubeAPI:
                 if response.status_code == 200:
                     data = response.json()
                     logger.info(f"YouTube music search success: {len(data.get('items', []))} results for '{query}'")
+                    
+                    # Store in cache before returning
+                    self._store_in_cache(cache_key, data)
                     return data
+                    
                 elif response.status_code == 403:
-                    logger.error("YouTube API quota exceeded or permission denied")
+                    logger.error("YouTube API quota exceeded - returning None")
                     return None
                 else:
                     logger.error(f"YouTube music search error: {response.status_code} - {response.text}")
@@ -70,17 +121,18 @@ class YouTubeAPI:
     
     async def search_videos(self, query: str, max_results: int = 5) -> Optional[Dict[str, Any]]:
         """
-        Search YouTube for video content.
-        
-        Args:
-            query: Search query (e.g., "Ed Sullivan Show 1960s classic")
-            max_results: Maximum number of results to return
-            
-        Returns:
-            YouTube search results or None if failed
+        Search YouTube for video content with daily caching.
         """
         
+        # Check cache first
+        cache_key = self._get_cache_key("videos", query)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result:
+            return cached_result
+        
         try:
+            logger.info(f"YouTube video search (LIVE API): {query}")
+            
             params = {
                 "part": "snippet",
                 "q": query,
@@ -100,9 +152,13 @@ class YouTubeAPI:
                 if response.status_code == 200:
                     data = response.json()
                     logger.info(f"YouTube video search success: {len(data.get('items', []))} results for '{query}'")
+                    
+                    # Store in cache before returning
+                    self._store_in_cache(cache_key, data)
                     return data
+                    
                 elif response.status_code == 403:
-                    logger.error("YouTube API quota exceeded or permission denied")
+                    logger.error("YouTube API quota exceeded - returning None")
                     return None
                 else:
                     logger.error(f"YouTube video search error: {response.status_code} - {response.text}")
@@ -117,14 +173,14 @@ class YouTubeAPI:
     
     async def get_video_details(self, video_id: str) -> Optional[Dict[str, Any]]:
         """
-        Get detailed information about a specific video.
-        
-        Args:
-            video_id: YouTube video ID
-            
-        Returns:
-            Video details or None if failed
+        Get detailed information about a specific video with caching.
         """
+        
+        # Check cache first
+        cache_key = self._get_cache_key("details", video_id)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result:
+            return cached_result
         
         try:
             params = {
@@ -142,6 +198,9 @@ class YouTubeAPI:
                 if response.status_code == 200:
                     data = response.json()
                     logger.info(f"YouTube video details success for video {video_id}")
+                    
+                    # Store in cache before returning
+                    self._store_in_cache(cache_key, data)
                     return data
                 else:
                     logger.error(f"YouTube video details error: {response.status_code}")
@@ -153,15 +212,7 @@ class YouTubeAPI:
     
     async def search_era_content(self, era: str, content_type: str = "music", max_results: int = 3) -> Optional[Dict[str, Any]]:
         """
-        Search for content from a specific era.
-        
-        Args:
-            era: Era descriptor (e.g., "1940s", "1950s", "1960s")
-            content_type: Type of content ("music", "variety", "entertainment")
-            max_results: Maximum number of results
-            
-        Returns:
-            Era-specific search results or None if failed
+        Search for content from a specific era with caching.
         """
         
         era_queries = {
@@ -180,13 +231,10 @@ class YouTubeAPI:
     async def test_connection(self) -> bool:
         """
         Test connection to YouTube Data API.
-        
-        Returns:
-            True if connection successful, False otherwise
         """
         
         try:
-            # Simple test search
+            # Simple test search with minimal results
             result = await self.search_music("test", max_results=1)
             
             if result and "items" in result:
@@ -199,3 +247,13 @@ class YouTubeAPI:
         except Exception as e:
             logger.error(f"YouTube API connection test exception: {str(e)}")
             return False
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics for debugging."""
+        self._check_and_update_daily_cache()
+        return {
+            "cache_size": len(self._daily_cache),
+            "cache_date": str(self._cache_date),
+            "daily_seed": self._get_daily_seed(),
+            "cached_keys": list(self._daily_cache.keys())
+        }

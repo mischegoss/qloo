@@ -1,8 +1,11 @@
 """
-Qloo Cultural Intelligence Agent - English Filtering + Daily Uniqueness
+Qloo Cultural Intelligence Agent with LIMITED Results - RATE LIMITING SOLUTION
 File: backend/multi_tool_agent/agents/qloo_cultural_intelligence_agent.py
 
-Agent 3: Filters non-English content and ensures daily unique results
+FIXES:
+- Limits results to FIRST/BEST only before passing to Agent 4
+- Reduces downstream API calls by providing only essential data
+- Maintains English filtering and daily uniqueness
 """
 
 import logging
@@ -16,24 +19,27 @@ logger = logging.getLogger(__name__)
 
 class QlooCulturalIntelligenceAgent:
     """
-    Agent 3: Qloo Cultural Intelligence with English Filtering + Daily Uniqueness
+    Agent 3: Qloo Cultural Intelligence with LIMITED results to prevent downstream rate limiting.
     
-    Filters out non-English multilingual data and ensures unique results per day.
+    RATE LIMITING FIXES:
+    - Returns ONLY first/best result per category to Agent 4
+    - Filters out non-English content
+    - Maintains daily uniqueness with minimal results
     """
     
     def __init__(self, qloo_tool):
         self.qloo_tool = qloo_tool
-        logger.info("Qloo Cultural Intelligence Agent initialized with English filtering")
+        logger.info("Qloo Cultural Intelligence Agent initialized with LIMITED results output")
     
     async def run(self,
                   consolidated_info: Dict[str, Any],
                   cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate cultural intelligence with English filtering and daily uniqueness.
+        Generate cultural intelligence with LIMITED results to prevent downstream rate limiting.
         """
         
         try:
-            logger.info("🚀 Agent 3: Starting Qloo intelligence with English filtering")
+            logger.info("🚀 Agent 3: Starting Qloo intelligence with LIMITED results output")
             
             # Set daily random seed for uniqueness
             today = date.today()
@@ -58,11 +64,11 @@ class QlooCulturalIntelligenceAgent:
             # FILTER ENGLISH ONLY before processing
             filtered_results = self._filter_english_only(qloo_results)
             
-            # Process and format results with daily uniqueness
-            cultural_recommendations = self._process_qloo_results_with_uniqueness(filtered_results)
+            # Process results with LIMITED output (first result only per category)
+            cultural_recommendations = self._process_qloo_results_with_limited_output(filtered_results)
             
-            # Create cross-domain connections
-            cross_domain_connections = self._create_cross_domain_connections(cultural_recommendations)
+            # Create limited cross-domain connections
+            cross_domain_connections = self._create_limited_cross_domain_connections(cultural_recommendations)
             
             return {
                 "qloo_intelligence": {
@@ -74,10 +80,12 @@ class QlooCulturalIntelligenceAgent:
                         "successful_calls": sum(1 for r in filtered_results.values() if r.get("success")),
                         "total_calls": 3,
                         "total_results": sum(r.get("results_count", 0) for r in filtered_results.values()),
+                        "results_limited_to_first_only": True,
+                        "downstream_rate_limiting_prevention": True,
                         "generation_timestamp": datetime.now().isoformat(),
                         "english_filtering_applied": True,
                         "daily_uniqueness_seed": daily_seed,
-                        "approach": "english_filtered_unique"
+                        "approach": "limited_english_filtered_unique"
                     },
                     "cross_domain_connections": cross_domain_connections,
                     "status": "success"
@@ -179,30 +187,34 @@ class QlooCulturalIntelligenceAgent:
         
         return filtered_entity
     
-    def _process_qloo_results_with_uniqueness(self, filtered_results: Dict[str, Any]) -> Dict[str, Any]:
-        """Process filtered results with daily uniqueness randomization."""
+    def _process_qloo_results_with_limited_output(self, filtered_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Process filtered results with LIMITED output (first result only per category)."""
         
         cultural_recommendations = {}
         
-        # Process each category with randomization
+        # Process each category with LIMITING to first result only
         for category, qloo_category in [("places", "cuisine"), ("artists", "music"), ("tv_shows", "tv_shows")]:
             result = filtered_results.get(qloo_category, {})
             
             if result.get("success") and result.get("entities"):
                 entities = result["entities"]
                 
-                # Randomize the order for daily uniqueness
+                # RATE LIMITING: Randomize but return ONLY FIRST result
                 random.shuffle(entities)
-                logger.info(f"Randomized {len(entities)} {category} for daily uniqueness")
+                limited_entities = entities[:1]  # Take ONLY the first result
+                
+                logger.info(f"LIMITED output - {category}: {len(entities)} available → returning ONLY 1")
                 
                 cultural_recommendations[category] = {
                     "available": True,
-                    "entity_count": len(entities),
-                    "entities": entities,  # Already randomized for uniqueness
+                    "entity_count": len(limited_entities),  # Always 1
+                    "entities": limited_entities,  # ONLY first result
                     "tag_used": result.get("tag"),
                     "entity_type": result.get("entity_type"),
                     "english_filtered": True,
-                    "daily_randomized": True
+                    "daily_randomized": True,
+                    "limited_to_first_result": True,
+                    "total_available": len(entities)  # Track how many were available
                 }
             else:
                 cultural_recommendations[category] = {
@@ -263,7 +275,7 @@ class QlooCulturalIntelligenceAgent:
         }
     
     async def _make_three_qloo_calls(self, heritage_tags: Dict[str, str], age_demographic: str) -> Dict[str, Any]:
-        """Make the 3 Qloo API calls with relaxed parameters."""
+        """Make the 3 Qloo API calls with standard parameters."""
         
         results = {}
         
@@ -277,8 +289,8 @@ class QlooCulturalIntelligenceAgent:
         results["music"] = await self._call_qloo_artists(heritage_tags["music"], age_demographic)
         await asyncio.sleep(1.0)  # Rate limiting
         
-        # Call 3: TV Shows (Relaxed parameters)
-        logger.info("Making Qloo call 3: TV Shows (relaxed)")
+        # Call 3: TV Shows
+        logger.info("Making Qloo call 3: TV Shows")
         results["tv_shows"] = await self._call_qloo_tv_shows_relaxed(heritage_tags["tv_shows"], age_demographic)
         
         return results
@@ -290,7 +302,7 @@ class QlooCulturalIntelligenceAgent:
                 entity_type="urn:entity:place",
                 tag=cuisine_tag,
                 age_demographic=age_demographic,
-                take=10  # Get more, will filter to English and randomize
+                take=10  # Get enough for filtering and randomization
             )
             return result
         except Exception as e:
@@ -304,7 +316,7 @@ class QlooCulturalIntelligenceAgent:
                 entity_type="urn:entity:artist",
                 tag=music_tag,
                 age_demographic=age_demographic,
-                take=10  # Get more, will filter to English and randomize
+                take=10  # Get enough for filtering and randomization
             )
             return result
         except Exception as e:
@@ -320,7 +332,7 @@ class QlooCulturalIntelligenceAgent:
                 entity_type="urn:entity:tv_show",
                 tag=tv_tag,
                 age_demographic=age_demographic,
-                take=15,  # Get more for better English filtering + uniqueness
+                take=15,  # Get more for better filtering
             )
             
             if result.get("success") and result.get("entities"):
@@ -341,10 +353,10 @@ class QlooCulturalIntelligenceAgent:
             logger.error(f"Qloo TV shows call failed: {e}")
             return {"success": False, "error": str(e)}
     
-    def _create_cross_domain_connections(self, cultural_recommendations: Dict[str, Any]) -> Dict[str, Any]:
-        """Create cross-domain connections between different categories."""
+    def _create_limited_cross_domain_connections(self, cultural_recommendations: Dict[str, Any]) -> Dict[str, Any]:
+        """Create cross-domain connections with limited data."""
         
-        # Check what content is available
+        # Check what content is available (will be limited to 1 per category)
         available_themes = []
         for category, data in cultural_recommendations.items():
             if isinstance(data, dict) and data.get("available"):
@@ -353,7 +365,8 @@ class QlooCulturalIntelligenceAgent:
         connections = {
             "available": len(available_themes) > 1,
             "themes": available_themes,
-            "suggested_combinations": []
+            "suggested_combinations": [],
+            "limited_to_first_results": True
         }
         
         # Add specific combinations if multiple themes available
@@ -394,6 +407,7 @@ class QlooCulturalIntelligenceAgent:
                     "successful_calls": 0,
                     "total_calls": 0,
                     "total_results": 0,
+                    "results_limited_to_first_only": True,
                     "english_filtering_applied": True,
                     "approach": "complete_fallback",
                     "status": "fallback"
