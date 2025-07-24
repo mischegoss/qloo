@@ -1,8 +1,9 @@
 """
-Simplified Qloo Tools
+Simplified Qloo Tools - REVISED for TV Shows
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
 Drastically simplified Qloo API integration focused on tag-based insights only.
+UPDATED: Changed from movies to TV shows throughout.
 Removes all complex entity searching, multi-signal logic, and error-prone patterns.
 """
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 class QlooInsightsAPI:
     """
     Simplified Qloo API tool focused on reliable tag-based insights.
+    UPDATED: Movies → TV Shows
     
     REMOVED COMPLEXITY:
     - Entity searching logic
@@ -48,7 +50,7 @@ class QlooInsightsAPI:
         Make a single, simple Qloo insights call using tags and demographics.
         
         Args:
-            entity_type: Qloo entity type (e.g., "urn:entity:place")
+            entity_type: Qloo entity type (e.g., "urn:entity:place", "urn:entity:tv_show")
             tag: Qloo tag (e.g., "urn:tag:cuisine:italian")  
             age_demographic: Age demographic (e.g., "55_and_older")
             take: Number of results to return
@@ -118,9 +120,10 @@ class QlooInsightsAPI:
                                       age_demographic: str) -> Dict[str, Any]:
         """
         Make exactly 3 simple Qloo calls for cultural recommendations.
+        UPDATED: Movies → TV Shows
         
         Args:
-            heritage_tags: Dictionary with cuisine, music, movies tags
+            heritage_tags: Dictionary with cuisine, music, tv_shows tags
             age_demographic: Age demographic string
             
         Returns:
@@ -128,7 +131,7 @@ class QlooInsightsAPI:
         """
         logger.info("Making 3 cultural Qloo API calls")
         
-        # Define the 3 calls we'll make
+        # Define the 3 calls we'll make - UPDATED FOR TV SHOWS
         calls = [
             {
                 "category": "cuisine",
@@ -141,9 +144,9 @@ class QlooInsightsAPI:
                 "tag": heritage_tags.get("music", "urn:tag:genre:music:popular")
             },
             {
-                "category": "movies",
-                "entity_type": "urn:entity:movie", 
-                "tag": heritage_tags.get("movies", "urn:tag:genre:media:family")
+                "category": "tv_shows",  # CHANGED: movies → tv_shows
+                "entity_type": "urn:entity:tv_show",  # CHANGED: movie → tv_show
+                "tag": heritage_tags.get("tv_shows", "urn:tag:genre:media:family")  # CHANGED: movies → tv_shows
             }
         ]
         
@@ -165,7 +168,7 @@ class QlooInsightsAPI:
             # Rate limiting between calls
             await asyncio.sleep(1.0)
         
-        # Format final response
+        # Format final response - UPDATED FOR TV SHOWS
         successful_calls = sum(1 for r in results.values() if r.get("success"))
         total_results = sum(r.get("results_count", 0) for r in results.values())
         
@@ -180,7 +183,7 @@ class QlooInsightsAPI:
             "cultural_recommendations": {
                 "places": self._format_category_results(results.get("cuisine", {})),
                 "artists": self._format_category_results(results.get("music", {})),
-                "movies": self._format_category_results(results.get("movies", {}))
+                "tv_shows": self._format_category_results(results.get("tv_shows", {}))  # CHANGED: movies → tv_shows
             },
             "metadata": {
                 "calls_made": [call["category"] for call in calls],
@@ -223,7 +226,7 @@ class QlooInsightsAPI:
         """Test if Qloo API is accessible."""
         try:
             test_result = await self.simple_tag_insights(
-                entity_type="urn:entity:movie",
+                entity_type="urn:entity:tv_show",  # CHANGED: movie → tv_show
                 tag="urn:tag:genre:media:family", 
                 age_demographic="55_and_older",
                 take=1
@@ -239,7 +242,7 @@ class QlooInsightsAPI:
 
 # Test function
 async def test_qloo_tools():
-    """Test the simplified Qloo tools."""
+    """Test the simplified Qloo tools - UPDATED for TV Shows."""
     import os
     from backend.config.cultural_mappings import get_heritage_tags, get_age_demographic
     
@@ -268,12 +271,19 @@ async def test_qloo_tools():
         print(f"\nResults: {results['successful_calls']}/3 calls successful")
         print(f"Total entities: {results['total_results']}")
         
-        # Show sample results
+        # Show sample results - UPDATED FOR TV SHOWS
         for category, data in results["cultural_recommendations"].items():
             if data.get("available"):
                 print(f"\n{category.title()}: {data['entity_count']} results")
                 for entity in data["entities"][:2]:  # Show first 2
-                    print(f"  - {entity['name']}")
+                    name = entity.get('name', 'Unknown')
+                    # Show additional info for TV shows
+                    if category == "tv_shows":
+                        properties = entity.get('properties', {})
+                        release_year = properties.get('release_year', 'Unknown year')
+                        print(f"  - {name} ({release_year})")
+                    else:
+                        print(f"  - {name}")
 
 if __name__ == "__main__":
     asyncio.run(test_qloo_tools())

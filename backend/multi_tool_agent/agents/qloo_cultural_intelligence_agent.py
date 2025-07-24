@@ -1,9 +1,9 @@
 """
-Enhanced Qloo Cultural Intelligence Agent with Formative Decades Filtering
+Enhanced Qloo Cultural Intelligence Agent with Nostalgia-Based Recommendations
 File: backend/multi_tool_agent/agents/qloo_cultural_intelligence_agent.py
 
-Agent 3: Uses formative decades (childhood, teen, young adult) as PRIMARY filters
-for age-appropriate cultural recommendations instead of broad demographic categories.
+Agent 3: Uses age-based nostalgia (heritage for cuisine only) and formative decades
+to ensure dementia-friendly, non-stereotypical cultural recommendations.
 """
 
 import logging
@@ -16,32 +16,32 @@ logger = logging.getLogger(__name__)
 
 class QlooCulturalIntelligenceAgent:
     """
-    Agent 3: Qloo Cultural Intelligence with Era-Specific Filtering
+    Agent 3: Qloo Cultural Intelligence with Nostalgia-Based Recommendations
     
-    Queries Qloo API using formative decades as the primary filtering mechanism
-    to ensure age-appropriate cultural recommendations for dementia care.
+    Uses age-based nostalgia (heritage for cuisine only) and formative decades
+    to ensure dementia-friendly, non-stereotypical cultural recommendations.
     """
     
     def __init__(self, qloo_tool):
         self.qloo_tool = qloo_tool
-        logger.info("Qloo Cultural Intelligence Agent initialized with formative decades filtering")
+        logger.info("Qloo Cultural Intelligence Agent initialized with nostalgia-based recommendations")
     
     async def run(self, 
                   consolidated_info: Dict[str, Any], 
                   cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate cultural intelligence using formative decades as primary filters.
+        Generate cultural intelligence using nostalgia-based recommendations.
         
         Args:
             consolidated_info: Output from Agent 1 (Information Consolidator)
             cultural_profile: Output from Agent 2 (Cultural Profile Builder)
             
         Returns:
-            Dictionary containing era-appropriate cultural recommendations
+            Dictionary containing age-appropriate, dementia-friendly cultural recommendations
         """
         
         try:
-            logger.info("🎭 Agent 3: Starting Qloo Cultural Intelligence with era filtering")
+            logger.info("🎭 Agent 3: Starting Qloo Cultural Intelligence with nostalgia-based recommendations")
             
             # Extract key information
             patient_profile = consolidated_info.get("patient_profile", {})
@@ -57,13 +57,14 @@ class QlooCulturalIntelligenceAgent:
                 # Calculate formative decades if not provided
                 formative_decades = self._calculate_formative_decades(birth_year)
             
-            # Get heritage tags for filtering
-            heritage_tags = get_heritage_tags(heritage)
+            # Get nostalgia-based tags (FIXED: pass birth_year parameter)
+            heritage_tags = get_heritage_tags(heritage, birth_year)
             age_demographic = get_age_demographic(birth_year) if birth_year else "55_and_older"
             
-            logger.info(f"Heritage: {heritage}, Formative decades: {formative_decades}")
+            logger.info(f"Heritage: {heritage} (cuisine only), Birth year: {birth_year}")
+            logger.info(f"Nostalgia-based tags: {heritage_tags}")
             logger.info(f"Location: {patient_location}")
-            logger.info(f"Heritage tags: {heritage_tags}")
+            logger.info(f"Formative decades: {formative_decades}")
             
             # Make era-specific Qloo calls with location filtering for places
             cultural_recommendations = await self._make_era_specific_calls(
@@ -107,12 +108,12 @@ class QlooCulturalIntelligenceAgent:
                                      age_demographic: str,
                                      patient_location: str = None) -> Dict[str, Any]:
         """
-        Make simple Qloo calls focused on Italian-American cultural recommendations.
-        Simplified approach - no era filtering for now.
+        Make simple Qloo calls focused on nostalgia-based cultural recommendations.
+        Heritage used for cuisine only, age-based nostalgia for music/TV.
         """
         
         results = {
-            "movies": {"available": False, "entities": [], "entity_count": 0},
+            "tv_shows": {"available": False, "entities": [], "entity_count": 0},
             "artists": {"available": False, "entities": [], "entity_count": 0}, 
             "places": {"available": False, "entities": [], "entity_count": 0}
         }
@@ -120,9 +121,9 @@ class QlooCulturalIntelligenceAgent:
         successful_calls = 0
         total_calls = 0
         
-        # Simple content type calls (no era looping)
+        # Nostalgia-based content calls (FIXED: correct entity type for TV shows)
         content_types = [
-            ("movies", "urn:entity:movie", heritage_tags.get("movies")),
+            ("tv_shows", "urn:entity:tv_show", heritage_tags.get("tv_shows")),  # FIXED: tv_show (singular)
             ("artists", "urn:entity:artist", heritage_tags.get("music")), 
             ("places", "urn:entity:place", heritage_tags.get("cuisine"))
         ]
@@ -134,7 +135,7 @@ class QlooCulturalIntelligenceAgent:
             try:
                 total_calls += 1
                 
-                logger.info(f"Simple call: {content_name} with {heritage_tag}")
+                logger.info(f"Nostalgia-based call: {content_name} with {heritage_tag}")
                 
                 # Make simple Qloo API call
                 result = await self.qloo_tool.simple_tag_insights(
@@ -156,7 +157,9 @@ class QlooCulturalIntelligenceAgent:
                         "available": True,
                         "entities": entities[:10],
                         "entity_count": len(entities[:10]),
-                        "memory_anchors": content_name == "places"
+                        "memory_anchors": content_name == "places",
+                        "tag_used": heritage_tag,
+                        "entity_type": entity_type
                     }
                     
                     successful_calls += 1
@@ -171,8 +174,10 @@ class QlooCulturalIntelligenceAgent:
         results["metadata"] = {
             "successful_calls": successful_calls,
             "total_calls": total_calls,
-            "approach": "simplified_cultural_recommendations",
-            "places_as_memory_anchors": True
+            "approach": "nostalgia_based_recommendations",
+            "places_as_memory_anchors": True,
+            "heritage_for_cuisine_only": True,
+            "age_based_media_selection": True
         }
         
         return results
@@ -253,7 +258,7 @@ class QlooCulturalIntelligenceAgent:
                                 heritage_tags: Dict[str, str],
                                 age_demographic: str,
                                 formative_decades: List[int]) -> Dict[str, Any]:
-        """Format response with era-specific metadata."""
+        """Format response with nostalgia-based metadata."""
         
         metadata = cultural_recommendations.get("metadata", {})
         
@@ -271,9 +276,14 @@ class QlooCulturalIntelligenceAgent:
                     "formative_decades": formative_decades,
                     "successful_calls": metadata.get("successful_calls", 0),
                     "total_calls": metadata.get("total_calls", 0),
+                    "total_results": sum(
+                        rec.get("entity_count", 0) 
+                        for rec in cultural_recommendations.values() 
+                        if isinstance(rec, dict) and "entity_count" in rec
+                    ),
                     "era_filtering_enabled": True,
                     "generation_timestamp": datetime.now().isoformat(),
-                    "approach": "era_specific_decades"
+                    "approach": "nostalgia_based_non_stereotypical"
                 },
                 "cross_domain_connections": self._create_era_connections(
                     cultural_recommendations, formative_decades
@@ -287,27 +297,43 @@ class QlooCulturalIntelligenceAgent:
                               formative_decades: List[int]) -> Dict[str, Any]:
         """Create connections between different content types from the same era."""
         
+        # Check what content is available
+        available_themes = []
+        for category, data in cultural_recommendations.items():
+            if isinstance(data, dict) and data.get("available"):
+                available_themes.append(category)
+        
         connections = {
-            "thematic_coherence": f"Content from formative decades: {', '.join(map(str, formative_decades))}",
-            "cultural_threading": "Music, movies, and places from the same cultural and temporal context",
-            "memory_activation": "Content selected to trigger positive memories from key life periods",
-            "era_focus": {
-                "childhood_decade": formative_decades[0] if formative_decades else None,
-                "identity_formation_decade": formative_decades[1] if len(formative_decades) > 1 else None,
-                "young_adult_decade": formative_decades[2] if len(formative_decades) > 2 else None
-            }
+            "available": len(available_themes) > 1,
+            "themes": available_themes,
+            "suggested_combinations": []
         }
+        
+        # Add specific combinations if multiple themes available
+        if "tv_shows" in available_themes and "places" in available_themes:
+            connections["suggested_combinations"].append({
+                "type": "tv_and_meal",
+                "description": "Watch nostalgic TV shows with themed comfort food"
+            })
+        
+        if "artists" in available_themes and "places" in available_themes:
+            connections["suggested_combinations"].append({
+                "type": "music_and_cooking",
+                "description": "Listen to nostalgic music while preparing familiar recipes"
+            })
         
         return connections
     
     def _create_fallback_response(self, heritage: str) -> Dict[str, Any]:
         """Create fallback response when Qloo calls fail."""
         
+        logger.warning("Creating fallback response for Qloo Cultural Intelligence")
+        
         return {
             "qloo_intelligence": {
                 "success": False,
                 "cultural_recommendations": {
-                    "movies": {"available": False, "entities": [], "entity_count": 0},
+                    "tv_shows": {"available": False, "entities": [], "entity_count": 0},
                     "artists": {"available": False, "entities": [], "entity_count": 0},
                     "places": {"available": False, "entities": [], "entity_count": 0}
                 },
@@ -315,16 +341,19 @@ class QlooCulturalIntelligenceAgent:
                     "heritage_used": heritage,
                     "successful_calls": 0,
                     "total_calls": 0,
+                    "total_results": 0,
                     "era_filtering_enabled": False,
-                    "status": "fallback_mode"
+                    "approach": "fallback_mode",
+                    "status": "fallback"
                 },
+                "cross_domain_connections": {"available": False},
                 "status": "fallback"
             }
         }
 
 # Test function
-async def test_era_filtering():
-    """Test the enhanced era-specific filtering."""
+async def test_nostalgia_based_recommendations():
+    """Test the enhanced nostalgia-based recommendations."""
     
     import os
     from backend.multi_tool_agent.tools.qloo_tools import QlooInsightsAPI
@@ -354,7 +383,7 @@ async def test_era_filtering():
     }
     
     # Run the agent
-    print("Testing enhanced era-specific Qloo filtering...")
+    print("Testing nostalgia-based Qloo recommendations...")
     result = await agent.run(consolidated_info, cultural_profile)
     
     # Display results
@@ -363,12 +392,13 @@ async def test_era_filtering():
     
     print(f"\nResults:")
     print(f"Success: {qloo_intel.get('success')}")
-    print(f"Heritage: {metadata.get('heritage_used')}")
+    print(f"Heritage: {metadata.get('heritage_used')} (cuisine only)")
     print(f"Formative decades: {metadata.get('formative_decades')}")
-    print(f"Era filtering: {metadata.get('era_filtering_enabled')}")
+    print(f"Approach: {metadata.get('approach')}")
     print(f"Successful calls: {metadata.get('successful_calls')}/{metadata.get('total_calls')}")
+    print(f"Total results: {metadata.get('total_results')}")
     
-    # Show era-specific recommendations
+    # Show nostalgia-based recommendations
     recommendations = qloo_intel.get("cultural_recommendations", {})
     for category, data in recommendations.items():
         if data.get("available"):
@@ -380,4 +410,4 @@ async def test_era_filtering():
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(test_era_filtering())
+    asyncio.run(test_nostalgia_based_recommendations())

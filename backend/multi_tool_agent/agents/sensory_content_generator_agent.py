@@ -420,7 +420,7 @@ Focus on:
         """Generate visual content and photo opportunities."""
         
         # Use Qloo movie recommendations if available
-        movies_data = qloo_recommendations.get("movies", {})
+        movies_data = qloo_recommendations.get("tv_shows", {})
         
         visual_elements = []
         
