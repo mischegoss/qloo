@@ -1,13 +1,15 @@
 """
-Enhanced Mobile Synthesizer Agent with Places as Memory Anchors
+Mobile Synthesizer Agent - Clean Dashboard Only Response
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
-Agent 6: Transforms places into memory anchors and conversation starters
-rather than destination suggestions for dementia care.
+Agent 6: Returns ONLY the clean dashboard, not all raw agent outputs
 """
 
 import logging
-from datetime import datetime
+import json
+import os
+import random
+from datetime import datetime, date
 from typing import Dict, Any, List, Optional
 
 # Configure logger
@@ -15,14 +17,43 @@ logger = logging.getLogger(__name__)
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Mobile Synthesizer with Memory-Focused Places Usage
+    Agent 6: Mobile Synthesizer - Clean Dashboard Only
     
-    Transforms all content into mobile-friendly experiences with places used
-    as memory anchors and recipe inspiration rather than visit suggestions.
+    Returns exactly one result per category in a clean, small response structure.
+    No more huge raw agent outputs - just the essential dashboard data.
     """
     
     def __init__(self):
-        logger.info("Mobile Synthesizer initialized with memory-focused places approach")
+        self.fallback_data = self._load_fallback_content()
+        logger.info("Mobile Synthesizer initialized for clean dashboard responses")
+    
+    def _load_fallback_content(self) -> Dict[str, Any]:
+        """Load fallback content from JSON file."""
+        try:
+            fallback_path = os.path.join(os.path.dirname(__file__), "../../data/fallback_content.json")
+            with open(fallback_path, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Could not load fallback content: {e}")
+            return self._get_hardcoded_fallbacks()
+    
+    def _get_hardcoded_fallbacks(self) -> Dict[str, Any]:
+        """Hardcoded fallbacks if JSON file unavailable."""
+        return {
+            "music": [
+                {"artist": "Frank Sinatra", "song": "My Way", "youtube_url": "https://youtube.com/watch?v=qQzdAsjWGPg"},
+                {"artist": "Ella Fitzgerald", "song": "Summertime", "youtube_url": "https://youtube.com/watch?v=MIDOmSQN6LU"}
+            ],
+            "tv_shows": [
+                {"name": "I Love Lucy", "youtube_url": "https://youtube.com/watch?v=example1", "description": "Classic 1950s comedy"},
+                {"name": "The Ed Sullivan Show", "youtube_url": "https://youtube.com/watch?v=example2", "description": "Variety show from the 1960s"}
+            ],
+            "conversation_starters": [
+                "What was your favorite song when you were young?",
+                "Tell me about TV shows your family watched together",
+                "What foods remind you of home?"
+            ]
+        }
     
     async def run(self,
                   consolidated_info: Dict[str, Any],
@@ -31,477 +62,289 @@ class MobileSynthesizerAgent:
                   sensory_content: Dict[str, Any],
                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize all content into mobile experience with places as memory anchors.
+        Create clean dashboard with exactly one result per category.
         
-        Args:
-            consolidated_info: Output from Agent 1
-            cultural_profile: Output from Agent 2
-            qloo_intelligence: Output from Agent 3
-            sensory_content: Output from Agent 4
-            photo_analysis: Output from Agent 5
-            
-        Returns:
-            Mobile-ready experience with memory-focused places usage
+        Returns ONLY the dashboard - no raw agent outputs.
         """
         
         try:
-            logger.info("📱 Agent 6: Starting mobile synthesis with memory anchors")
+            logger.info("📱 Agent 6: Creating clean dashboard (single results only)")
             
-            # Extract key information
-            patient_profile = consolidated_info.get("patient_profile", {})
-            patient_name = patient_profile.get("first_name", "").split()[0] if patient_profile.get("first_name") else "Patient"
-            heritage = patient_profile.get("cultural_heritage", "American")
+            # Set daily random seed for uniqueness (same as Qloo agent)
+            today = date.today()
+            daily_seed = hash(f"{today.year}-{today.month}-{today.day}")
+            random.seed(daily_seed)
             
-            # Create memory-focused dashboard content
-            mobile_experience = {
-                "dashboard_content": self._create_memory_focused_dashboard(
-                    consolidated_info, cultural_profile, qloo_intelligence, sensory_content
-                ),
-                "places_as_memory_anchors": self._transform_places_to_memory_content(
-                    qloo_intelligence, heritage, patient_name
-                ),
-                "conversation_starters": self._create_places_based_conversations(
-                    qloo_intelligence, heritage, patient_name
-                ),
-                "recipe_inspiration_notes": self._extract_recipe_inspiration_from_places(
-                    qloo_intelligence, sensory_content
-                ),
-                "caregiver_guidance": self._create_caregiver_guidance_for_places(heritage),
-                "mobile_structure": self._define_mobile_structure()
+            # Select exactly one result per category
+            selected_results = self._select_single_results(
+                qloo_intelligence, sensory_content, photo_analysis, 
+                consolidated_info.get("patient_profile", {})
+            )
+            
+            # Create ONLY the clean dashboard - no extra data
+            dashboard = {
+                "music": selected_results["music"],
+                "tv_show": selected_results["tv_show"], 
+                "recipe": selected_results["recipe"],
+                "photo": selected_results["photo"],
+                "conversation_starters": selected_results["conversation_starters"]
             }
             
+            logger.info("✅ Clean dashboard created - single results only")
+            
+            # Return ONLY the dashboard - not all the raw agent outputs
             return {
-                "mobile_experience": mobile_experience
+                "dashboard": dashboard,
+                "metadata": {
+                    "timestamp": datetime.now().isoformat(),
+                    "request_type": "dashboard",
+                    "results_per_category": 1,
+                    "daily_seed": daily_seed,
+                    "fallbacks_used": selected_results.get("fallbacks_used", []),
+                    "response_type": "clean_dashboard_only"
+                }
             }
             
         except Exception as e:
             logger.error(f"❌ Agent 6 failed: {e}")
-            return self._create_fallback_mobile_experience(consolidated_info)
+            return self._create_fallback_dashboard(consolidated_info)
     
-    def _create_memory_focused_dashboard(self,
-                                       consolidated_info: Dict[str, Any],
-                                       cultural_profile: Dict[str, Any],
-                                       qloo_intelligence: Dict[str, Any],
-                                       sensory_content: Dict[str, Any]) -> Dict[str, Any]:
-        """Create dashboard with places used as memory triggers."""
+    def _select_single_results(self, 
+                              qloo_intelligence: Dict[str, Any],
+                              sensory_content: Dict[str, Any], 
+                              photo_analysis: Dict[str, Any],
+                              patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Select exactly ONE result per category from filtered English data."""
         
-        patient_profile = consolidated_info.get("patient_profile", {})
-        patient_name = patient_profile.get("first_name", "").split()[0] if patient_profile.get("first_name") else "Patient"
+        results = {}
+        fallbacks_used = []
         
-        # Extract recipe from sensory content
-        recipe_content = sensory_content.get("content_by_sense", {}).get("taste", {})
-        recipe = recipe_content.get("elements", [{}])[0] if recipe_content.get("available") else {}
+        # MUSIC: Pick one result from English-filtered data
+        music_result = self._select_single_music(sensory_content)
+        if not music_result:
+            music_result = random.choice(self.fallback_data["music"])
+            fallbacks_used.append("music")
+        results["music"] = music_result
+        logger.info(f"Selected music: {music_result.get('song', 'Unknown')}")
         
-        # Extract music from sensory content
-        music_content = sensory_content.get("content_by_sense", {}).get("sound", {})
-        music = music_content.get("elements", [{}])[0] if music_content.get("available") else {}
+        # TV SHOWS: Pick one result from English-filtered data
+        tv_result = self._select_single_tv_show(qloo_intelligence)
+        if not tv_result:
+            tv_result = random.choice(self.fallback_data["tv_shows"])
+            fallbacks_used.append("tv_show")
+        results["tv_show"] = tv_result
+        logger.info(f"Selected TV show: {tv_result.get('name', 'Unknown')}")
         
-        dashboard = {
-            "today_highlights": [
-                {
-                    "type": "recipe_activity",
-                    "title": recipe.get("name", "Simple Comfort Recipe"),
-                    "subtitle": "Cooking together",
-                    "duration": recipe.get("total_time", "25 minutes"),
-                    "description": recipe.get("description", "A simple, comforting recipe"),
-                    "cultural_inspiration": recipe.get("recipe_inspiration_source", "Traditional family cooking"),
-                    "engagement_focus": "Recipe inspired by family restaurant memories"
-                },
-                {
-                    "type": "music_activity", 
-                    "title": music.get("title", "Era-Appropriate Music"),
-                    "subtitle": "Listening together",
-                    "duration": "15-30 minutes",
-                    "description": "Music from their formative years",
-                    "cultural_connection": f"Music that connects to their {patient_profile.get('cultural_heritage', 'cultural')} background"
-                }
-            ],
-            "memory_conversation_section": self._create_memory_conversation_section(
-                qloo_intelligence, patient_name
-            )
-        }
+        # RECIPE: Pick one result from recipes.json customization
+        recipe_result = self._select_single_recipe(sensory_content)
+        if not recipe_result:
+            recipe_result = {
+                "name": "Simple Comfort Recipe",
+                "total_time": "15 minutes",
+                "ingredients": ["Basic ingredients"],
+                "instructions": ["Simple preparation steps"],
+                "heritage_connection": "Traditional comfort food"
+            }
+            fallbacks_used.append("recipe")
+        results["recipe"] = recipe_result
+        logger.info(f"Selected recipe: {recipe_result.get('name', 'Unknown')}")
         
-        return dashboard
+        # PHOTO: Pick one result (if available)
+        photo_result = self._select_single_photo(photo_analysis, patient_profile)
+        results["photo"] = photo_result
+        
+        # CONVERSATION: Generate 1-2 starters based on selected content
+        conversation_starters = self._get_conversation_starters(
+            results["music"], results["tv_show"], results["recipe"]
+        )
+        results["conversation_starters"] = conversation_starters
+        
+        results["fallbacks_used"] = fallbacks_used
+        return results
     
-    def _transform_places_to_memory_content(self,
-                                          qloo_intelligence: Dict[str, Any],
-                                          heritage: str,
-                                          patient_name: str) -> Dict[str, Any]:
-        """Transform places into memory anchor content."""
-        
-        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
-        places_data = cultural_recommendations.get("places", {})
-        
-        memory_anchors = []
-        
-        if places_data.get("available") and places_data.get("entities"):
-            for place_entity in places_data["entities"][:3]:  # Limit to 3 for mobile
+    def _select_single_music(self, sensory_content: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Select one music result from English-filtered sensory content."""
+        try:
+            music_data = sensory_content.get("content_by_sense", {}).get("auditory", {})
+            if music_data.get("available") and music_data.get("elements"):
+                # Pick one random music item (already English-filtered by Qloo agent)
+                music_item = random.choice(music_data["elements"])
                 
-                # Check if this is already a memory anchor from our enhanced system
-                if place_entity.get("memory_anchor_name"):
-                    memory_anchor = {
-                        "type": "memory_anchor",
-                        "title": f"Family Restaurant Memories",
-                        "subtitle": f"Inspired by {place_entity.get('memory_anchor_name')}",
-                        "usage": "conversation_starter_and_recipe_inspiration",
-                        "conversation_prompts": place_entity.get("conversation_prompts", []),
-                        "recipe_inspiration": place_entity.get("recipe_inspiration", {}),
-                        "memory_focus": f"Think about family restaurants from the {heritage} community",
-                        "not_a_destination": True
-                    }
-                else:
-                    # Transform regular place into memory anchor
-                    place_name = place_entity.get("name", "Family Restaurant")
-                    memory_anchor = {
-                        "type": "memory_anchor",
-                        "title": f"Family Dining Memories",
-                        "subtitle": f"Style of {place_name}",
-                        "usage": "conversation_starter_and_recipe_inspiration",
-                        "conversation_prompts": [
-                            f"Did you have a favorite family restaurant?",
-                            f"What do you remember about dining out with family?",
-                            f"Tell me about the food at places like this"
-                        ],
-                        "memory_focus": f"Think about family restaurants and special meals",
-                        "not_a_destination": True
-                    }
+                # Extract clean data for dashboard
+                return {
+                    "artist": self._extract_artist_name(music_item.get("title", "Unknown Artist")),
+                    "song": music_item.get("title", "Classic Song"),
+                    "youtube_url": self._format_youtube_url(music_item.get("id", {})),
+                    "description": music_item.get("description", "Era-appropriate music")[:100] + "..." if len(music_item.get("description", "")) > 100 else music_item.get("description", "")
+                }
+        except Exception as e:
+            logger.warning(f"Music selection failed: {e}")
+        return None
+    
+    def _extract_artist_name(self, title: str) -> str:
+        """Extract artist name from YouTube title."""
+        # Common patterns: "Artist - Song" or "Artist: Song" 
+        if " - " in title:
+            return title.split(" - ")[0].strip()
+        elif ": " in title:
+            return title.split(": ")[0].strip()
+        elif " by " in title:
+            parts = title.split(" by ")
+            if len(parts) > 1:
+                return parts[1].strip()
+        
+        # Default to first part if no clear pattern
+        words = title.split()
+        return " ".join(words[:2]) if len(words) >= 2 else title
+    
+    def _format_youtube_url(self, video_id: Dict[str, Any]) -> str:
+        """Format YouTube URL from video ID object."""
+        if isinstance(video_id, dict) and video_id.get("videoId"):
+            return f"https://youtube.com/watch?v={video_id['videoId']}"
+        return "https://youtube.com/results?search_query=classic+music"
+    
+    def _select_single_tv_show(self, qloo_intelligence: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Select one TV show result from English-filtered Qloo data."""
+        try:
+            tv_data = qloo_intelligence.get("cultural_recommendations", {}).get("tv_shows", {})
+            if tv_data.get("available") and tv_data.get("entities"):
+                # Pick one random TV show (already English-filtered and randomized by Qloo agent)
+                tv_show = random.choice(tv_data["entities"])
                 
-                memory_anchors.append(memory_anchor)
-        
-        return {
-            "memory_anchors": memory_anchors,
-            "usage_note": "These are for memories and conversations, not actual visits",
-            "caregiver_instruction": f"Use these to help {patient_name} remember family dining experiences"
-        }
-    
-    def _create_places_based_conversations(self,
-                                         qloo_intelligence: Dict[str, Any],
-                                         heritage: str,
-                                         patient_name: str) -> Dict[str, Any]:
-        """Create conversation starters based on places as memory anchors."""
-        
-        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
-        places_data = cultural_recommendations.get("places", {})
-        
-        conversation_starters = []
-        
-        # Era-based restaurant memory conversations
-        era_context = qloo_intelligence.get("metadata", {}).get("formative_decades", [])
-        
-        for decade in era_context[:2]:  # Use top 2 decades
-            conversation_starters.extend([
-                {
-                    "category": "family_dining_memories",
-                    "starter": f"What was your favorite family restaurant in the {decade}s?",
-                    "follow_ups": [
-                        "Who did you go there with?",
-                        "What did you usually order?",
-                        "What made it special?"
-                    ],
-                    "context": f"Family restaurants were important social spaces in the {decade}s",
-                    "memory_trigger": "family dining experiences",
-                    "decade_focus": decade
-                },
-                {
-                    "category": "food_traditions",
-                    "starter": f"Tell me about how families cooked {heritage} food in the {decade}s",
-                    "follow_ups": [
-                        "Did your family have special recipes?",
-                        "Who taught you to cook?",
-                        "What smells remind you of home cooking?"
-                    ],
-                    "context": f"Traditional cooking methods from the {decade}s",
-                    "memory_trigger": "cooking and food preparation",
-                    "decade_focus": decade
+                return {
+                    "name": tv_show.get("name", "Classic TV Show"),
+                    "youtube_url": self._get_tv_youtube_link(tv_show.get("name", "Classic Show")),
+                    "description": self._extract_english_description(tv_show)[:100] + "..." if len(self._extract_english_description(tv_show)) > 100 else self._extract_english_description(tv_show)
                 }
-            ])
-        
-        # Add heritage-specific restaurant conversations
-        conversation_starters.append({
-            "category": "cultural_food_memories",
-            "starter": f"What {heritage} restaurants did you love when you were younger?",
-            "follow_ups": [
-                "What made the food special there?",
-                "Did you have regular dishes you'd order?",
-                "Who introduced you to these places?"
-            ],
-            "context": f"Cultural food experiences and {heritage} community dining",
-            "memory_trigger": "cultural food identity",
-            "heritage_focus": heritage
-        })
-        
-        return {
-            "conversation_starters": conversation_starters,
-            "usage_guidance": "Use these to explore food and family memories, not to plan visits",
-            "caregiver_note": f"Let {patient_name} lead the conversation and share what they remember"
-        }
+        except Exception as e:
+            logger.warning(f"TV show selection failed: {e}")
+        return None
     
-    def _extract_recipe_inspiration_from_places(self,
-                                              qloo_intelligence: Dict[str, Any],
-                                              sensory_content: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract how places inspired the recipe creation."""
+    def _extract_english_description(self, tv_show: Dict[str, Any]) -> str:
+        """Extract English description from TV show properties."""
+        properties = tv_show.get("properties", {})
         
-        # Get recipe from sensory content
-        recipe_content = sensory_content.get("content_by_sense", {}).get("taste", {})
-        recipe = recipe_content.get("elements", [{}])[0] if recipe_content.get("available") else {}
+        # Try main description first
+        if "description" in properties:
+            return properties["description"]
         
-        # Get places data
-        cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
-        places_data = cultural_recommendations.get("places", {})
+        # Try English short descriptions
+        if "short_descriptions" in properties:
+            for desc in properties["short_descriptions"]:
+                if isinstance(desc, dict) and "en" in desc.get("languages", []):
+                    return desc.get("value", "")
         
-        inspiration_notes = {
-            "recipe_name": recipe.get("name", "Simple Comfort Recipe"),
-            "inspiration_source": recipe.get("recipe_inspiration_source", "Traditional family cooking"),
-            "cooking_style": "Family restaurant style from their formative years",
-            "flavor_profile": "Comfort food flavors that would remind them of dining out with family",
-            "preparation_approach": "Simple, traditional methods used in family restaurants",
-            "memory_connection": "Designed to evoke positive memories of family dining experiences"
-        }
-        
-        if places_data.get("available") and places_data.get("entities"):
-            first_place = places_data["entities"][0]
-            if first_place.get("recipe_inspiration"):
-                inspiration_notes.update({
-                    "specific_inspiration": first_place.get("recipe_inspiration"),
-                    "place_style": first_place.get("memory_anchor_name", "Family restaurant style")
-                })
-        
-        return inspiration_notes
+        return f"Classic show: {tv_show.get('name', 'TV Show')}"
     
-    def _create_memory_conversation_section(self,
-                                          qloo_intelligence: Dict[str, Any],
-                                          patient_name: str) -> Dict[str, Any]:
-        """Create conversation section focused on memory exploration."""
-        
-        return {
-            "section_title": f"Exploring {patient_name}'s Memories",
-            "conversation_approach": "memory_focused_not_destination_focused",
-            "conversation_categories": [
-                {
-                    "category": "family_restaurants",
-                    "icon": "🍽️",
-                    "title": "Family Dining Memories",
-                    "description": "Explore memories of favorite family restaurants and special meals",
-                    "sample_questions": [
-                        "Where did your family go for special occasions?",
-                        "What restaurant did you visit most often?",
-                        "Tell me about a memorable meal you had"
-                    ]
-                },
-                {
-                    "category": "cooking_memories", 
-                    "icon": "👨‍🍳",
-                    "title": "Cooking & Food Traditions",
-                    "description": "Discuss family recipes and cooking traditions",
-                    "sample_questions": [
-                        "Who was the best cook in your family?",
-                        "What smells remind you of home cooking?",
-                        "Did you have any special family recipes?"
-                    ]
-                },
-                {
-                    "category": "community_dining",
-                    "icon": "🏘️", 
-                    "title": "Neighborhood Food Places",
-                    "description": "Remember local delis, bakeries, and community gathering spots",
-                    "sample_questions": [
-                        "What shops did you visit in your neighborhood?",
-                        "Where did families in your community gather?",
-                        "Tell me about the local bakery or deli"
-                    ]
+    def _select_single_recipe(self, sensory_content: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Select one recipe result from recipes.json customization."""
+        try:
+            recipe_data = sensory_content.get("content_by_sense", {}).get("gustatory", {})
+            if recipe_data.get("available") and recipe_data.get("elements"):
+                recipe = recipe_data["elements"][0]  # Take the customized recipe
+                
+                return {
+                    "name": recipe.get("name", "Simple Recipe"),
+                    "total_time": recipe.get("total_time", "20 minutes"),
+                    "ingredients": recipe.get("ingredients", [])[:5],  # Max 5 for clean display
+                    "instructions": recipe.get("instructions", [])[:6],  # Max 6 steps for clean display
+                    "heritage_connection": recipe.get("cultural_context", "Comfort food"),
+                    "description": recipe.get("description", "Simple, comforting recipe")
                 }
-            ],
-            "caregiver_guidance": f"Use these topics to help {patient_name} share food-related memories. Focus on their stories, not on planning any visits."
-        }
+        except Exception as e:
+            logger.warning(f"Recipe selection failed: {e}")
+        return None
     
-    def _create_caregiver_guidance_for_places(self, heritage: str) -> Dict[str, Any]:
-        """Create specific guidance for caregivers about using places as memory anchors."""
-        
-        return {
-            "approach": "memory_anchors_not_destinations",
-            "key_principles": [
-                "Use places to trigger memories, not plan visits",
-                "Focus on the past, not future activities",
-                "Let them lead the conversation about their experiences",
-                "Don't assume they want to visit anywhere new"
-            ],
-            "conversation_techniques": [
-                {
-                    "technique": "memory_bridging",
-                    "description": "Use place names to bridge to personal memories",
-                    "example": "This reminds me of Italian restaurants - did you have a favorite one?"
-                },
-                {
-                    "technique": "sensory_connection",
-                    "description": "Connect places to sensory memories",
-                    "example": "What did it smell like in your favorite restaurant?"
-                },
-                {
-                    "technique": "family_connection",
-                    "description": "Connect places to family memories",
-                    "example": "Who did you go to restaurants with when you were younger?"
+    def _select_single_photo(self, photo_analysis: Dict[str, Any], patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Select one photo result."""
+        try:
+            # If photo analysis available, use it
+            if photo_analysis.get("vision_analysis", {}).get("objects"):
+                return {
+                    "title": "Photo of the Day",
+                    "path": photo_analysis.get("photo_path", "/static/default/photo.jpg"),
+                    "description": "Personal memory photo"
                 }
-            ],
-            "what_to_avoid": [
-                "Don't suggest actually visiting any places",
-                "Don't assume they want to go out to eat",
-                "Don't make plans based on place recommendations",
-                "Don't use places as activity suggestions"
-            ],
-            "safety_considerations": [
-                "Many people with dementia prefer familiar environments",
-                "New places can be overwhelming and confusing",
-                "Focus on memory and comfort, not exploration",
-                "Use places for cooking inspiration and conversation only"
-            ]
+            
+            # Use from patient profile if available
+            photo_library = patient_profile.get("photo_library", [])
+            if photo_library:
+                return {
+                    "title": "Memory Photo",
+                    "path": random.choice(photo_library),
+                    "description": "From your photo collection"
+                }
+        except Exception as e:
+            logger.warning(f"Photo selection failed: {e}")
+        
+        # Default photo
+        return {
+            "title": "Today's Photo",
+            "path": "/static/default/photo.jpg",
+            "description": "Peaceful image for today"
         }
     
-    def _define_mobile_structure(self) -> Dict[str, Any]:
-        """Define mobile app structure with memory-focused places usage."""
+    def _get_conversation_starters(self, music: Dict[str, Any], tv_show: Dict[str, Any], recipe: Dict[str, Any]) -> List[str]:
+        """Generate 1-2 conversation starters based on selected content."""
+        starters = []
         
-        return {
-            "structure_type": "memory_focused_dashboard", 
-            "layout": "vertical_scrolling_cards",
-            "primary_sections": [
-                "today_highlights",
-                "memory_conversation_starters", 
-                "recipe_inspiration_notes",
-                "places_as_memory_anchors",
-                "family_food_memories"
-            ],
-            "interaction_pattern": "tap_to_explore_memories",
-            "places_usage": "memory_anchors_and_recipe_inspiration_only",
-            "caregiver_controls": "visible_throughout_with_memory_guidance"
-        }
+        try:
+            if music and music.get("song"):
+                starters.append(f"Do you remember dancing to songs like '{music['song']}'?")
+            elif music and music.get("artist"):
+                starters.append(f"What do you think of {music['artist']} music?")
+            
+            if tv_show and tv_show.get("name"):
+                starters.append(f"Did you ever watch shows like '{tv_show['name']}'?")
+            
+            if recipe and recipe.get("name") and len(starters) < 2:
+                starters.append(f"Does '{recipe['name']}' remind you of cooking with family?")
+            
+            # If no specific starters generated, use general ones
+            if not starters:
+                starters = random.sample(self.fallback_data.get("conversation_starters", [
+                    "What was your favorite song when you were young?",
+                    "Tell me about your family's favorite recipes"
+                ]), 2)
+                
+        except Exception as e:
+            logger.warning(f"Conversation starter generation failed: {e}")
+            starters = ["Tell me about your day", "What makes you smile?"]
+        
+        return starters[:2]  # Max 2 conversation starters
     
-    def _create_fallback_mobile_experience(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback mobile experience when synthesis fails."""
-        
-        patient_profile = consolidated_info.get("patient_profile", {})
-        heritage = patient_profile.get("cultural_heritage", "American")
+    def _get_tv_youtube_link(self, show_name: str) -> str:
+        """Generate YouTube search link for TV show."""
+        search_query = show_name.replace(" ", "+")
+        return f"https://youtube.com/results?search_query={search_query}+classic+episodes"
+    
+    def _create_fallback_dashboard(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Create complete fallback dashboard when everything fails."""
+        logger.warning("Creating complete fallback dashboard")
         
         return {
-            "mobile_experience": {
-                "dashboard_content": {
-                    "today_highlights": [
-                        {
-                            "type": "memory_conversation",
-                            "title": "Family Food Memories",
-                            "description": f"Talk about {heritage} family food traditions",
-                            "duration": "15-30 minutes"
-                        }
-                    ]
+            "dashboard": {
+                "music": random.choice(self.fallback_data["music"]),
+                "tv_show": random.choice(self.fallback_data["tv_shows"]),
+                "recipe": {
+                    "name": "Simple Comfort Recipe",
+                    "total_time": "15 minutes",
+                    "ingredients": ["Basic ingredients as available"],
+                    "instructions": ["Simple preparation"],
+                    "heritage_connection": "Traditional comfort food"
                 },
-                "places_as_memory_anchors": {
-                    "memory_anchors": [
-                        {
-                            "type": "memory_anchor",
-                            "title": "Family Restaurant Memories",
-                            "usage": "conversation_starter_only",
-                            "not_a_destination": True
-                        }
-                    ],
-                    "usage_note": "These are for memories only, not visits"
+                "photo": {
+                    "title": "Today's Photo",
+                    "path": "/static/default/photo.jpg",
+                    "description": "Peaceful image"
                 },
-                "fallback_used": True
+                "conversation_starters": random.sample(self.fallback_data["conversation_starters"], 2)
+            },
+            "metadata": {
+                "timestamp": datetime.now().isoformat(),
+                "request_type": "dashboard",
+                "status": "complete_fallback",
+                "fallbacks_used": ["music", "tv_show", "recipe", "conversation"],
+                "response_type": "clean_dashboard_only"
             }
         }
-
-# Test function
-async def test_memory_focused_synthesis():
-    """Test the memory-focused places synthesis."""
-    
-    agent = MobileSynthesizerAgent()
-    
-    # Test data with places as memory anchors
-    consolidated_info = {
-        "patient_profile": {
-            "first_name": "Maria",
-            "cultural_heritage": "Italian-American",
-            "birth_year": 1945,
-            "location": "Brooklyn, New York"
-        }
-    }
-    
-    cultural_profile = {
-        "era_context": {
-            "formative_decades": [1950, 1960, 1970]
-        }
-    }
-    
-    qloo_intelligence = {
-        "cultural_recommendations": {
-            "places": {
-                "available": True,
-                "memory_anchors": True,
-                "entities": [
-                    {
-                        "name": "Larcomar",
-                        "memory_anchor_name": "1960s-style Larcomar",
-                        "conversation_prompts": [
-                            "Did you have a favorite restaurant in the 1960s?",
-                            "What do you remember about restaurants from that time?"
-                        ],
-                        "recipe_inspiration": {
-                            "cuisine_style": "1960s family-style cooking",
-                            "flavor_profile": "comfort food flavors"
-                        },
-                        "not_a_destination": True
-                    }
-                ]
-            }
-        },
-        "metadata": {
-            "formative_decades": [1950, 1960, 1970]
-        }
-    }
-    
-    sensory_content = {
-        "content_by_sense": {
-            "taste": {
-                "available": True,
-                "elements": [
-                    {
-                        "name": "Simple Italian Comfort Bread",
-                        "description": "A comforting recipe inspired by family restaurants",
-                        "recipe_inspiration_source": "Inspired by 1960s-style family restaurants"
-                    }
-                ]
-            }
-        }
-    }
-    
-    photo_analysis = {"status": "skipped"}
-    
-    # Run the agent
-    print("Testing memory-focused places synthesis...")
-    result = await agent.run(
-        consolidated_info, cultural_profile, qloo_intelligence, 
-        sensory_content, photo_analysis
-    )
-    
-    # Display results
-    mobile_exp = result.get("mobile_experience", {})
-    places_anchors = mobile_exp.get("places_as_memory_anchors", {})
-    
-    print(f"\nMemory Anchors Generated:")
-    print(f"Count: {len(places_anchors.get('memory_anchors', []))}")
-    print(f"Usage note: {places_anchors.get('usage_note')}")
-    
-    conversation_starters = mobile_exp.get("conversation_starters", {})
-    print(f"\nConversation Starters: {len(conversation_starters.get('conversation_starters', []))}")
-    
-    caregiver_guidance = mobile_exp.get("caregiver_guidance", {})
-    print(f"Caregiver approach: {caregiver_guidance.get('approach')}")
-    
-    # Show first memory anchor
-    if places_anchors.get("memory_anchors"):
-        first_anchor = places_anchors["memory_anchors"][0]
-        print(f"\nFirst Memory Anchor:")
-        print(f"Title: {first_anchor.get('title')}")
-        print(f"Usage: {first_anchor.get('usage')}")
-        print(f"Not a destination: {first_anchor.get('not_a_destination')}")
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(test_memory_focused_synthesis())

@@ -1,15 +1,14 @@
 """
-Agent 4: Sensory Content Generator - FIXED for Data Structure Issues
+Enhanced Sensory Content Generator Agent with Recipes JSON + Light Customization
 File: backend/multi_tool_agent/agents/sensory_content_generator_agent.py
 
-FIXED ISSUES:
-- Handles list vs dictionary data structure correctly
-- Properly processes Qloo response format
-- Uses tv_shows instead of movies throughout
-- Adds proper error handling for data access
+Agent 4: Uses pre-made recipes from JSON + light Gemini customization for reliability
 """
 
 import logging
+import json
+import os
+import random
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
@@ -18,26 +17,53 @@ logger = logging.getLogger(__name__)
 
 class SensoryContentGeneratorAgent:
     """
-    Agent 4: Sensory Content Generator - FIXED for Data Structure Issues
+    Agent 4: Sensory Content Generator with Recipes JSON + Light Customization
     
-    FIXES:
-    - Properly handles dictionary vs list data structures
-    - Uses tv_shows instead of movies 
-    - Adds robust error handling for data access
-    - Creates multi-sensory experiences with dementia-optimized recipes
+    Uses pre-made recipes from backend/config/recipes.json and applies light cultural
+    customization via Gemini for fast, reliable recipe generation.
     """
     
     def __init__(self, gemini_tool, youtube_tool):
         self.gemini_tool = gemini_tool
         self.youtube_tool = youtube_tool
-        logger.info("Sensory Content Generator initialized with FIXED data structure handling")
+        self.recipes_data = self._load_recipes_json()
+        logger.info("Sensory Content Generator initialized with recipes.json + light customization")
+    
+    def _load_recipes_json(self) -> List[Dict[str, Any]]:
+        """Load simple recipes from JSON file."""
+        try:
+            recipes_path = os.path.join(os.path.dirname(__file__), "../../config/recipes.json")
+            with open(recipes_path, 'r') as f:
+                recipes = json.load(f)
+                logger.info(f"Loaded {len(recipes)} recipes from recipes.json")
+                return recipes
+        except Exception as e:
+            logger.error(f"Failed to load recipes.json: {e}")
+            return self._get_hardcoded_fallback_recipes()
+    
+    def _get_hardcoded_fallback_recipes(self) -> List[Dict[str, Any]]:
+        """Hardcoded recipes if JSON file unavailable."""
+        return [
+            {
+                "name": "Warm Cinnamon Apples",
+                "ingredients": ["1 apple (soft)", "1/2 tsp cinnamon", "1 tsp brown sugar", "1 tsp butter"],
+                "instructions": ["Place apple slices in microwave-safe bowl", "Sprinkle with cinnamon and sugar, dot with butter", "Microwave 1-2 minutes until soft"],
+                "notes": "Smells like apple pie. Great for nostalgic memories."
+            },
+            {
+                "name": "Microwave Oatmeal with Raisins", 
+                "ingredients": ["1/2 cup oats", "1 cup milk", "1 tbsp raisins", "Dash cinnamon"],
+                "instructions": ["Mix all ingredients in microwave-safe bowl", "Microwave 90 seconds to 2 minutes", "Let cool 1 minute before serving"],
+                "notes": "Warm and sweet, often served by grandparents."
+            }
+        ]
     
     async def run(self, 
                   consolidated_info: Dict[str, Any],
                   cultural_profile: Dict[str, Any], 
                   qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate comprehensive sensory content with FIXED data handling.
+        Generate comprehensive sensory content with recipe selection + light customization.
         
         Args:
             consolidated_info: Output from Agent 1
@@ -45,13 +71,13 @@ class SensoryContentGeneratorAgent:
             qloo_intelligence: Output from Agent 3
             
         Returns:
-            Dictionary containing multi-sensory content with optimized recipes
+            Dictionary containing multi-sensory content with customized recipes
         """
         
         try:
-            logger.info("🎵 Agent 4: Starting FIXED sensory content generation")
+            logger.info("🎵 Agent 4: Starting sensory content generation with recipes.json")
             
-            # Extract key information safely
+            # Extract key information
             patient_profile = consolidated_info.get("patient_profile", {})
             heritage = patient_profile.get("cultural_heritage", "American")
             age = patient_profile.get("age", 75)
@@ -59,35 +85,31 @@ class SensoryContentGeneratorAgent:
             if birth_year:
                 age = 2024 - birth_year
             
-            # FIXED: Safely extract Qloo recommendations
-            qloo_recommendations = self._safely_extract_qloo_recommendations(qloo_intelligence)
-            
-            logger.info(f"Processing sensory content for {heritage} heritage, age {age}")
-            logger.info(f"Available Qloo categories: {list(qloo_recommendations.keys())}")
+            qloo_recommendations = qloo_intelligence.get("cultural_recommendations", {})
             
             # Generate content for each sense
             sensory_content = {}
             
-            # TASTE: Enhanced dementia-specific recipes
-            sensory_content["taste"] = await self._generate_dementia_optimized_recipes(
+            # TASTE: Select recipe + light customization
+            sensory_content["gustatory"] = await self._generate_customized_recipe(
                 heritage, age, qloo_recommendations
             )
             
             # SOUND: Era-appropriate music
-            sensory_content["sound"] = await self._generate_era_music_content(
+            sensory_content["auditory"] = await self._generate_era_music_content(
                 heritage, qloo_recommendations
             )
             
-            # SIGHT: Visual content and photo opportunities  
-            sensory_content["sight"] = await self._generate_visual_content(
+            # SIGHT: Visual content
+            sensory_content["visual"] = await self._generate_visual_content(
                 heritage, qloo_recommendations
             )
             
-            # SMELL: Cultural scents and aromas
-            sensory_content["smell"] = await self._generate_olfactory_content(heritage)
+            # SMELL: Cultural scents
+            sensory_content["olfactory"] = self._generate_olfactory_content(heritage)
             
             # TOUCH: Tactile experiences
-            sensory_content["touch"] = await self._generate_tactile_content(heritage)
+            sensory_content["tactile"] = self._generate_tactile_content(heritage)
             
             return {
                 "sensory_content": {
@@ -96,9 +118,9 @@ class SensoryContentGeneratorAgent:
                     "generation_metadata": {
                         "heritage_used": heritage,
                         "age_optimized_for": age,
-                        "dementia_care_focused": True,
+                        "recipes_json_used": True,
                         "generation_timestamp": datetime.now().isoformat(),
-                        "agent_version": "fixed_data_structures"
+                        "agent_version": "recipes_json_customization"
                     }
                 }
             }
@@ -107,503 +129,402 @@ class SensoryContentGeneratorAgent:
             logger.error(f"❌ Agent 4 failed: {e}")
             return self._create_fallback_sensory_content(consolidated_info, cultural_profile)
     
-    def _safely_extract_qloo_recommendations(self, qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_customized_recipe(self, 
+                                        heritage: str, 
+                                        age: int,
+                                        qloo_recommendations: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Safely extract Qloo recommendations handling various data structures.
-        
-        Args:
-            qloo_intelligence: Output from Agent 3
-            
-        Returns:
-            Dictionary with safely extracted recommendations
+        Select recipe from JSON and apply light cultural customization.
         """
         
         try:
-            # Navigate to cultural_recommendations safely
-            qloo_data = qloo_intelligence.get("qloo_intelligence", {})
-            recommendations = qloo_data.get("cultural_recommendations", {})
+            logger.info(f"Selecting and customizing recipe for {heritage} heritage, age {age}")
             
-            # Ensure we have a dictionary, not a list
-            if not isinstance(recommendations, dict):
-                logger.warning(f"Expected dict, got {type(recommendations)}. Using empty dict.")
-                return {}
+            # Step 1: Select appropriate base recipe
+            base_recipe = self._select_base_recipe(heritage, age)
             
-            # Validate each category
-            safe_recommendations = {}
-            expected_categories = ["tv_shows", "artists", "places"]
+            # Step 2: Apply light customization via Gemini
+            customized_recipe = await self._apply_light_customization(base_recipe, heritage, age)
             
-            for category in expected_categories:
-                category_data = recommendations.get(category, {})
+            # Step 3: Format for response
+            if customized_recipe:
+                recipe_elements = [{
+                    "content_type": "customized_recipe",
+                    "name": customized_recipe.get("name", base_recipe["name"]),
+                    "description": customized_recipe.get("description", f"Simple {heritage} comfort recipe"),
+                    "total_time": customized_recipe.get("total_time", "20 minutes"),
+                    "difficulty": "very_easy",
+                    "ingredients": customized_recipe.get("ingredients", base_recipe["ingredients"]),
+                    "instructions": customized_recipe.get("instructions", base_recipe["instructions"]),
+                    "cultural_context": customized_recipe.get("cultural_context", f"Traditional {heritage} comfort food"),
+                    "heritage_connection": customized_recipe.get("heritage_connection", base_recipe.get("notes", "")),
+                    "source": "recipes_json_customized",
+                    "base_recipe": base_recipe["name"]
+                }]
                 
-                # Ensure category_data is a dictionary
-                if isinstance(category_data, dict):
-                    safe_recommendations[category] = {
-                        "available": category_data.get("available", False),
-                        "entities": category_data.get("entities", []),
-                        "entity_count": category_data.get("entity_count", 0)
-                    }
-                else:
-                    logger.warning(f"Category {category} data is not a dict: {type(category_data)}")
-                    safe_recommendations[category] = {
-                        "available": False,
-                        "entities": [],
-                        "entity_count": 0
-                    }
-            
-            logger.info(f"Safely extracted {len(safe_recommendations)} recommendation categories")
-            return safe_recommendations
-            
-        except Exception as e:
-            logger.error(f"Error safely extracting Qloo recommendations: {e}")
-            return {
-                "tv_shows": {"available": False, "entities": [], "entity_count": 0},
-                "artists": {"available": False, "entities": [], "entity_count": 0},
-                "places": {"available": False, "entities": [], "entity_count": 0}
-            }
-    
-    async def _generate_dementia_optimized_recipes(self, 
-                                                 heritage: str, 
-                                                 age: int,
-                                                 qloo_recommendations: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generate FIXED dementia-optimized recipes with proper error handling.
-        """
-        
-        try:
-            logger.info(f"Generating dementia-optimized recipes for {heritage} heritage")
-            
-            # Use Qloo place recommendations for cultural cuisine inspiration
-            places_data = qloo_recommendations.get("places", {})
-            cultural_cuisines = []
-            
-            if places_data.get("available") and places_data.get("entities"):
-                # Safely extract cuisine inspiration from places
-                entities = places_data.get("entities", [])
-                if isinstance(entities, list):
-                    for entity in entities[:3]:  # Use first 3 places
-                        if isinstance(entity, dict):
-                            name = entity.get("name", "")
-                            if name:
-                                cultural_cuisines.append(name)
-            
-            # Generate cultural comfort food recipe
-            recipe_elements = []
-            
-            # Create a simple, culturally-inspired comfort food recipe
-            cultural_base = heritage.split("-")[0] if "-" in heritage else heritage
-            
-            recipe_elements.append({
-                "content_type": "comfort_food_recipe",
-                "name": f"Simple {cultural_base} Comfort Dish",
-                "description": f"A very simple, comforting dish inspired by {heritage} traditions",
-                "prep_time": "15 minutes",
-                "difficulty": "very_easy",
-                "ingredients": self._get_simple_ingredients(cultural_base),
-                "instructions": self._get_simple_instructions(cultural_base),
-                "dementia_friendly": True,
-                "cultural_connection": f"Traditional comfort food from {heritage} heritage",
-                "caregiver_notes": "Perfect for cooking together - simple steps, familiar flavors"
-            })
-            
-            # Add a no-cook option
-            recipe_elements.append({
-                "content_type": "no_cook_comfort",
-                "name": f"{cultural_base} Memory Plate",
-                "description": f"Simple assembled foods that evoke {heritage} memories",
-                "prep_time": "5 minutes",
-                "difficulty": "no_cooking",
-                "ingredients": self._get_no_cook_ingredients(cultural_base),
-                "instructions": ["Arrange ingredients on a beautiful plate", "Share memories while enjoying together"],
-                "dementia_friendly": True,
-                "cultural_connection": f"Familiar flavors from {heritage} tradition"
-            })
-            
-            return {
-                "sense_type": "gustatory",
-                "available": True,
-                "elements": recipe_elements,
-                "cultural_inspiration": cultural_cuisines,
-                "dementia_optimized": True
-            }
-            
-        except Exception as e:
-            logger.error(f"Recipe generation failed: {e}")
-            return self._create_fallback_recipe(heritage)
-    
-    def _get_simple_ingredients(self, cultural_base: str) -> List[str]:
-        """Get simple ingredients based on cultural background."""
-        
-        ingredient_map = {
-            "Italian": ["pasta", "olive oil", "garlic", "parmesan cheese", "butter"],
-            "Irish": ["potatoes", "butter", "milk", "cheese", "herbs"],
-            "Mexican": ["tortillas", "cheese", "beans", "tomatoes", "avocado"],
-            "American": ["bread", "butter", "eggs", "cheese", "milk"],
-            "German": ["potatoes", "butter", "cheese", "herbs", "cream"]
-        }
-        
-        return ingredient_map.get(cultural_base, ingredient_map["American"])
-    
-    def _get_simple_instructions(self, cultural_base: str) -> List[str]:
-        """Get very simple cooking instructions."""
-        
-        instruction_map = {
-            "Italian": [
-                "Boil pasta according to package directions",
-                "Heat olive oil and garlic in pan",
-                "Toss pasta with oil and cheese",
-                "Serve warm with extra cheese"
-            ],
-            "Irish": [
-                "Boil potatoes until tender",
-                "Mash with butter and milk",
-                "Add cheese and herbs",
-                "Serve hot with butter on top"
-            ],
-            "Mexican": [
-                "Warm tortillas in dry pan",
-                "Heat beans in small pot",
-                "Fill tortillas with beans and cheese",
-                "Top with tomatoes and avocado"
-            ],
-            "American": [
-                "Beat eggs in bowl",
-                "Cook eggs in buttered pan",
-                "Add cheese when almost done",
-                "Serve on buttered toast"
-            ]
-        }
-        
-        return instruction_map.get(cultural_base, instruction_map["American"])
-    
-    def _get_no_cook_ingredients(self, cultural_base: str) -> List[str]:
-        """Get no-cook ingredients for memory plates."""
-        
-        no_cook_map = {
-            "Italian": ["fresh mozzarella", "tomatoes", "basil", "crackers", "olives"],
-            "Irish": ["aged cheese", "crackers", "butter", "jam", "tea"],
-            "Mexican": ["cheese", "crackers", "salsa", "avocado", "tortilla chips"],
-            "American": ["cheese", "crackers", "grapes", "nuts", "apple slices"]
-        }
-        
-        return no_cook_map.get(cultural_base, no_cook_map["American"])
-    
-    async def _generate_era_music_content(self, 
-                                         heritage: str,
-                                         qloo_recommendations: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate era-appropriate music content using YouTube API."""
-        
-        try:
-            logger.info(f"Generating era music content for {heritage}")
-            
-            # Extract music inspiration from Qloo artists
-            artists_data = qloo_recommendations.get("artists", {})
-            search_terms = [f"{heritage} traditional music", "nostalgic music", "classic songs"]
-            
-            if artists_data.get("available") and artists_data.get("entities"):
-                entities = artists_data.get("entities", [])
-                if isinstance(entities, list):
-                    for entity in entities[:2]:  # Use first 2 artists
-                        if isinstance(entity, dict):
-                            name = entity.get("name", "")
-                            if name:
-                                search_terms.append(name)
-            
-            # Try to get music from YouTube
-            music_results = []
-            if self.youtube_tool:
-                for term in search_terms[:3]:  # Limit API calls
-                    try:
-                        results = await self.youtube_tool.search_music(term, max_results=2)
-                        if results and isinstance(results, list):
-                            for result in results:
-                                if isinstance(result, dict):
-                                    music_results.append({
-                                        "title": result.get("title", "Unknown Song"),
-                                        "description": result.get("description", "")[:100],
-                                        "video_id": result.get("video_id", ""),
-                                        "source": "youtube",
-                                        "cultural_relevance": "high",
-                                        "search_term": term
-                                    })
-                        break  # Stop after first successful search
-                    except Exception as e:
-                        logger.warning(f"YouTube search failed for {term}: {e}")
-                        continue
-            
-            if music_results:
                 return {
-                    "sense_type": "auditory",
+                    "sense_type": "gustatory", 
                     "available": True,
-                    "elements": music_results,
-                    "heritage_focused": True
+                    "elements": recipe_elements,
+                    "customization_applied": True,
+                    "implementation_notes": [
+                        "Recipe selected from curated JSON collection",
+                        "Culturally customized for individual preferences",
+                        "All ingredients are dementia-safe and familiar"
+                    ]
                 }
             else:
-                # Fallback to simple music suggestion
+                # If customization fails, use base recipe
+                logger.warning("Customization failed, using base recipe")
+                return self._format_base_recipe(base_recipe, heritage)
+                
+        except Exception as e:
+            logger.error(f"Recipe customization failed: {e}")
+            # Fallback to any base recipe
+            return self._format_base_recipe(random.choice(self.recipes_data), heritage)
+    
+    def _select_base_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
+        """Select most appropriate base recipe from JSON."""
+        
+        # Heritage-based preferences
+        heritage_preferences = {
+            "Italian-American": ["apple", "oatmeal", "bread", "cocoa"],
+            "Mexican-American": ["cinnamon", "cocoa", "banana"],
+            "Irish-American": ["oatmeal", "bread", "cocoa"],
+            "German-American": ["apple", "bread", "cocoa"],
+            "American": ["apple", "oatmeal", "banana", "bread"]
+        }
+        
+        preferred_keywords = heritage_preferences.get(heritage, heritage_preferences["American"])
+        
+        # Find recipes matching heritage preferences
+        matching_recipes = []
+        for recipe in self.recipes_data:
+            recipe_text = (recipe["name"] + " " + " ".join(recipe["ingredients"])).lower()
+            if any(keyword in recipe_text for keyword in preferred_keywords):
+                matching_recipes.append(recipe)
+        
+        # If no matches, use any recipe
+        if not matching_recipes:
+            matching_recipes = self.recipes_data
+        
+        # Select random from matching recipes
+        selected = random.choice(matching_recipes)
+        logger.info(f"Selected base recipe: {selected['name']} for {heritage}")
+        return selected
+    
+    async def _apply_light_customization(self, base_recipe: Dict[str, Any], heritage: str, age: int) -> Optional[Dict[str, Any]]:
+        """Apply light cultural customization via Gemini."""
+        
+        try:
+            customization_prompt = f"""
+            Take this simple recipe and make small cultural customizations for a {age}-year-old {heritage} person:
+            
+            Base Recipe: {base_recipe['name']}
+            Ingredients: {base_recipe['ingredients']}
+            Instructions: {base_recipe['instructions']}
+            Original Notes: {base_recipe.get('notes', '')}
+            
+            Make ONLY these small changes:
+            1. Add 1-2 small ingredients/spices that fit {heritage} heritage (optional additions only)
+            2. Modify ONE instruction to be more culturally relevant
+            3. Add a brief cultural memory connection
+            4. Keep it exactly as simple and safe as the original
+            5. Do not change cooking method (keep microwave-based)
+            
+            Return as JSON with same structure:
+            {{
+                "name": "Modified recipe name (can add heritage reference)",
+                "description": "One sentence about cultural comfort and memory",
+                "total_time": "Same as original",
+                "ingredients": ["Original ingredients with 1-2 optional cultural additions"],
+                "instructions": ["Slightly modified instructions"],
+                "cultural_context": "Why this connects to {heritage} heritage",
+                "heritage_connection": "How this might trigger positive food memories"
+            }}
+            """
+            
+            # Try Gemini customization with short timeout
+            customized = await self.gemini_tool.generate_recipe(customization_prompt)
+            
+            if customized and isinstance(customized, dict):
+                logger.info(f"Successfully customized recipe: {customized.get('name')}")
+                return customized
+            else:
+                logger.warning("Gemini customization returned invalid format")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"Light customization failed: {e}")
+            return None
+    
+    def _format_base_recipe(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
+        """Format base recipe without customization."""
+        
+        recipe_elements = [{
+            "content_type": "base_recipe",
+            "name": f"Simple {heritage} {base_recipe['name']}",
+            "description": f"Comforting {heritage} style {base_recipe['name'].lower()}",
+            "total_time": "20 minutes",
+            "difficulty": "very_easy",
+            "ingredients": base_recipe["ingredients"],
+            "instructions": base_recipe["instructions"],
+            "cultural_context": f"Traditional {heritage} comfort food",
+            "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
+            "source": "recipes_json_base"
+        }]
+        
+        return {
+            "sense_type": "gustatory",
+            "available": True,
+            "elements": recipe_elements,
+            "customization_applied": False,
+            "implementation_notes": [
+                "Recipe from curated JSON collection",
+                "Dementia-safe and microwave-based",
+                "Simple, familiar ingredients only"
+            ]
+        }
+    
+    async def _generate_era_music_content(self, 
+                                        heritage: str,
+                                        qloo_recommendations: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate era-appropriate music content."""
+        
+        try:
+            # Check for Qloo artist recommendations first
+            artists_data = qloo_recommendations.get("artists", {})
+            
+            if artists_data.get("available") and artists_data.get("entities"):
+                # Use first Qloo artist recommendation
+                artist = artists_data["entities"][0]
+                artist_name = artist.get("name", "Classic Artist")
+                
+                # Search YouTube for this artist
+                youtube_results = await self.youtube_tool.search_music(f"{artist_name} classic songs")
+                
+                if youtube_results and youtube_results.get("items"):
+                    music_elements = []
+                    for item in youtube_results["items"][:3]:  # Take first 3
+                        music_elements.append({
+                            "title": item.get("snippet", {}).get("title", "Classic Song"),
+                            "description": item.get("snippet", {}).get("description", "")[:100],
+                            "id": item.get("id", {}),
+                            "cultural_relevance": "high",
+                            "source": "qloo_youtube_enhanced"
+                        })
+                    
+                    return {
+                        "sense_type": "auditory",
+                        "available": True, 
+                        "elements": music_elements,
+                        "qloo_enhanced": True
+                    }
+            
+            # Fallback to heritage-based music search
+            heritage_music_query = f"{heritage} traditional music classics"
+            youtube_results = await self.youtube_tool.search_music(heritage_music_query)
+            
+            if youtube_results and youtube_results.get("items"):
+                music_elements = []
+                for item in youtube_results["items"][:5]:
+                    music_elements.append({
+                        "title": item.get("snippet", {}).get("title", "Traditional Music"),
+                        "description": item.get("snippet", {}).get("description", "")[:100],
+                        "id": item.get("id", {}),
+                        "cultural_relevance": "high", 
+                        "source": "heritage_youtube"
+                    })
+                
                 return {
                     "sense_type": "auditory",
                     "available": True,
-                    "elements": [{
-                        "title": f"{heritage} Traditional Music",
-                        "description": f"Play gentle traditional {heritage} music",
-                        "source": "fallback_suggestion",
-                        "cultural_relevance": "high",
-                        "implementation": "Use any available music source"
-                    }],
-                    "fallback_used": True
+                    "elements": music_elements,
+                    "heritage_focused": True
                 }
-                
+        
         except Exception as e:
             logger.error(f"Music content generation failed: {e}")
-            return {
-                "sense_type": "auditory",
-                "available": False,
-                "fallback_used": True,
-                "error": str(e)
-            }
+        
+        # Fallback music suggestion
+        return {
+            "sense_type": "auditory",
+            "available": True,
+            "elements": [{
+                "title": f"{heritage} Traditional Music",
+                "description": f"Gentle traditional {heritage} music",
+                "source": "fallback_suggestion",
+                "cultural_relevance": "high"
+            }],
+            "fallback_used": True
+        }
     
     async def _generate_visual_content(self, 
                                      heritage: str,
                                      qloo_recommendations: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate visual content and photo opportunities."""
+        """Generate visual content from TV shows."""
+        
+        visual_elements = []
         
         try:
-            # FIXED: Use TV show recommendations instead of movies
-            tv_shows_data = qloo_recommendations.get("tv_shows", {})
+            # Use Qloo TV show recommendations if available
+            tv_data = qloo_recommendations.get("tv_shows", {})
             
-            visual_elements = []
-            
-            if tv_shows_data.get("available") and tv_shows_data.get("entities"):
-                # Convert TV show recommendations to visual content
-                entities = tv_shows_data.get("entities", [])
-                if isinstance(entities, list):
-                    for show in entities[:3]:
-                        if isinstance(show, dict):
-                            show_name = show.get("name", "Classic Show")
-                            properties = show.get("properties", {})
-                            description = properties.get("description", "") if isinstance(properties, dict) else ""
-                            
-                            visual_elements.append({
-                                "content_type": "tv_show_visual",
-                                "name": show_name,
-                                "description": description[:100] + "..." if len(description) > 100 else description,
-                                "viewing_guidance": f"Classic {heritage} television for gentle viewing",
-                                "cultural_connection": f"From the era of great {heritage} television"
-                            })
-            
-            # Add photo opportunities
-            visual_elements.append({
-                "content_type": "photo_opportunity",
-                "name": f"{heritage} Heritage Photos",
-                "description": f"Look through family photos or {heritage} cultural images",
-                "activity": "Photo viewing and memory sharing",
-                "engagement_tips": [
-                    "Ask about people in the photos",
-                    "Let them lead the conversation",
-                    "Focus on positive memories"
-                ]
-            })
-            
-            return {
-                "sense_type": "visual",
-                "available": True if visual_elements else False,
-                "elements": visual_elements,
-                "tv_show_focused": True  # FIXED: TV show focused
-            }
-            
+            if tv_data.get("available") and tv_data.get("entities"):
+                for tv_show in tv_data["entities"][:3]:  # Top 3 shows
+                    show_name = tv_show.get("name", "Classic Show")
+                    
+                    visual_elements.append({
+                        "content_type": "tv_show",
+                        "title": show_name,
+                        "description": tv_show.get("properties", {}).get("description", f"Classic show: {show_name}")[:100],
+                        "cultural_relevance": "high",
+                        "source": "qloo_recommendation",
+                        "viewing_notes": ["Watch together", "Pause for discussion", "Choose comfortable time"]
+                    })
         except Exception as e:
-            logger.error(f"Visual content generation failed: {e}")
-            return {
-                "sense_type": "visual",
-                "available": False,
-                "fallback_used": True,
-                "error": str(e)
-            }
+            logger.warning(f"TV show visual content failed: {e}")
+        
+        # Add heritage photo suggestions
+        visual_elements.append({
+            "content_type": "photo_collection",
+            "title": f"{heritage} Heritage Photos",
+            "description": f"Traditional images and scenes from {heritage} culture",
+            "suggestions": [
+                f"Traditional {heritage} landscapes",
+                f"{heritage} cultural celebrations", 
+                f"Historical {heritage} photography"
+            ],
+            "cultural_relevance": "high",
+            "source": "heritage_based"
+        })
+        
+        return {
+            "sense_type": "visual",
+            "available": True if visual_elements else False,
+            "elements": visual_elements,
+            "implementation_notes": [
+                "Use good lighting",
+                "Ensure comfortable viewing angle", 
+                "Consider visual clarity needs"
+            ]
+        }
     
-    async def _generate_olfactory_content(self, heritage: str) -> Dict[str, Any]:
+    def _generate_olfactory_content(self, heritage: str) -> Dict[str, Any]:
         """Generate cultural scent experiences."""
         
         heritage_scents = {
-            "Italian-American": ["basil", "garlic", "olive oil", "fresh bread"],
-            "Irish-American": ["fresh herbs", "baking bread", "tea", "wool"],
-            "Mexican-American": ["cinnamon", "vanilla", "fresh tortillas", "lime"],
-            "German-American": ["baking bread", "apple", "pine", "herbs"],
-            "American": ["vanilla", "apple pie", "fresh bread", "coffee"]
+            "Italian-American": ["basil", "oregano", "fresh bread"],
+            "Irish-American": ["fresh bread", "tea", "herbs"],
+            "Mexican-American": ["cinnamon", "vanilla", "lime"],
+            "German-American": ["apple", "pine", "herbs"],
+            "American": ["vanilla", "apple pie", "coffee"]
         }
         
         scents = heritage_scents.get(heritage, heritage_scents["American"])
         
         scent_elements = []
-        for scent in scents[:3]:
+        for scent in scents:
             scent_elements.append({
-                "content_type": "cultural_scent",
-                "name": f"{scent.title()} Aroma",
-                "description": f"Experience the comforting scent of {scent}",
-                "implementation": f"Use {scent} essential oil or actual {scent} if available",
-                "safety_note": "Ensure no allergies before using",
-                "cultural_connection": f"Traditional {heritage} scent memory"
+                "scent_type": scent,
+                "description": f"Gentle {scent} aroma",
+                "source_suggestions": [f"{scent} essential oil", f"fresh {scent}", f"{scent} candle"],
+                "cultural_relevance": "traditional",
+                "safety_notes": ["Use mild concentrations", "Check for allergies"]
             })
         
         return {
             "sense_type": "olfactory",
             "available": True,
-            "elements": scent_elements
+            "elements": scent_elements,
+            "implementation_notes": [
+                "Use gentle, natural scents",
+                "Avoid overwhelming fragrances",
+                "Consider personal scent preferences"
+            ]
         }
     
-    async def _generate_tactile_content(self, heritage: str) -> Dict[str, Any]:
+    def _generate_tactile_content(self, heritage: str) -> Dict[str, Any]:
         """Generate tactile experiences."""
         
         tactile_elements = [
             {
-                "content_type": "texture_exploration",
-                "name": "Soft Fabric Touch",
-                "description": "Feel different textures of comfortable fabrics",
-                "materials": ["soft blanket", "smooth silk", "textured wool"],
-                "guidance": "Let them explore textures at their own pace",
-                "benefits": "Calming and grounding sensory experience"
+                "content_type": "fabric_textures",
+                "title": "Comfort Fabrics",
+                "items": ["soft wool", "cotton", "silk", "fleece"],
+                "cultural_connection": f"Traditional {heritage} textiles",
+                "implementation": "Provide fabric samples to touch and hold"
             },
             {
-                "content_type": "cultural_touch",
-                "name": f"{heritage} Craft Materials",
-                "description": f"Touch materials associated with {heritage} crafts",
-                "materials": ["smooth wood", "soft yarn", "natural fibers"],
-                "cultural_connection": f"Materials from {heritage} traditional crafts"
+                "content_type": "sensory_objects", 
+                "title": "Familiar Objects",
+                "items": ["smooth stones", "wooden items", "soft brushes", "textured balls"],
+                "cultural_connection": "Objects that evoke positive memories",
+                "implementation": "Gentle touching and manipulation activities"
             }
         ]
         
         return {
             "sense_type": "tactile",
             "available": True,
-            "elements": tactile_elements
+            "elements": tactile_elements,
+            "implementation_notes": [
+                "Ensure objects are clean and safe",
+                "Consider temperature preferences",
+                "Watch for comfort/discomfort reactions"
+            ]
         }
     
     def _create_sensory_summary(self, sensory_content: Dict[str, Any]) -> Dict[str, Any]:
         """Create summary of generated sensory content."""
         
-        available_senses = sum(1 for content in sensory_content.values() 
-                             if isinstance(content, dict) and content.get("available"))
-        total_elements = sum(len(content.get("elements", [])) 
-                           for content in sensory_content.values() 
-                           if isinstance(content, dict))
+        available_senses = [sense for sense, data in sensory_content.items() if data.get("available")]
+        total_elements = sum(len(data.get("elements", [])) for data in sensory_content.values())
         
         return {
-            "total_senses_activated": available_senses,
-            "total_elements_generated": total_elements,
-            "dementia_optimized": True,
-            "generation_success": available_senses > 0,
-            "primary_focus": "taste (recipes)" if sensory_content.get("taste", {}).get("available") else "multi_sensory"
+            "total_senses_activated": len(available_senses),
+            "available_senses": available_senses,
+            "total_content_elements": total_elements,
+            "cross_sensory_potential": len(available_senses) >= 3,
+            "generation_success": len(available_senses) >= 2
         }
     
-    def _create_fallback_recipe(self, heritage: str) -> Dict[str, Any]:
-        """Create a simple fallback recipe."""
-        
-        return {
-            "sense_type": "gustatory",
-            "available": True,
-            "elements": [{
-                "content_type": "simple_comfort_food",
-                "name": f"Simple {heritage} Comfort Food",
-                "description": "A very easy, comforting dish",
-                "prep_time": "10 minutes",
-                "difficulty": "very_easy",
-                "ingredients": ["simple ingredients", "comfort food basics"],
-                "instructions": ["Very simple steps", "Easy to follow"],
-                "dementia_friendly": True,
-                "fallback_used": True
-            }],
-            "fallback_used": True
-        }
-    
-    def _create_fallback_sensory_content(self, 
-                                       consolidated_info: Dict[str, Any],
-                                       cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_fallback_sensory_content(self, consolidated_info: Dict[str, Any], cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
         """Create fallback sensory content when generation fails."""
         
         heritage = consolidated_info.get("patient_profile", {}).get("cultural_heritage", "American")
         
+        # Use first available recipe as fallback
+        base_recipe = self.recipes_data[0] if self.recipes_data else {
+            "name": "Simple Comfort Food",
+            "ingredients": ["Basic ingredients"],
+            "instructions": ["Simple preparation"]
+        }
+        
         return {
             "sensory_content": {
                 "content_by_sense": {
-                    "taste": self._create_fallback_recipe(heritage),
-                    "sound": {"sense_type": "auditory", "available": False, "fallback_used": True},
-                    "sight": {"sense_type": "visual", "available": False, "fallback_used": True},
-                    "smell": {"sense_type": "olfactory", "available": False, "fallback_used": True},
-                    "touch": {"sense_type": "tactile", "available": False, "fallback_used": True}
+                    "gustatory": self._format_base_recipe(base_recipe, heritage),
+                    "auditory": {
+                        "sense_type": "auditory",
+                        "available": True,
+                        "elements": [{
+                            "title": f"{heritage} Traditional Music",
+                            "description": "Gentle background music",
+                            "source": "fallback"
+                        }],
+                        "fallback_used": True
+                    }
                 },
                 "sensory_summary": {
-                    "total_senses_activated": 1,
-                    "generation_success": True,
-                    "fallback_mode": True,
-                    "dementia_optimized": True
+                    "total_senses_activated": 2,
+                    "available_senses": ["gustatory", "auditory"],
+                    "generation_success": True
                 },
                 "generation_metadata": {
-                    "fallback_used": True,
-                    "agent_version": "fallback_fixed_structures"
+                    "heritage_used": heritage,
+                    "status": "fallback",
+                    "generation_timestamp": datetime.now().isoformat()
                 }
             }
         }
-
-# Test function
-async def test_fixed_sensory_content_generator():
-    """Test the FIXED Sensory Content Generator Agent."""
-    
-    # Mock tools for testing
-    class MockYouTubeTool:
-        async def search_music(self, query, max_results=5):
-            return [{"title": f"Test Song for {query}", "video_id": "test123", "description": "Test description"}]
-    
-    class MockGeminiTool:
-        async def generate_recipe(self, prompt):
-            return {"recipe": "Test recipe content"}
-    
-    # Test data with proper structure
-    agent = SensoryContentGeneratorAgent(MockGeminiTool(), MockYouTubeTool())
-    
-    test_consolidated_info = {
-        "patient_profile": {
-            "cultural_heritage": "Italian-American",
-            "birth_year": 1945,
-            "age": 79
-        }
-    }
-    
-    test_cultural_profile = {
-        "era_context": {"formative_decades": [1950, 1960, 1970]}
-    }
-    
-    test_qloo_intelligence = {
-        "qloo_intelligence": {
-            "cultural_recommendations": {
-                "tv_shows": {
-                    "available": True,
-                    "entities": [{"name": "Classic Family Show", "properties": {"description": "A wholesome family show"}}],
-                    "entity_count": 1
-                },
-                "artists": {
-                    "available": True,
-                    "entities": [{"name": "Frank Sinatra"}],
-                    "entity_count": 1
-                },
-                "places": {
-                    "available": True,
-                    "entities": [{"name": "Italian Restaurant"}],
-                    "entity_count": 1
-                }
-            }
-        }
-    }
-    
-    # Run test
-    result = await agent.run(test_consolidated_info, test_cultural_profile, test_qloo_intelligence)
-    
-    sensory = result.get("sensory_content", {})
-    print("FIXED Sensory Content Generator Test Results:")
-    print(f"Senses activated: {sensory.get('sensory_summary', {}).get('total_senses_activated')}")
-    print(f"Taste available: {sensory.get('content_by_sense', {}).get('taste', {}).get('available')}")
-    print(f"TV show focused: {sensory.get('content_by_sense', {}).get('sight', {}).get('tv_show_focused')}")
-    print(f"Agent version: {sensory.get('generation_metadata', {}).get('agent_version')}")
-    
-    return result
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(test_fixed_sensory_content_generator())
