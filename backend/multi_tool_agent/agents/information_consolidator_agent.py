@@ -1,300 +1,309 @@
 """
-Agent 1: Information Consolidator - NULL-SAFE VERSION
+Information Consolidator Agent - Enhanced with Daily Theme Selection
 File: backend/multi_tool_agent/agents/information_consolidator_agent.py
 
-Fixed to handle None/null values safely from JSON input
+Agent 1: Consolidates all input information and adds daily theme selection
 """
 
-from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
-from google.adk.agents import Agent
+from typing import Dict, Any, Optional
+import json
 
+# Configure logger FIRST
 logger = logging.getLogger(__name__)
 
-class InformationConsolidatorAgent(Agent):
-    """
-    Agent 1: Information Consolidator - NULL-SAFE
+# Import theme manager with error handling (FIXED import path)
+try:
+    # Try direct import path first (working path)
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+    from config.theme_config import theme_manager
+    logger.info("✅ Successfully imported theme_manager")
     
-    Fixed to handle None/null values from JSON input safely
+    # Debug theme manager status
+    debug_status = theme_manager.debug_theme_status()
+    logger.info(f"🔍 Theme manager debug: {debug_status}")
+    
+except ImportError as e:
+    logger.error(f"❌ Failed to import theme_manager: {e}")
+    theme_manager = None
+except Exception as e:
+    logger.error(f"❌ Error with theme_manager: {e}")
+    theme_manager = None
+
+class InformationConsolidatorAgent:
+    """
+    Agent 1: Information Consolidator with Daily Theme Selection
+    
+    Consolidates patient profile, request type, and session info.
+    NEW: Adds daily theme selection for enhanced content curation.
     """
     
     def __init__(self):
-        super().__init__(
-            name="information_consolidator_safe",
-            description="Consolidates patient information with null-safe processing"
-        )
-        logger.info("Information Consolidator Agent initialized in null-safe mode")
-    
-    def _safe_string(self, value: Any, default: str = "") -> str:
-        """Safely convert any value to string, handling None values."""
-        if value is None:
-            return default
-        return str(value).strip()
+        logger.info("Information Consolidator initialized with theme support")
     
     async def run(self, 
                   patient_profile: Dict[str, Any],
                   request_type: str = "dashboard",
+                  session_id: Optional[str] = None,
                   feedback_data: Optional[Dict[str, Any]] = None,
-                  photo_data: Optional[Dict[str, Any]] = None,
-                  session_id: Optional[str] = None) -> Dict[str, Any]:
+                  photo_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Consolidate patient information using null-safe extraction.
+        Consolidate all input information and select daily theme.
+        
+        Args:
+            patient_profile: Patient information including demographics and preferences
+            request_type: Type of request (dashboard, recipe, music, etc.)
+            session_id: Session identifier for tracking
+            feedback_data: Previous feedback for learning (optional)
+            photo_data: Photo information if available
+            
+        Returns:
+            Consolidated information with daily theme selection
         """
         
         try:
-            logger.info(f"Consolidating information for {request_type} request")
+            logger.info("🔄 Agent 1: Starting information consolidation with theme selection")
             
-            # STEP 1: Extract cultural heritage safely
-            cultural_heritage = self._extract_cultural_heritage(patient_profile)
+            # Generate session ID if not provided
+            if not session_id:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                patient_name = patient_profile.get("first_name", "unknown")
+                birth_year = patient_profile.get("birth_year", "unknown")
+                session_id = f"session_{patient_name}_{birth_year}_{timestamp}"
             
-            # STEP 2: Calculate age from birth_year safely
-            age_info = self._extract_age_information(patient_profile)
+            # Extract patient demographics
+            demographics = self._extract_demographics(patient_profile)
             
-            # STEP 3: Extract location context safely
-            location = self._extract_location_context(patient_profile)
+            # Extract cultural heritage information
+            heritage_info = self._extract_heritage_info(patient_profile)
             
-            # STEP 4: Parse preferences safely
-            preferences = self._parse_preferences(patient_profile)
+            # Extract preferences and blocked content
+            preferences_info = self._extract_preferences_info(patient_profile, feedback_data)
             
-            # STEP 5: Process feedback patterns
-            feedback_patterns = self._process_feedback_patterns(feedback_data or {})
+            # NEW: Select daily theme (additive - doesn't change existing logic)
+            if theme_manager:
+                try:
+                    theme_selection = theme_manager.get_daily_theme(session_id)
+                    daily_theme = theme_selection["theme_of_the_day"]
+                    logger.info(f"📅 Daily theme selected: {daily_theme['name']} - {daily_theme['description']}")
+                except Exception as e:
+                    logger.error(f"❌ Error selecting daily theme: {e}")
+                    # Fallback theme
+                    daily_theme = {
+                        "id": "general",
+                        "name": "General",
+                        "description": "General daily activities",
+                        "conversation_prompts": ["Tell me about something that makes you happy"],
+                        "recipe_keywords": ["comfort"],
+                        "content_preferences": {"qloo_priority": "places", "sensory_focus": "visual"}
+                    }
+                    theme_selection = {
+                        "theme_of_the_day": daily_theme,
+                        "selection_metadata": {
+                            "date": datetime.now().date().isoformat(),
+                            "fallback_used": True,
+                            "error": str(e)
+                        }
+                    }
+            else:
+                logger.warning("⚠️ theme_manager not available - using fallback theme")
+                # Fallback theme when theme_manager import failed
+                daily_theme = {
+                    "id": "general", 
+                    "name": "General",
+                    "description": "General daily activities",
+                    "conversation_prompts": ["Tell me about something that makes you happy"],
+                    "recipe_keywords": ["comfort"],
+                    "content_preferences": {"qloo_priority": "places", "sensory_focus": "visual"}
+                }
+                theme_selection = {
+                    "theme_of_the_day": daily_theme,
+                    "selection_metadata": {
+                        "date": datetime.now().date().isoformat(),
+                        "fallback_used": True,
+                        "fallback_reason": "theme_manager_import_failed"
+                    }
+                }
             
-            # STEP 6: Process photo context
-            photo_context = self._process_photo_context(photo_data)
-            
-            # STEP 7: Build consolidated information safely
+            # Build consolidated information structure
             consolidated_info = {
-                "patient_profile": {
-                    "cultural_heritage": cultural_heritage,
-                    "birth_year": patient_profile.get("birth_year"),
-                    "age": age_info.get("current_age"),
-                    "age_demographic": age_info.get("age_demographic"),
-                    "location": location,
-                    "preferences": preferences,
-                    "additional_context": self._safe_string(patient_profile.get("additional_context")),
-                    "caregiver_notes": self._safe_string(patient_profile.get("caregiver_notes"))
-                },
-                "request_context": {
-                    "request_type": request_type,
-                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    "timestamp": datetime.now().isoformat()
-                },
-                "feedback_patterns": feedback_patterns,
-                "photo_context": photo_context,
+                "patient_profile": patient_profile,
                 "session_metadata": {
-                    "data_sources": ["direct_input"],
-                    "cultural_heritage_source": "patient_profile",
-                    "age_calculation_method": "birth_year" if patient_profile.get("birth_year") else "direct",
-                    "preferences_source": "additional_context_parsing",
-                    "consolidation_timestamp": datetime.now().isoformat()
+                    "session_id": session_id,
+                    "request_type": request_type,
+                    "timestamp": datetime.now().isoformat(),
+                    "processing_agent": "information_consolidator"
+                },
+                "demographics": demographics,
+                "heritage_info": heritage_info,
+                "preferences_info": preferences_info,
+                # NEW: Theme information (additive)
+                "daily_theme": {
+                    "theme": daily_theme,
+                    "selection_metadata": theme_selection["selection_metadata"],
+                    "application_note": "Theme enhances content selection but doesn't override individual preferences"
+                },
+                "feedback_history": feedback_data or {},
+                "photo_context": photo_data or {},
+                "processing_metadata": {
+                    "consolidation_timestamp": datetime.now().isoformat(),
+                    "data_sources": ["patient_profile", "session_data", "daily_theme"],
+                    "theme_enabled": theme_manager is not None,
+                    "agent_version": "1.1_with_themes"
                 }
             }
             
-            logger.info(f"✅ Information consolidated: {cultural_heritage} heritage, {age_info.get('current_age')} years old")
+            logger.info("✅ Agent 1 completed: Information consolidated with daily theme")
+            logger.info(f"   Patient: {demographics.get('first_name')} (Age {demographics.get('age')})")
+            logger.info(f"   Heritage: {heritage_info.get('primary_heritage', 'Not specified')}")
+            logger.info(f"   Daily Theme: {daily_theme['name']}")
             
+            # DEBUG: Log the structure being returned
+            logger.info(f"🔍 DEBUG Agent 1 RETURN: daily_theme structure in consolidated_info: {consolidated_info['daily_theme']}")
+            
+            # IMPORTANT: Return wrapped in the expected format for sequential agent
             return {"consolidated_info": consolidated_info}
             
         except Exception as e:
-            logger.error(f"❌ Information consolidation failed: {e}")
-            return self._create_fallback_consolidation(patient_profile, request_type)
+            logger.error(f"❌ Agent 1 failed: {e}")
+            return self._create_fallback_consolidated_info(patient_profile, request_type, session_id)
     
-    def _extract_cultural_heritage(self, patient_profile: Dict[str, Any]) -> str:
-        """Extract cultural heritage safely from patient profile."""
+    def _extract_demographics(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract and calculate demographic information."""
         
-        heritage = self._safe_string(patient_profile.get("cultural_heritage"))
-        
-        if heritage:
-            logger.info(f"Cultural heritage extracted: {heritage}")
-            return heritage
-        
-        # Fallback to American if not specified
-        logger.warning("No cultural heritage specified, defaulting to American")
-        return "American"
-    
-    def _extract_age_information(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate age information safely from birth_year or direct age."""
-        
+        current_year = datetime.now().year
         birth_year = patient_profile.get("birth_year")
-        current_year = 2024
+        age = current_year - birth_year if birth_year else None
         
-        if birth_year and isinstance(birth_year, (int, float)):
-            current_age = current_year - int(birth_year)
-            
-            # Map to Qloo age demographics
-            if current_age <= 35:
-                age_demographic = "35_and_younger"
-            elif current_age <= 55:
-                age_demographic = "36_to_55"
-            else:
+        # Determine age demographic for Qloo API
+        age_demographic = "55_and_older"  # Default for dementia care
+        if age:
+            if age >= 80:
+                age_demographic = "55_and_older"  # Qloo's oldest category
+            elif age >= 65:
                 age_demographic = "55_and_older"
-            
-            logger.info(f"Age calculated from birth year {birth_year}: {current_age} → {age_demographic}")
-            
-            return {
-                "birth_year": birth_year,
-                "current_age": current_age,
-                "age_demographic": age_demographic,
-                "calculation_method": "birth_year"
-            }
-        
-        # Try direct age
-        age = patient_profile.get("age")
-        if age and isinstance(age, (int, float)):
-            age = int(age)
-            if age <= 35:
-                age_demographic = "35_and_younger"
-            elif age <= 55:
-                age_demographic = "36_to_55"
             else:
-                age_demographic = "55_and_older"
-            
-            return {
-                "current_age": age,
-                "age_demographic": age_demographic,
-                "calculation_method": "direct_age"
-            }
+                age_demographic = "35_to_54"
         
-        # Default fallback
-        logger.warning("No age information found, defaulting to 55_and_older")
         return {
-            "current_age": 75,  # Conservative estimate for dementia care
-            "age_demographic": "55_and_older",
-            "calculation_method": "default_fallback"
+            "first_name": patient_profile.get("first_name", ""),
+            "birth_year": birth_year,
+            "birth_month": patient_profile.get("birth_month"),
+            "age": age,
+            "age_demographic": age_demographic,
+            "location": {
+                "city": patient_profile.get("city", ""),
+                "region": patient_profile.get("region", ""),
+                "country": patient_profile.get("country", "")
+            }
         }
     
-    def _extract_location_context(self, patient_profile: Dict[str, Any]) -> str:
-        """Extract and combine location information safely."""
-        
-        # FIXED: Handle None values properly using _safe_string
-        city = self._safe_string(patient_profile.get("city"))
-        state = self._safe_string(patient_profile.get("state"))
-        
-        if city and state:
-            location = f"{city}, {state}"
-        elif city:
-            location = city
-        elif state:
-            location = state
-        else:
-            location = "United States"  # Default
-        
-        logger.info(f"Location context: {location}")
-        return location
-    
-    def _parse_preferences(self, patient_profile: Dict[str, Any]) -> List[str]:
-        """Parse preferences safely from additional_context and caregiver_notes."""
-        
-        preferences = []
-        
-        # Parse additional_context safely
-        additional_context = self._safe_string(patient_profile.get("additional_context")).lower()
-        if additional_context:
-            if "music" in additional_context:
-                preferences.append("music")
-            if "cook" in additional_context:
-                preferences.append("cooking")
-            if "family" in additional_context:
-                preferences.append("family activities")
-            if "read" in additional_context:
-                preferences.append("reading")
-            if "garden" in additional_context:
-                preferences.append("gardening")
-        
-        # Parse caregiver_notes safely
-        caregiver_notes = self._safe_string(patient_profile.get("caregiver_notes")).lower()
-        if caregiver_notes:
-            if "music" in caregiver_notes:
-                preferences.append("music")
-            if "cook" in caregiver_notes:
-                preferences.append("cooking")
-            if "family" in caregiver_notes:
-                preferences.append("family activities")
-        
-        # Remove duplicates
-        preferences = list(set(preferences))
-        
-        logger.info(f"Parsed preferences: {preferences}")
-        return preferences
-    
-    def _process_feedback_patterns(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process feedback data into patterns for future agents."""
-        
-        if not feedback_data:
-            return {
-                "has_feedback": False,
-                "blocked_content": {},
-                "positive_patterns": [],
-                "negative_patterns": []
-            }
-        
-        # Extract blocked content
-        blocked_content = feedback_data.get("blocked_content", {})
-        
-        # Extract feedback history
-        feedback_history = feedback_data.get("feedback_history", [])
-        
-        positive_patterns = []
-        negative_patterns = []
-        
-        for feedback in feedback_history:
-            if feedback.get("rating") == "positive":
-                positive_patterns.append(feedback.get("content_type", "unknown"))
-            elif feedback.get("rating") == "negative":
-                negative_patterns.append(feedback.get("content_type", "unknown"))
+    def _extract_heritage_info(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract cultural heritage information for cultural intelligence."""
         
         return {
-            "has_feedback": True,
+            "primary_heritage": patient_profile.get("heritage", ""),
+            "languages": patient_profile.get("languages", ""),
+            "spiritual_traditions": patient_profile.get("spiritual_traditions", ""),
+            "cultural_context": patient_profile.get("additional_context", ""),
+            "heritage_specified": bool(patient_profile.get("heritage"))
+        }
+    
+    def _extract_preferences_info(self, 
+                                patient_profile: Dict[str, Any],
+                                feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract preferences and blocked content from profile and feedback."""
+        
+        # Extract explicit preferences from profile
+        explicit_preferences = {
+            "tags": patient_profile.get("tags", []),
+            "interests": patient_profile.get("interests", []),
+            "photo_library": patient_profile.get("photo_library", [])
+        }
+        
+        # Extract learned preferences from feedback
+        learned_preferences = {}
+        blocked_content = []
+        
+        if feedback_data:
+            learned_preferences = feedback_data.get("learned_preferences", {})
+            blocked_content = feedback_data.get("blocked_content", [])
+        
+        return {
+            "explicit_preferences": explicit_preferences,
+            "learned_preferences": learned_preferences,
             "blocked_content": blocked_content,
-            "positive_patterns": list(set(positive_patterns)),
-            "negative_patterns": list(set(negative_patterns)),
-            "feedback_count": len(feedback_history)
+            "caregiver_notes": patient_profile.get("caregiver_notes", ""),
+            "preferences_available": bool(explicit_preferences["tags"] or learned_preferences)
         }
     
-    def _process_photo_context(self, photo_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process photo data context safely for Agent 5."""
+    def _create_fallback_consolidated_info(self, 
+                                         patient_profile: Dict[str, Any],
+                                         request_type: str,
+                                         session_id: Optional[str]) -> Dict[str, Any]:
+        """Create fallback consolidated info if main processing fails."""
         
-        if not photo_data:
-            return {"has_photo": False}
+        logger.warning("Creating fallback consolidated information")
         
-        return {
-            "has_photo": True,
-            "photo_metadata": {
-                "upload_timestamp": photo_data.get("timestamp", datetime.now().isoformat()),
-                "photo_type": photo_data.get("type", "family_photo"),
-                "caregiver_description": self._safe_string(photo_data.get("description"))[:200]
-            },
-            "photo_processing_ready": True
+        # Get fallback theme
+        fallback_theme = {
+            "id": "general",
+            "name": "General",
+            "description": "General daily activities",
+            "conversation_prompts": ["Tell me about something that makes you happy"],
+            "recipe_keywords": ["comfort"],
+            "content_preferences": {"qloo_priority": "places", "sensory_focus": "visual"}
         }
-    
-    def _create_fallback_consolidation(self, 
-                                     patient_profile: Dict[str, Any], 
-                                     request_type: str) -> Dict[str, Any]:
-        """Create fallback consolidation when extraction fails."""
         
-        logger.warning("Creating fallback consolidation")
+        fallback_theme_selection = {
+            "theme_of_the_day": fallback_theme,
+            "selection_metadata": {
+                "date": datetime.now().date().isoformat(),
+                "fallback_used": True,
+                "fallback_reason": "main_processing_failed"
+            }
+        }
         
         return {
             "consolidated_info": {
-                "patient_profile": {
-                    "cultural_heritage": "American",
-                    "age": 75,
-                    "age_demographic": "55_and_older",
-                    "location": "United States",
-                    "preferences": ["family activities"],
-                    "additional_context": self._safe_string(patient_profile.get("additional_context")),
-                    "caregiver_notes": self._safe_string(patient_profile.get("caregiver_notes"))
-                },
-                "request_context": {
-                    "request_type": request_type,
-                    "session_id": f"fallback_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    "timestamp": datetime.now().isoformat()
-                },
-                "feedback_patterns": {"has_feedback": False},
-                "photo_context": {"has_photo": False},
+                "patient_profile": patient_profile,
                 "session_metadata": {
-                    "data_sources": ["fallback"],
-                    "consolidation_timestamp": datetime.now().isoformat()
+                    "session_id": session_id or "fallback_session",
+                    "request_type": request_type,
+                    "timestamp": datetime.now().isoformat(),
+                    "processing_agent": "information_consolidator_fallback"
+                },
+                "demographics": {
+                    "first_name": patient_profile.get("first_name", ""),
+                    "age_demographic": "55_and_older",
+                    "age": None
+                },
+                "heritage_info": {
+                    "primary_heritage": patient_profile.get("heritage", ""),
+                    "heritage_specified": False
+                },
+                "preferences_info": {
+                    "explicit_preferences": {"tags": []},
+                    "learned_preferences": {},
+                    "blocked_content": [],
+                    "preferences_available": False
+                },
+                "daily_theme": {
+                    "theme": fallback_theme,
+                    "selection_metadata": fallback_theme_selection["selection_metadata"],
+                    "application_note": "Fallback theme selection"
+                },
+                "feedback_history": {},
+                "photo_context": {},
+                "processing_metadata": {
+                    "consolidation_timestamp": datetime.now().isoformat(),
+                    "data_sources": ["patient_profile_fallback", "daily_theme_fallback"],
+                    "theme_enabled": False,
+                    "agent_version": "1.1_fallback",
+                    "fallback_reason": "main_processing_failed"
                 }
             }
         }
