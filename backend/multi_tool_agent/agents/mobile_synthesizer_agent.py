@@ -1,13 +1,12 @@
 """
-Mobile Synthesizer Agent - REVISED for Enhanced Theme-Based Recipe Selection
+Mobile Synthesizer Agent - FIXED Qloo Data Path Mapping + YouTube URL Support
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
 CHANGES:
-- Leverages improved theme-matched recipes from Agent 4
-- Simplified data structure navigation due to better upstream filtering
-- Enhanced error handling and logging
-- More reliable recipe selection process
-- FIXED: Added proper run() method for pipeline compatibility
+- FIXED: Correct data path mapping from Agent 3 (Qloo) output structure
+- Added YouTube URL mapping from embeddable_url to youtube_url
+- Enhanced theme-based recipe selection
+- Proper run() method for pipeline compatibility
 """
 
 import logging
@@ -36,37 +35,27 @@ except Exception as e:
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Mobile Synthesizer with ENHANCED Theme-Based Recipe Selection
+    Agent 6: Mobile Synthesizer with FIXED Qloo Data Path Mapping
     
-    IMPROVEMENTS:
-    - More reliable recipe data extraction due to better upstream theme matching
-    - Simplified data structure navigation
-    - Enhanced conversation starter integration
-    - Better error handling and fallback mechanisms
-    - FIXED: Added proper run() method for pipeline compatibility
+    FIXES:
+    - Correct data extraction from Agent 3 (Qloo Cultural Intelligence) output
+    - YouTube URL mapping from embeddable_url to youtube_url
+    - Enhanced theme-based recipe selection
+    - Proper pipeline integration
     """
     
     def __init__(self):
         self.fallback_data = self._load_fallback_content()
-        logger.info("Mobile Synthesizer initialized with ENHANCED theme-aware content selection")
+        logger.info("Mobile Synthesizer initialized with FIXED Qloo data path mapping")
     
     async def run(self, audio_content: Dict[str, Any], 
                   visual_content: Dict[str, Any], 
                   sensory_content: Dict[str, Any],
                   daily_theme: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Main entry point for the Mobile Synthesizer Agent (async for pipeline compatibility)
-        
-        Args:
-            audio_content: Audio content from Agent 3
-            visual_content: Visual content from Agent 2
-            sensory_content: Enhanced sensory content from Agent 4
-            daily_theme: Current theme configuration
-            
-        Returns:
-            Clean dashboard content with theme-matched selections
+        Main entry point for the Mobile Synthesizer Agent
         """
-        logger.info("🚀 Mobile Synthesizer Agent starting with async run() method")
+        logger.info("🚀 Mobile Synthesizer Agent starting with FIXED data path mapping")
         return self.synthesize_dashboard_content(audio_content, visual_content, sensory_content, daily_theme)
     
     def _load_fallback_content(self) -> Dict[str, Any]:
@@ -82,8 +71,8 @@ class MobileSynthesizerAgent:
     def _get_hardcoded_fallbacks(self) -> Dict[str, Any]:
         """Hardcoded fallbacks if JSON file unavailable."""
         return {
-            "music": [{"artist": "Unknown Artist", "song": "Unforgotten Melody"}],
-            "tv_shows": [{"name": "Classic Show", "genre": "Drama"}],
+            "music": [{"artist": "Unknown Artist", "song": "Unforgotten Melody", "youtube_url": ""}],
+            "tv_shows": [{"name": "Classic Show", "genre": "Drama", "youtube_url": ""}],
             "recipes": [{
                 "name": "Simple Warm Snack",
                 "ingredients": ["Basic ingredients"],
@@ -98,16 +87,7 @@ class MobileSynthesizerAgent:
                                    sensory_content: Dict[str, Any],
                                    daily_theme: Dict[str, Any]) -> Dict[str, Any]:
         """
-        REVISED: Synthesize content for mobile dashboard with enhanced theme integration
-        
-        Args:
-            audio_content: Audio content from Agent 3
-            visual_content: Visual content from Agent 2
-            sensory_content: Enhanced sensory content from Agent 4
-            daily_theme: Current theme configuration
-            
-        Returns:
-            Clean dashboard content with theme-matched selections
+        Synthesize content for mobile dashboard with FIXED Qloo data extraction
         """
         
         current_theme = daily_theme.get("theme_of_the_day", {})
@@ -116,11 +96,11 @@ class MobileSynthesizerAgent:
         logger.info(f"🎯 Synthesizing dashboard content for theme: {theme_name}")
         
         try:
-            # ENHANCED: Select content with better theme awareness
+            # FIXED: Select content with correct Qloo data paths
             selected_content = {
                 "music": self._select_music_content(audio_content, current_theme),
                 "tv_show": self._select_tv_content(visual_content, current_theme),
-                "recipe": self._select_recipe_content(sensory_content, current_theme),  # IMPROVED
+                "recipe": self._select_recipe_content(sensory_content, current_theme),
                 "theme_info": {
                     "name": theme_name,
                     "description": current_theme.get("description", ""),
@@ -128,7 +108,7 @@ class MobileSynthesizerAgent:
                 }
             }
             
-            # ENHANCED: Generate theme-aware conversation starters
+            # Generate theme-aware conversation starters
             conversation_starters = self._generate_conversation_starters(selected_content, current_theme)
             
             # Create clean dashboard response
@@ -146,7 +126,7 @@ class MobileSynthesizerAgent:
                         "timestamp": datetime.now().isoformat(),
                         "theme_selection_quality": self._assess_content_quality(selected_content),
                         "agent": "MobileSynthesizer",
-                        "version": "enhanced_theme_matching"
+                        "version": "fixed_qloo_mapping"
                     }
                 }
             }
@@ -162,17 +142,94 @@ class MobileSynthesizerAgent:
             logger.error(f"❌ Error synthesizing dashboard content: {e}")
             return self._generate_fallback_dashboard(current_theme)
     
+    def _select_music_content(self, audio_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """FIXED: Select music content from correct Qloo data structure"""
+        logger.info("🎵 Extracting music content from Qloo results")
+        
+        try:
+            # FIXED: Extract from correct Qloo data structure
+            qloo_intelligence = audio_content.get("qloo_intelligence", {})
+            cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+            artists = cultural_recommendations.get("artists", [])
+            
+            logger.info(f"🔍 Found {len(artists)} artists from Qloo")
+            
+            if artists and len(artists) > 0:
+                selected_artist = artists[0]
+                logger.info(f"✅ Selected artist from Qloo: {selected_artist.get('name', 'Unknown')}")
+                
+                # Map embeddable_url to youtube_url for frontend
+                youtube_url = selected_artist.get("embeddable_url", "")
+                
+                return {
+                    "artist": selected_artist.get("name", "Unknown Artist"),
+                    "song": selected_artist.get("title", selected_artist.get("name", "Unknown Song")),
+                    "youtube_url": youtube_url,
+                    "year": selected_artist.get("year"),
+                    "genre": selected_artist.get("genre"),
+                    "source": "qloo_intelligence"
+                }
+        except Exception as e:
+            logger.warning(f"Error selecting music content from Qloo: {e}")
+        
+        # Fallback
+        logger.info("🔄 Using fallback music content")
+        fallback_music = self.fallback_data.get("music", [{}])[0]
+        return {
+            "artist": fallback_music.get("artist", "Classic Artist"),
+            "song": fallback_music.get("song", "Timeless Song"),
+            "youtube_url": fallback_music.get("youtube_url", ""),
+            "year": fallback_music.get("year"),
+            "genre": fallback_music.get("genre"),
+            "source": "fallback"
+        }
+    
+    def _select_tv_content(self, visual_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """FIXED: Select TV content from correct Qloo data structure"""
+        logger.info("📺 Extracting TV content from Qloo results")
+        
+        try:
+            # FIXED: Extract from correct Qloo data structure
+            qloo_intelligence = visual_content.get("qloo_intelligence", {})
+            cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
+            tv_shows = cultural_recommendations.get("tv_shows", [])
+            
+            logger.info(f"🔍 Found {len(tv_shows)} TV shows from Qloo")
+            
+            if tv_shows and len(tv_shows) > 0:
+                selected_show = tv_shows[0]
+                logger.info(f"✅ Selected TV show from Qloo: {selected_show.get('name', 'Unknown')}")
+                
+                # Map embeddable_url to youtube_url for frontend
+                youtube_url = selected_show.get("embeddable_url", "")
+                
+                return {
+                    "name": selected_show.get("name", "Unknown Show"),
+                    "youtube_url": youtube_url,
+                    "genre": selected_show.get("genre"),
+                    "year": selected_show.get("year"),
+                    "description": selected_show.get("description"),
+                    "source": "qloo_intelligence"
+                }
+        except Exception as e:
+            logger.warning(f"Error selecting TV content from Qloo: {e}")
+        
+        # Fallback
+        logger.info("🔄 Using fallback TV content")
+        fallback_tv = self.fallback_data.get("tv_shows", [{}])[0]
+        return {
+            "name": fallback_tv.get("name", "Classic Television"),
+            "youtube_url": fallback_tv.get("youtube_url", ""),
+            "genre": fallback_tv.get("genre"),
+            "year": fallback_tv.get("year"),
+            "description": fallback_tv.get("description"),
+            "source": "fallback"
+        }
+    
     def _select_recipe_content(self, sensory_content: Dict[str, Any], 
                              current_theme: Dict[str, Any]) -> Dict[str, Any]:
         """
-        ENHANCED: Select recipe content with improved data structure navigation
-        
-        Args:
-            sensory_content: Sensory content including theme-filtered recipes
-            current_theme: Current theme configuration
-            
-        Returns:
-            Single recipe selection with enhanced metadata
+        Select recipe content with improved data structure navigation
         """
         
         logger.info(f"🔍 Selecting recipe content for theme: {current_theme.get('name', 'Unknown')}")
@@ -185,7 +242,7 @@ class MobileSynthesizerAgent:
             # Path 1: Enhanced gustatory content structure (expected from Agent 4)
             gustatory_content = sensory_content.get("content_by_sense", {}).get("gustatory", {})
             
-            # Try primary_recipe first (new enhanced structure)
+            # Try primary recipe first (new enhanced structure)
             if gustatory_content.get("primary_recipe"):
                 recipe_data = gustatory_content["primary_recipe"]
                 selection_method = "primary_recipe"
@@ -206,13 +263,13 @@ class MobileSynthesizerAgent:
         except Exception as e:
             logger.warning(f"⚠️ Error in recipe extraction: {e}")
         
-        # ENHANCED: Use theme-specific fallback if no recipe found
+        # Use theme-specific fallback if no recipe found
         if not recipe_data:
             logger.warning(f"⚠️ No recipe found in sensory content, using theme-specific fallback")
             recipe_data = self._get_theme_fallback_recipe(current_theme)
             selection_method = "theme_fallback"
         
-        # ENHANCED: Validate and enrich recipe data
+        # Validate and enrich recipe data
         validated_recipe = self._validate_and_enrich_recipe(recipe_data, current_theme, selection_method)
         
         logger.info(f"🍽️ Recipe selection complete: '{validated_recipe.get('name', 'Unknown')}' (method: {selection_method})")
@@ -222,15 +279,7 @@ class MobileSynthesizerAgent:
                                   current_theme: Dict[str, Any], 
                                   selection_method: str) -> Dict[str, Any]:
         """
-        ENHANCED: Validate and enrich recipe data with theme context
-        
-        Args:
-            recipe_data: Raw recipe data
-            current_theme: Current theme configuration
-            selection_method: How the recipe was selected
-            
-        Returns:
-            Validated and enriched recipe data
+        Validate and enrich recipe data with theme context
         """
         
         if not recipe_data:
@@ -259,73 +308,6 @@ class MobileSynthesizerAgent:
         
         return validated_recipe
     
-    def _get_theme_fallback_recipe(self, current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        ENHANCED: Get theme-specific fallback recipe
-        
-        Args:
-            current_theme: Current theme configuration
-            
-        Returns:
-            Theme-appropriate fallback recipe
-        """
-        
-        theme_id = current_theme.get("id", "food")
-        theme_name = current_theme.get("name", "Food")
-        
-        # Theme-specific fallback recipes
-        theme_fallbacks = {
-            "birthday": {
-                "name": "Birthday Cookie (soft)",
-                "ingredients": ["1 soft cookie", "Optional: small amount of frosting"],
-                "instructions": ["If cookie is hard, soften slightly in microwave for 5-10 seconds", "Enjoy slowly"],
-                "notes": {"text": "A sweet treat perfect for celebrating special moments", "theme": "birthday"}
-            },
-            "seasons": {
-                "name": "Seasonal Fruit Cup", 
-                "ingredients": ["1/2 cup canned or soft fresh fruit"],
-                "instructions": ["Serve at room temperature or slightly warmed"],
-                "notes": {"text": "Fresh flavors that change with the seasons", "theme": "seasons"}
-            },
-            "weather": {
-                "name": "Warming Tea and Toast",
-                "ingredients": ["1 slice soft bread", "Butter", "Warm tea or warm milk"],
-                "instructions": ["Lightly toast bread until soft", "Add butter", "Serve with warm beverage"],
-                "notes": {"text": "Perfect comfort for any weather", "theme": "weather"}
-            },
-            "travel": {
-                "name": "Travel Snack Mix",
-                "ingredients": ["Small crackers", "Soft cheese or spread"],
-                "instructions": ["Arrange crackers", "Add small amount of spread"],
-                "notes": {"text": "Reminiscent of snacks enjoyed while traveling", "theme": "travel"}
-            }
-        }
-        
-        fallback_recipe = theme_fallbacks.get(theme_id, {
-            "name": f"{theme_name} Comfort Snack",
-            "ingredients": ["Simple, nourishing ingredients"],
-            "instructions": ["Prepare with care"],
-            "notes": {"text": f"A comforting choice for {theme_name.lower()} memories", "theme": theme_id}
-        })
-        
-        # Add conversation starters
-        fallback_recipe["conversation_starters"] = self._get_default_recipe_starters(current_theme)
-        
-        logger.info(f"🔄 Using theme fallback recipe: {fallback_recipe['name']}")
-        return fallback_recipe
-    
-    def _get_default_recipe_starters(self, current_theme: Dict[str, Any]) -> List[str]:
-        """Get default conversation starters for recipes"""
-        theme_prompts = current_theme.get("conversation_prompts", [])
-        if theme_prompts:
-            return theme_prompts[:3]
-        
-        return [
-            "What foods bring back good memories?",
-            "Do you have a favorite comfort food?",
-            "What did you like to cook or eat?"
-        ]
-    
     def _assess_recipe_quality(self, recipe_data: Dict[str, Any], current_theme: Dict[str, Any]) -> str:
         """Assess the quality of recipe selection for theme matching"""
         if not recipe_data:
@@ -343,58 +325,63 @@ class MobileSynthesizerAgent:
         
         return "basic"
     
-    def _select_music_content(self, audio_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select music content (existing logic maintained)"""
-        try:
-            songs = audio_content.get("songs", [])
-            if songs and len(songs) > 0:
-                selected_song = songs[0]
-                return {
-                    "artist": selected_song.get("artist", "Unknown Artist"),
-                    "song": selected_song.get("title", "Unknown Song"),
-                    "year": selected_song.get("year"),
-                    "genre": selected_song.get("genre")
-                }
-        except Exception as e:
-            logger.warning(f"Error selecting music content: {e}")
+    def _get_theme_fallback_recipe(self, current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """Get theme-specific fallback recipe"""
         
-        # Fallback
-        fallback_music = self.fallback_data.get("music", [{}])[0]
-        return {
-            "artist": fallback_music.get("artist", "Classic Artist"),
-            "song": fallback_music.get("song", "Timeless Song"),
-            "year": fallback_music.get("year"),
-            "genre": fallback_music.get("genre")
+        theme_id = current_theme.get("id", "food")
+        theme_name = current_theme.get("name", "Food")
+        
+        # Theme-specific fallback recipes
+        theme_fallbacks = {
+            "birthday": {
+                "name": "Birthday Cookie (soft)",
+                "ingredients": ["1 soft cookie", "Optional: small amount of frosting"],
+                "instructions": ["If cookie is hard, soften slightly with a damp paper towel", "Enjoy this special treat"],
+                "conversation_starters": ["What were your favorite birthday treats?", "Tell me about a memorable birthday"]
+            },
+            "family": {
+                "name": "Family Comfort Toast",
+                "ingredients": ["1 slice bread", "Butter or favorite spread"],
+                "instructions": ["Toast bread lightly", "Add your favorite spread", "Share memories while eating"],
+                "conversation_starters": ["What foods did your family make together?", "What comfort foods remind you of home?"]
+            },
+            "music": {
+                "name": "Music Listening Snack",
+                "ingredients": ["Your favorite listening snack", "A comfortable seat"],
+                "instructions": ["Prepare your favorite snack", "Find a comfortable spot", "Enjoy music and memories"],
+                "conversation_starters": ["What music brings back memories?", "Did you have favorite songs to eat by?"]
+            },
+            "food": {
+                "name": "Simple Comfort Snack",
+                "ingredients": ["Your favorite easy-to-eat snack"],
+                "instructions": ["Choose something you enjoy", "Take your time and savor it"],
+                "conversation_starters": ["What foods bring you comfort?", "What did you like to cook or eat?"]
+            }
         }
+        
+        # Get theme-specific fallback or default
+        fallback_recipe = theme_fallbacks.get(theme_id, theme_fallbacks["food"])
+        
+        # Add theme context
+        fallback_recipe["notes"] = {
+            "text": f"A comforting choice for {theme_name} theme",
+            "theme": theme_id
+        }
+        
+        return fallback_recipe
     
-    def _select_tv_content(self, visual_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select TV content (existing logic maintained)"""
-        try:
-            tv_shows = visual_content.get("tv_shows", [])
-            if tv_shows and len(tv_shows) > 0:
-                selected_show = tv_shows[0]
-                return {
-                    "name": selected_show.get("name", "Unknown Show"),
-                    "genre": selected_show.get("genre"),
-                    "year": selected_show.get("year"),
-                    "description": selected_show.get("description")
-                }
-        except Exception as e:
-            logger.warning(f"Error selecting TV content: {e}")
-        
-        # Fallback
-        fallback_tv = self.fallback_data.get("tv_shows", [{}])[0]
-        return {
-            "name": fallback_tv.get("name", "Classic Television"),
-            "genre": fallback_tv.get("genre"),
-            "year": fallback_tv.get("year"),
-            "description": fallback_tv.get("description")
-        }
+    def _get_default_recipe_starters(self, current_theme: Dict[str, Any]) -> List[str]:
+        """Get default conversation starters for recipes"""
+        return [
+            "What foods bring back good memories?",
+            "Do you have a favorite comfort food?",
+            "What did you like to cook or eat?"
+        ]
     
     def _generate_conversation_starters(self, selected_content: Dict[str, Any], 
                                       current_theme: Dict[str, Any]) -> List[str]:
         """
-        ENHANCED: Generate conversation starters with improved theme integration
+        Generate conversation starters with improved theme integration
         """
         if not theme_manager:
             # Fallback without theme manager
@@ -427,13 +414,23 @@ class MobileSynthesizerAgent:
         if all(key in selected_content for key in ["music", "tv_show", "recipe"]):
             quality_factors.append("complete")
         
+        # Check if content is from live Qloo data
+        if selected_content.get("music", {}).get("source") == "qloo_intelligence":
+            quality_factors.append("live_qloo_music")
+        if selected_content.get("tv_show", {}).get("source") == "qloo_intelligence":
+            quality_factors.append("live_qloo_tv")
+        
         # Determine overall quality
         if "exact_theme_match" in quality_factors:
             return "excellent"
-        elif "good_with_starters" in quality_factors or "complete" in quality_factors:
+        elif "live_qloo_music" in quality_factors and "live_qloo_tv" in quality_factors:
+            return "very_good"
+        elif any("live_qloo" in factor for factor in quality_factors):
             return "good"
-        else:
+        elif "complete" in quality_factors:
             return "acceptable"
+        else:
+            return "fallback"
     
     def _generate_fallback_dashboard(self, current_theme: Dict[str, Any]) -> Dict[str, Any]:
         """Generate fallback dashboard content when main synthesis fails"""
@@ -450,8 +447,8 @@ class MobileSynthesizerAgent:
                     "id": current_theme.get("id", "general")
                 },
                 "selected_content": {
-                    "music": {"artist": "Classic Artist", "song": "Memorable Tune"},
-                    "tv_show": {"name": "Beloved Show", "genre": "Classic"},
+                    "music": {"artist": "Classic Artist", "song": "Memorable Tune", "youtube_url": "", "source": "fallback"},
+                    "tv_show": {"name": "Beloved Show", "genre": "Classic", "youtube_url": "", "source": "fallback"},
                     "recipe": self._get_theme_fallback_recipe(current_theme),
                     "theme_info": {
                         "name": theme_name,

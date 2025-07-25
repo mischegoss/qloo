@@ -3,42 +3,42 @@
     {
       "artist": "Frank Sinatra",
       "song": "My Way",
-      "youtube_url": "https://youtube.com/watch?v=qQzdAsjWGPg",
+      "youtube_url": "https://www.youtube.com/embed/qQzdAsjWGPg",
       "era": "1940s-1950s",
       "heritage": "universal"
     },
     {
       "artist": "Ella Fitzgerald",
       "song": "Summertime",
-      "youtube_url": "https://youtube.com/watch?v=MIDOmSQN6LU",
+      "youtube_url": "https://www.youtube.com/embed/MIDOmSQN6LU",
       "era": "1940s-1950s",
       "heritage": "universal"
     },
     {
       "artist": "Nat King Cole",
       "song": "Unforgettable",
-      "youtube_url": "https://youtube.com/watch?v=vDN5rG3wbSU",
+      "youtube_url": "https://www.youtube.com/embed/vDN5rG3wbSU",
       "era": "1940s-1950s",
       "heritage": "universal"
     },
     {
       "artist": "Dean Martin",
       "song": "That's Amore",
-      "youtube_url": "https://youtube.com/watch?v=OnFlx2Lnr9Q",
+      "youtube_url": "https://www.youtube.com/embed/OnFlx2Lnr9Q",
       "era": "1950s",
       "heritage": "Italian-American"
     },
     {
       "artist": "Perry Como",
       "song": "Catch a Falling Star",
-      "youtube_url": "https://youtube.com/watch?v=7VgGgCGKdyw",
+      "youtube_url": "https://www.youtube.com/embed/7VgGgCGKdyw",
       "era": "1950s",
       "heritage": "Italian-American"
     },
     {
       "artist": "Bing Crosby",
       "song": "White Christmas",
-      "youtube_url": "https://youtube.com/watch?v=7nZ1v96-veM",
+      "youtube_url": "https://www.youtube.com/embed/7nZ1v96-veM",
       "era": "1940s",
       "heritage": "Irish-American"
     }
@@ -46,42 +46,42 @@
   "tv_shows": [
     {
       "name": "I Love Lucy",
-      "youtube_url": "https://youtube.com/results?search_query=I+Love+Lucy+classic+episodes",
+      "youtube_url": "https://www.youtube.com/embed/bDSF6Bj1nQU",
       "description": "Classic 1950s comedy starring Lucille Ball",
       "era": "1950s",
       "heritage": "universal"
     },
     {
       "name": "The Ed Sullivan Show",
-      "youtube_url": "https://youtube.com/results?search_query=Ed+Sullivan+Show+classic+performances",
+      "youtube_url": "https://www.youtube.com/embed/c7lUGN8hW7E",
       "description": "Variety show from the 1960s featuring music and entertainment",
       "era": "1960s",
       "heritage": "universal"
     },
     {
       "name": "The Lawrence Welk Show",
-      "youtube_url": "https://youtube.com/results?search_query=Lawrence+Welk+Show+classic",
+      "youtube_url": "https://www.youtube.com/embed/gMYgBJbQzLo",
       "description": "Musical variety show popular with older audiences",
       "era": "1950s-1970s",
       "heritage": "German-American"
     },
     {
       "name": "The Danny Thomas Show",
-      "youtube_url": "https://youtube.com/results?search_query=Danny+Thomas+Show+classic+episodes",
+      "youtube_url": "https://www.youtube.com/embed/KkjJg0Bur_o",
       "description": "Family sitcom from the 1950s and 1960s",
       "era": "1950s-1960s",
       "heritage": "universal"
     },
     {
       "name": "Queen for a Day",
-      "youtube_url": "https://youtube.com/results?search_query=Queen+for+a+Day+classic+show",
+      "youtube_url": "https://www.youtube.com/embed/J4uSmjCJO1g",
       "description": "Popular game show from the 1950s",
       "era": "1950s",
       "heritage": "universal"
     },
     {
       "name": "The Arthur Murray Party",
-      "youtube_url": "https://youtube.com/results?search_query=Arthur+Murray+Party+classic+dance",
+      "youtube_url": "https://www.youtube.com/embed/R6SaKoYeVMM",
       "description": "Dance and music show from the 1950s",
       "era": "1950s",
       "heritage": "universal"
@@ -89,164 +89,10 @@
   ],
   "conversation_starters": [
     "What was your favorite song when you were young?",
-    "Tell me about TV shows your family watched together",
-    "What foods remind you of home?",
-    "Do you remember dancing to music like this?",
-    "What was your neighborhood like when you were growing up?",
-    "Tell me about your favorite family recipes",
-    "What holidays did your family celebrate together?",
-    "Do you remember any special family traditions?",
-    "What was your favorite thing to do on Sundays?",
-    "Tell me about the music your parents liked",
-    "What was your favorite place to visit as a child?",
-    "Do you remember any special family meals?",
-    "What games did you play when you were young?",
-    "Tell me about your favorite childhood memories",
-    "What was school like when you were young?",
-    "Do you remember your first job?",
-    "What was dating like in your day?",
-    "Tell me about your wedding day",
-    "What was your favorite restaurant growing up?",
-    "Do you remember any special celebrations?"
+    "What did you do together as a family?"
   ],
-  "photos": [
-    {
-      "title": "Peaceful Garden",
-      "path": "/static/fallback_photos/garden.jpg",
-      "description": "Beautiful garden scene for peaceful viewing"
-    },
-    {
-      "title": "Vintage Kitchen",
-      "path": "/static/fallback_photos/vintage_kitchen.jpg",
-      "description": "Classic 1950s kitchen scene"
-    },
-    {
-      "title": "Family Dinner",
-      "path": "/static/fallback_photos/family_dinner.jpg",
-      "description": "Traditional family gathering around dinner table"
-    },
-    {
-      "title": "City Street 1950s",
-      "path": "/static/fallback_photos/city_street_1950s.jpg",
-      "description": "Nostalgic street scene from the 1950s"
-    },
-    {
-      "title": "Wedding Dance",
-      "path": "/static/fallback_photos/wedding_dance.jpg",
-      "description": "Classic wedding celebration photo"
-    }
-  ],
-  "activities": [
-    {
-      "name": "Looking at Family Photos",
-      "description": "Gentle activity of viewing and discussing personal photos",
-      "duration": "10-30 minutes",
-      "preparation": "Gather photo albums or digital photos",
-      "benefits": "Memory stimulation and emotional connection"
-    },
-    {
-      "name": "Listening to Familiar Music",
-      "description": "Playing songs from their era and cultural background",
-      "duration": "15-45 minutes",
-      "preparation": "Select appropriate music and comfortable seating",
-      "benefits": "Mood improvement and memory recall"
-    },
-    {
-      "name": "Simple Cooking Together",
-      "description": "Making easy recipes that connect to cultural heritage",
-      "duration": "20-40 minutes",
-      "preparation": "Gather simple ingredients and microwave-safe dishes",
-      "benefits": "Sensory engagement and accomplishment"
-    },
-    {
-      "name": "Gentle Hand Massage",
-      "description": "Soothing tactile activity with pleasant scents",
-      "duration": "5-15 minutes",
-      "preparation": "Comfortable seating and optional hand lotion",
-      "benefits": "Relaxation and physical comfort"
-    },
-    {
-      "name": "Reading Together",
-      "description": "Sharing short stories or poems from their era",
-      "duration": "10-20 minutes",
-      "preparation": "Select familiar stories or nostalgic content",
-      "benefits": "Cognitive engagement and shared experience"
-    }
-  ],
-  "heritage_specific": {
-    "Italian-American": {
-      "music_keywords": [
-        "opera",
-        "mandolin",
-        "traditional italian",
-        "tarantella"
-      ],
-      "food_keywords": ["pasta", "tomato", "basil", "garlic", "olive oil"],
-      "conversation_topics": [
-        "family recipes",
-        "Sunday dinner",
-        "feast days",
-        "old country stories"
-      ]
-    },
-    "Irish-American": {
-      "music_keywords": ["folk", "fiddle", "traditional irish", "ballads"],
-      "food_keywords": ["potatoes", "bread", "stew", "tea", "soda bread"],
-      "conversation_topics": [
-        "family traditions",
-        "Irish music",
-        "storytelling",
-        "church gatherings"
-      ]
-    },
-    "Mexican-American": {
-      "music_keywords": ["mariachi", "folk", "traditional mexican", "guitar"],
-      "food_keywords": ["corn", "beans", "peppers", "tortillas", "cinnamon"],
-      "conversation_topics": [
-        "family celebrations",
-        "traditional festivals",
-        "homemade meals",
-        "cultural traditions"
-      ]
-    },
-    "German-American": {
-      "music_keywords": ["polka", "accordion", "traditional german", "folk"],
-      "food_keywords": ["bread", "sausage", "cabbage", "apple", "beer"],
-      "conversation_topics": [
-        "harvest celebrations",
-        "family gatherings",
-        "traditional foods",
-        "community events"
-      ]
-    },
-    "American": {
-      "music_keywords": ["big band", "swing", "country", "folk"],
-      "food_keywords": [
-        "apple pie",
-        "comfort food",
-        "home cooking",
-        "traditional"
-      ],
-      "conversation_topics": [
-        "family dinners",
-        "holidays",
-        "neighborhood",
-        "childhood memories"
-      ]
-    }
-  },
-  "safety_notes": {
-    "music": "Keep volume at comfortable level, watch for emotional reactions",
-    "tv_shows": "Choose content appropriate for their comfort level, pause if needed",
-    "cooking": "Ensure all activities are safe, avoid sharp objects or hot surfaces",
-    "photos": "Be prepared for emotional responses, both positive and challenging",
-    "conversation": "Follow their lead, don't push if they seem uncomfortable"
-  },
-  "implementation_notes": {
-    "usage": "These fallbacks should ONLY be used when primary APIs return zero results",
-    "selection": "Choose items that best match the person's heritage and age when possible",
-    "customization": "Adapt any content to the individual's specific needs and preferences",
-    "flexibility": "Always be prepared to switch activities if something isn't working",
-    "backup": "Have multiple options ready in case first choice doesn't resonate"
+  "content_preferences": {
+    "qloo_priority": "places",
+    "sensory_focus": "gustatory"
   }
 }
