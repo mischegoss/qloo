@@ -1,453 +1,403 @@
 """
-Photo Cultural Analyzer Agent - FIXED for Theme Photos ONLY in Automatic Pipeline
+Revised Photo Cultural Analyzer Agent - Places Photos Only
 File: backend/multi_tool_agent/agents/photo_cultural_analyzer_agent.py
 
-MAJOR CHANGES:
-- THEME PHOTOS: Properly analyzed with VisionAI in automatic pipeline
-- PERSONAL PHOTOS: Completely excluded from automatic pipeline (on-demand only)
-- Enhanced error handling for VisionAI
-- Simplified logic focused exclusively on theme photos
-- All other functionality preserved
+REVISED: Now analyzes ONLY Qloo place photos with Google Vision
+- Finds theme-relevant places from Qloo results
+- Analyzes place photos with Google Vision API
+- Provides rich visual context for conversation starters
+- Clean fallback for rural areas with no places
 """
 
 import logging
-import random
-import base64
+import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pathlib import Path
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 class PhotoCulturalAnalyzerAgent:
     """
-    Agent 5: Photo Cultural Analyzer - THEME PHOTOS ONLY in Automatic Pipeline
+    Agent 5: Photo Cultural Analyzer - REVISED for Places Only
     
-    AUTOMATIC PIPELINE: Theme photos only (analyzed with VisionAI)
-    PERSONAL PHOTOS: Separate on-demand functionality (not through this agent)
+    NEW ROLE: Analyze place photos from Qloo results using Google Vision
+    - Takes Qloo intelligence containing places data
+    - Finds theme-relevant places  
+    - Analyzes place photos with Vision API
+    - Returns rich visual analysis for conversation starters
     """
     
-    def __init__(self, vision_ai_tool):
-        self.vision_ai_tool = vision_ai_tool
-        logger.info("Photo Cultural Analyzer initialized - THEME PHOTOS ONLY in automatic pipeline")
+    def __init__(self, vision_tool):
+        self.vision_tool = vision_tool
+        logger.info("✅ Photo Cultural Analyzer initialized - PLACES PHOTOS ONLY")
     
     async def run(self,
                   consolidated_info: Dict[str, Any],
                   cultural_profile: Dict[str, Any],
                   qloo_intelligence: Dict[str, Any],
-                  sensory_content: Dict[str, Any],
-                  photo_of_the_day: Optional[str] = None,  # IGNORED in automatic pipeline
-                  stored_photo_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:  # IGNORED in automatic pipeline
+                  sensory_content: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Analyze THEME PHOTOS ONLY in automatic pipeline
+        Analyze place photos from Qloo results with Google Vision
         
         Args:
-            consolidated_info: Information from Agent 1 (includes theme data)
-            cultural_profile: Cultural profile from Agent 2
-            qloo_intelligence: Cultural intelligence from Agent 3
-            sensory_content: Sensory content from Agent 4
-            photo_of_the_day: IGNORED - not used in automatic pipeline
-            stored_photo_analysis: IGNORED - not used in automatic pipeline
+            consolidated_info: Contains daily theme and location info
+            cultural_profile: Cultural profile data (passed through)
+            qloo_intelligence: Qloo results containing places data
+            sensory_content: Sensory content (passed through)
             
         Returns:
-            Theme photo analysis only
+            Enhanced data with place photo analysis
         """
         
+        logger.info("📸 Agent 5: Starting place photo analysis with Google Vision")
+        
         try:
-            logger.info("🎯 Starting Theme Photo Analysis - AUTOMATIC PIPELINE ONLY")
-            logger.info("📷 Personal photos: EXCLUDED from automatic pipeline")
+            # Extract key information
+            daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
+            location_info = self._extract_location_info(consolidated_info)
             
-            # Extract patient info
-            patient_profile = consolidated_info.get("patient_profile", {})
-            heritage = patient_profile.get("cultural_heritage", "American")
-            birth_year = patient_profile.get("birth_year")
-            
-            # Extract theme information
-            daily_theme = consolidated_info.get("daily_theme", {})
-            theme_of_the_day = daily_theme.get("theme_of_the_day", {})
-            theme_image = daily_theme.get("theme_image", {})
-            
-            theme_name = theme_of_the_day.get("name", "Unknown")
-            theme_id = theme_of_the_day.get("id", "unknown")
-            
-            logger.info(f"🎯 Processing theme: {theme_name} (ID: {theme_id})")
-            logger.info(f"🖼️ Theme image: {theme_image.get('filename', 'Not found')}")
-            logger.info(f"✅ Theme image exists: {theme_image.get('exists', False)}")
-            
-            # ONLY analyze theme image (no personal photos in automatic pipeline)
-            theme_image_analysis = await self._analyze_theme_image_only(
-                theme_image, theme_of_the_day, heritage, birth_year
-            )
-            
-            # Generate conversation starters based on theme image analysis
-            conversation_starters = theme_image_analysis.get("conversation_starters", [])
-            memory_triggers = theme_image_analysis.get("memory_triggers", [])
-            
-            logger.info(f"✅ Theme photo analysis completed:")
-            logger.info(f"   🎯 Theme: {theme_name}")
-            logger.info(f"   🖼️ Image analyzed: {theme_image.get('filename', 'N/A')}")
-            logger.info(f"   💬 Conversation starters: {len(conversation_starters)}")
-            logger.info(f"   🧠 Memory triggers: {len(memory_triggers)}")
+            # Analyze place photos from Qloo results
+            place_analysis = await self._analyze_qloo_places(qloo_intelligence, daily_theme, location_info)
             
             return {
-                "photo_analysis": {
-                    "status": "success",
-                    "analysis_type": "theme_photo_only",
-                    "primary_source": "theme_image",
-                    
-                    # REMOVED: Personal photo analysis (not in automatic pipeline)
-                    
-                    # Theme image analysis (primary and only source)
-                    "theme_image": {
-                        "image_info": theme_image,
-                        "vision_analysis": theme_image_analysis.get("vision_analysis", {}),
-                        "conversation_starters": conversation_starters,
-                        "memory_triggers": memory_triggers,
-                        "theme_alignment": theme_image_analysis.get("theme_alignment", {}),
-                        "status": theme_image_analysis.get("status", "analyzed")
-                    },
-                    
-                    # Simplified analysis (theme-only)
-                    "combined_analysis": {
-                        "conversation_starters": conversation_starters,
-                        "memory_triggers": memory_triggers,
-                        "cultural_integration": self._analyze_theme_cultural_alignment(
-                            theme_image_analysis, heritage, theme_of_the_day
-                        ),
-                        "visual_coherence": {"coherence_level": "theme_focused"}
-                    },
-                    
-                    # Metadata
-                    "processing_metadata": {
-                        "agent": "photo_cultural_analyzer",
-                        "analysis_sources": ["theme_image_only"],
-                        "theme_context": {
-                            "theme_name": theme_name,
-                            "theme_id": theme_id,
-                            "theme_image_found": theme_image.get("exists", False)
-                        },
-                        "conversation_count": len(conversation_starters),
-                        "memory_trigger_count": len(memory_triggers),
-                        "pipeline_mode": "automatic_theme_only",
-                        "personal_photos_excluded": True
-                    }
+                "place_photo_analysis": place_analysis,
+                "location_context": location_info,
+                "agent_metadata": {
+                    "agent": "PhotoCulturalAnalyzer",
+                    "mode": "places_photos_only",
+                    "vision_analysis": place_analysis.get("available", False),
+                    "timestamp": datetime.now().isoformat()
                 }
             }
             
         except Exception as e:
-            logger.error(f"❌ Theme photo analysis failed: {e}")
-            return self._create_theme_fallback_analysis(
-                consolidated_info, theme_of_the_day
-            )
+            logger.error(f"❌ Agent 5 failed: {e}")
+            return self._create_fallback_response()
     
-    async def _analyze_theme_image_only(self, theme_image: Dict[str, Any], 
-                                      theme: Dict[str, Any], heritage: str, 
-                                      birth_year: Optional[int]) -> Dict[str, Any]:
-        """
-        FIXED: Analyze theme image with proper VisionAI handling
-        Theme photos SHOULD be analyzed - personal photos are excluded from pipeline
-        """
+    def _extract_location_info(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract and prioritize location information"""
+        patient_profile = consolidated_info.get("patient_profile", {})
         
-        theme_name = theme.get("name", "Unknown")
-        theme_id = theme.get("id", "unknown")
+        # Prioritize hometown over location
+        hometown = patient_profile.get("hometown", "").strip()
+        location = patient_profile.get("location", "").strip()
+        city = patient_profile.get("city", "").strip()
+        state = patient_profile.get("state", "").strip()
         
-        logger.info(f"🎯 Analyzing THEME image for '{theme_name}' (ID: {theme_id})")
+        # Build primary location with preference order
+        primary_location = hometown or location or f"{city}, {state}".strip(", ")
+        location_type = "hometown" if hometown else "location"
         
-        # Check if theme image exists
-        if not theme_image.get("exists", False):
-            logger.warning(f"⚠️ Theme image missing for theme '{theme_name}' - using fallback")
-            return self._create_fallback_theme_analysis(theme, heritage)
+        return {
+            "primary_location": primary_location,
+            "location_type": location_type,
+            "hometown": hometown,
+            "current_location": location,
+            "city": city,
+            "state": state,
+            "available": bool(primary_location)
+        }
+    
+    async def _analyze_qloo_places(self, qloo_intelligence: Dict[str, Any], 
+                                   current_theme: Dict[str, Any],
+                                   location_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze places from Qloo results with theme relevance"""
         
-        # Get image path
-        image_path = theme_image.get("backend_path")
-        if not image_path or not Path(image_path).exists():
-            logger.warning(f"⚠️ Theme image file not found: {image_path} - using fallback")
-            return self._create_fallback_theme_analysis(theme, heritage)
+        logger.info(f"🔍 Analyzing Qloo places for theme: {current_theme.get('name', 'Unknown')}")
+        
+        # Extract places from Qloo intelligence
+        places_data = qloo_intelligence.get("cultural_recommendations", {}).get("places", {})
+        places = places_data.get("entities", [])
+        
+        if not places or len(places) == 0:
+            logger.info("📍 No places found in Qloo results - using rural fallback")
+            return self._create_rural_fallback(current_theme, location_info)
+        
+        logger.info(f"📍 Found {len(places)} places from Qloo")
+        
+        # Find theme-relevant place
+        relevant_place = self._find_theme_matching_place(places, current_theme)
+        
+        if not relevant_place:
+            logger.info("🔄 No theme match - using first available place")
+            relevant_place = places[0]
+        
+        # Analyze the place photo with Google Vision
+        return await self._analyze_place_photo(relevant_place, current_theme, location_info)
+    
+    def _find_theme_matching_place(self, places: List[Dict[str, Any]], 
+                                   current_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Find place that best matches current theme"""
+        
+        theme_id = current_theme.get("id", "")
+        theme_keywords = self._get_theme_keywords(theme_id)
+        
+        logger.info(f"🔍 Looking for places matching theme '{theme_id}' with keywords: {theme_keywords}")
+        
+        best_place = None
+        highest_score = 0
+        
+        for place in places:
+            score = self._calculate_theme_relevance_score(place, theme_keywords)
+            
+            if score > highest_score:
+                highest_score = score
+                best_place = place
+                
+            logger.debug(f"Place '{place.get('name', 'Unknown')}' theme relevance score: {score}")
+        
+        if best_place:
+            logger.info(f"✅ Selected theme-relevant place: {best_place.get('name', 'Unknown')} (score: {highest_score})")
+        
+        return best_place
+    
+    def _get_theme_keywords(self, theme_id: str) -> List[str]:
+        """Get keywords for theme matching"""
+        theme_keywords = {
+            "school": ["school", "library", "education", "academy", "university", "college", "learning", "historic", "building"],
+            "birthday": ["bakery", "restaurant", "celebration", "party", "sweet", "cake", "festive"],
+            "music": ["theater", "venue", "hall", "music", "concert", "performance", "cultural", "arts"],
+            "food": ["restaurant", "market", "italian", "bakery", "dining", "cuisine", "culinary"],
+            "travel": ["tourist", "landmark", "historic", "museum", "attraction", "destination"],
+            "weather": ["park", "outdoor", "garden", "nature", "seasonal"],
+            "holidays": ["cultural", "historic", "traditional", "celebration", "religious", "community"],
+            "seasons": ["park", "garden", "outdoor", "nature", "seasonal", "market"],
+            "pets": ["park", "outdoor", "family", "community", "neighborhood"],
+            "clothing": ["historic", "cultural", "traditional", "vintage", "classic"]
+        }
+        
+        return theme_keywords.get(theme_id, ["historic", "cultural", "landmark"])
+    
+    def _calculate_theme_relevance_score(self, place: Dict[str, Any], theme_keywords: List[str]) -> int:
+        """Calculate how well a place matches theme keywords"""
+        score = 0
+        
+        # Check place name
+        place_name = place.get("name", "").lower()
+        for keyword in theme_keywords:
+            if keyword in place_name:
+                score += 3
+        
+        # Check description
+        description = place.get("properties", {}).get("description", "").lower()
+        for keyword in theme_keywords:
+            if keyword in description:
+                score += 2
+        
+        # Check tags
+        tags = place.get("tags", [])
+        for tag in tags:
+            tag_name = tag.get("name", "").lower()
+            for keyword in theme_keywords:
+                if keyword in tag_name:
+                    score += 1
+        
+        return score
+    
+    async def _analyze_place_photo(self, place: Dict[str, Any], 
+                                   current_theme: Dict[str, Any],
+                                   location_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze individual place photo with Google Vision"""
+        
+        place_name = place.get("name", "Unknown Place")
+        logger.info(f"📸 Analyzing photo for: {place_name}")
+        
+        # Get photo URL from place data
+        images = place.get("images", [])
+        if not images or len(images) == 0:
+            logger.warning(f"📸 No images available for {place_name}")
+            return self._create_no_photo_fallback(place, current_theme, location_info)
+        
+        photo_url = images[0].get("url", "")
+        if not photo_url:
+            logger.warning(f"📸 No valid photo URL for {place_name}")
+            return self._create_no_photo_fallback(place, current_theme, location_info)
         
         try:
-            # Check if VisionAI tool is available and properly initialized
-            if not self.vision_ai_tool:
-                logger.warning(f"⚠️ VisionAI tool not available - using theme-based fallback")
-                return self._create_fallback_theme_analysis(theme, heritage)
+            # Analyze with Google Vision
+            logger.info(f"🔍 Running Google Vision analysis on: {photo_url}")
+            vision_result = await self.vision_tool.analyze_image(photo_url)
             
-            # Read and encode image for Vision AI
-            logger.info(f"🔍 Running VisionAI analysis on THEME image: {theme_image.get('filename')}")
-            
-            with open(image_path, "rb") as image_file:
-                image_data = image_file.read()
-                image_base64 = base64.b64encode(image_data).decode('utf-8')
-            
-            # Call VisionAI with proper error handling
-            vision_result = await self.vision_ai_tool.analyze_with_google_vision(image_base64)
-            
-            if vision_result and vision_result.get("success"):
-                logger.info(f"✅ VisionAI analysis successful for THEME image: {theme_image.get('filename')}")
-                
-                # Generate theme-specific conversation starters based on VisionAI results
-                theme_conversation_starters = self._generate_theme_conversation_starters_from_vision(
-                    vision_result, theme, heritage, birth_year
-                )
-                
-                # Generate theme-specific memory triggers
-                theme_memory_triggers = self._generate_theme_memory_triggers_from_vision(
-                    vision_result, theme, heritage
-                )
-                
-                # Assess theme alignment
-                theme_alignment = self._assess_theme_alignment(vision_result, theme)
+            if vision_result.get("success"):
+                logger.info(f"✅ Vision analysis successful for {place_name}")
                 
                 return {
-                    "vision_analysis": vision_result,
-                    "conversation_starters": theme_conversation_starters,
-                    "memory_triggers": theme_memory_triggers,
-                    "theme_alignment": theme_alignment,
-                    "status": "analyzed"
+                    "available": True,
+                    "place_data": {
+                        "name": place_name,
+                        "description": place.get("properties", {}).get("description", ""),
+                        "address": place.get("properties", {}).get("address", ""),
+                        "neighborhood": place.get("neighborhood", ""),
+                        "tags": [tag.get("name", "") for tag in place.get("tags", [])[:5]]  # Top 5 tags
+                    },
+                    "photo_url": photo_url,
+                    "vision_analysis": {
+                        "labels": vision_result.get("labels", []),
+                        "objects": vision_result.get("objects", []),
+                        "text": vision_result.get("text", []),
+                        "landmarks": vision_result.get("landmarks", []),
+                        "architectural_details": self._extract_architectural_details(vision_result),
+                        "atmosphere_description": self._create_atmosphere_description(vision_result)
+                    },
+                    "theme_relevance": {
+                        "theme_id": current_theme.get("id", ""),
+                        "theme_name": current_theme.get("name", ""),
+                        "relevance_explanation": self._explain_theme_relevance(place, current_theme)
+                    },
+                    "source": "qloo_vision_analysis"
                 }
             else:
-                logger.warning(f"⚠️ VisionAI failed for THEME image: {theme_image.get('filename')} - using fallback")
-                return self._create_fallback_theme_analysis(theme, heritage)
+                logger.warning(f"⚠️ Vision analysis failed for {place_name}: {vision_result.get('error', 'Unknown error')}")
+                return self._create_no_photo_fallback(place, current_theme, location_info)
                 
         except Exception as e:
-            logger.error(f"❌ THEME image analysis failed: {e}")
-            logger.info(f"🔄 Using fallback analysis for theme: {theme_name}")
-            return self._create_fallback_theme_analysis(theme, heritage)
+            logger.error(f"❌ Vision analysis exception for {place_name}: {e}")
+            return self._create_no_photo_fallback(place, current_theme, location_info)
     
-    def _generate_theme_conversation_starters_from_vision(self, 
-                                                        vision_result: Dict[str, Any],
-                                                        theme: Dict[str, Any], 
-                                                        heritage: str,
-                                                        birth_year: Optional[int]) -> List[Dict[str, Any]]:
-        """
-        Generate conversation starters for THEME photos based on VisionAI analysis
-        """
-        
-        theme_name = theme.get("name", "Unknown")
-        theme_prompts = theme.get("conversation_prompts", [])
-        
-        objects = vision_result.get("objects", [])
-        labels = vision_result.get("labels", [])
-        
-        starters = []
-        
-        # Use theme's built-in prompts as high priority
-        for i, prompt in enumerate(theme_prompts[:2]):  # Use first 2 theme prompts
-            starters.append({
-                "type": "theme_prompt",
-                "starter": prompt,
-                "follow_up": f"What do you remember about {theme_name.lower()}?",
-                "theme_context": theme_name,
-                "source": "theme_config",
-                "priority": "high"
-            })
-        
-        # Add VisionAI-based starters
-        if "people" in objects or "family" in labels:
-            starters.append({
-                "type": "theme_people",
-                "starter": f"This {theme_name.lower()} image shows people together.",
-                "follow_up": f"What {theme_name.lower()} memories do you have with others?",
-                "theme_context": theme_name,
-                "source": "vision_ai",
-                "priority": "high"
-            })
-        
-        if "home" in labels or "house" in objects or "building" in objects:
-            starters.append({
-                "type": "theme_place",
-                "starter": f"This reminds me of {theme_name.lower()} at home.",
-                "follow_up": f"What was {theme_name.lower()} like in your home?",
-                "theme_context": theme_name,
-                "source": "vision_ai",
-                "priority": "medium"
-            })
-        
-        if "celebration" in labels or "gathering" in labels:
-            starters.append({
-                "type": "theme_celebration",
-                "starter": f"This looks like a {theme_name.lower()} celebration.",
-                "follow_up": f"What celebrations do you remember?",
-                "theme_context": theme_name,
-                "source": "vision_ai",
-                "priority": "medium"
-            })
-        
-        # Fallback if no specific starters generated
-        if len(starters) < 3:
-            starters.append({
-                "type": "theme_general",
-                "starter": f"What does this {theme_name.lower()} image remind you of?",
-                "follow_up": "Tell me about those memories.",
-                "theme_context": theme_name,
-                "source": "theme_fallback",
-                "priority": "medium"
-            })
-        
-        # Sort by priority and limit
-        starters.sort(key=lambda x: {"high": 0, "medium": 1, "low": 2}.get(x.get("priority", "low"), 2))
-        return starters[:5]  # Return top 5 theme starters
-    
-    def _generate_theme_memory_triggers_from_vision(self, 
-                                                  vision_result: Dict[str, Any],
-                                                  theme: Dict[str, Any], 
-                                                  heritage: str) -> List[str]:
-        """
-        Generate memory triggers for THEME photos based on VisionAI analysis
-        """
-        
-        theme_name = theme.get("name", "Unknown")
+    def _extract_architectural_details(self, vision_result: Dict[str, Any]) -> str:
+        """Extract architectural details from vision analysis"""
         labels = vision_result.get("labels", [])
         objects = vision_result.get("objects", [])
         
-        triggers = []
+        architectural_terms = []
         
-        # Add theme-specific triggers
-        triggers.append(f"{theme_name} memories")
+        # Look for architectural labels
+        for label in labels[:10]:  # Top 10 labels
+            label_name = label.get("description", "").lower()
+            if any(term in label_name for term in ["building", "architecture", "facade", "window", "door", "column", "brick", "stone"]):
+                architectural_terms.append(label.get("description", ""))
         
-        # Add VisionAI-based triggers
-        for label in labels[:3]:  # Use top 3 labels
-            triggers.append(f"{label} and {theme_name.lower()}")
+        # Look for architectural objects
+        for obj in objects[:5]:  # Top 5 objects
+            obj_name = obj.get("name", "").lower()
+            if any(term in obj_name for term in ["building", "window", "door", "sign", "entrance"]):
+                architectural_terms.append(obj.get("name", ""))
         
-        for obj in objects[:2]:  # Use top 2 objects
-            triggers.append(f"{obj} memories")
-        
-        # Add heritage-specific trigger if relevant
-        if heritage and heritage != "American":
-            triggers.append(f"{heritage} {theme_name.lower()} traditions")
-        
-        return triggers[:5]  # Limit to 5 triggers
+        if architectural_terms:
+            return f"I can see {', '.join(architectural_terms[:3])} in this image."
+        else:
+            return "This appears to be an interesting building with distinctive features."
     
-    def _assess_theme_alignment(self, vision_result: Dict[str, Any], 
-                               theme: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Assess how well the theme image aligns with the theme
-        """
+    def _create_atmosphere_description(self, vision_result: Dict[str, Any]) -> str:
+        """Create atmosphere description from vision analysis"""
+        labels = vision_result.get("labels", [])
         
-        theme_name = theme.get("name", "Unknown").lower()
-        theme_keywords = theme.get("conversation_prompts", [])
+        atmosphere_terms = []
         
-        detected_labels = [label.lower() for label in vision_result.get("labels", [])]
-        detected_objects = [obj.lower() for obj in vision_result.get("objects", [])]
+        # Look for atmosphere-related labels
+        for label in labels[:15]:  # Top 15 labels
+            label_name = label.get("description", "").lower()
+            if any(term in label_name for term in ["cozy", "bright", "historic", "elegant", "bustling", "quiet", "charming", "welcoming"]):
+                atmosphere_terms.append(label.get("description", ""))
         
-        alignment_score = 0
-        matching_elements = []
+        if atmosphere_terms:
+            return f"The atmosphere looks {', '.join(atmosphere_terms[:2])}."
+        else:
+            return "This place has a distinctive character and atmosphere."
+    
+    def _explain_theme_relevance(self, place: Dict[str, Any], current_theme: Dict[str, Any]) -> str:
+        """Explain why this place is relevant to the current theme"""
+        theme_id = current_theme.get("id", "")
+        place_name = place.get("name", "this place")
         
-        # Check theme name alignment
-        if theme_name in detected_labels:
-            alignment_score += 2
-            matching_elements.append(theme_name)
+        explanations = {
+            "school": f"{place_name} represents the kind of educational or historic building you might have encountered during your school years.",
+            "birthday": f"{place_name} is the type of place where families might have celebrated special occasions like birthdays.",
+            "music": f"{place_name} represents the cultural venues where music and performances brought communities together.",
+            "food": f"{place_name} represents the dining traditions and food culture of your area.",
+            "travel": f"{place_name} is a landmark that represents the places people visited for special trips.",
+            "weather": f"{place_name} represents the outdoor spaces where people experienced different seasons and weather.",
+            "holidays": f"{place_name} represents the community spaces where people gathered for celebrations and traditions.",
+            "seasons": f"{place_name} represents the places that changed with the seasons in your community.",
+            "pets": f"{place_name} represents the community spaces where families and their pets spent time together.",
+            "clothing": f"{place_name} represents the historic and cultural context of fashion and style from your era."
+        }
         
-        # Check keyword alignment
-        for keyword in theme_keywords:
-            if any(word.lower() in detected_labels or word.lower() in detected_objects 
-                   for word in keyword.split()):
-                alignment_score += 1
-                matching_elements.append(keyword)
+        return explanations.get(theme_id, f"{place_name} represents an important part of your community's cultural heritage.")
+    
+    def _create_no_photo_fallback(self, place: Dict[str, Any], 
+                                  current_theme: Dict[str, Any],
+                                  location_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback when place has no analyzable photo"""
+        
+        place_name = place.get("name", "Unknown Place")
+        description = place.get("properties", {}).get("description", "")
+        
+        logger.info(f"📝 Creating text-only analysis for {place_name}")
         
         return {
-            "alignment_score": alignment_score,
-            "max_possible_score": 2 + len(theme_keywords),
-            "matching_elements": matching_elements,
-            "alignment_quality": "high" if alignment_score >= 2 else "medium" if alignment_score >= 1 else "low"
+            "available": True,
+            "place_data": {
+                "name": place_name,
+                "description": description,
+                "address": place.get("properties", {}).get("address", ""),
+                "neighborhood": place.get("neighborhood", ""),
+                "tags": [tag.get("name", "") for tag in place.get("tags", [])[:5]]
+            },
+            "photo_url": "",
+            "vision_analysis": {
+                "labels": [],
+                "objects": [],
+                "text": [],
+                "landmarks": [],
+                "architectural_details": "This historic location has distinctive architectural features.",
+                "atmosphere_description": "This place has a welcoming community atmosphere."
+            },
+            "theme_relevance": {
+                "theme_id": current_theme.get("id", ""),
+                "theme_name": current_theme.get("name", ""),
+                "relevance_explanation": self._explain_theme_relevance(place, current_theme)
+            },
+            "source": "qloo_text_only"
         }
     
-    def _analyze_theme_cultural_alignment(self, theme_analysis: Dict[str, Any],
-                                        heritage: str, theme: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Analyze cultural alignment for theme only
-        """
+    def _create_rural_fallback(self, current_theme: Dict[str, Any], 
+                               location_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback for rural areas with no Qloo places"""
+        
+        primary_location = location_info.get("primary_location", "your area")
+        location_type = location_info.get("location_type", "location")
+        
+        logger.info(f"🏡 Creating rural area fallback for {primary_location}")
         
         return {
-            "heritage_context": heritage,
-            "theme_context": theme.get("name", "Unknown"),
-            "theme_image_available": bool(theme_analysis.get("vision_analysis")),
-            "cultural_coherence": "theme_focused"
+            "available": False,
+            "rural_fallback": True,
+            "location_context": {
+                "primary_location": primary_location,
+                "location_type": location_type,
+                "fallback_reason": "no_places_found"
+            },
+            "theme_context": {
+                "theme_id": current_theme.get("id", ""),
+                "theme_name": current_theme.get("name", ""),
+                "rural_prompt_ready": True
+            },
+            "source": "rural_fallback"
         }
     
-    def _create_fallback_theme_analysis(self, theme: Dict[str, Any], heritage: str) -> Dict[str, Any]:
-        """
-        Create fallback analysis when theme image analysis fails
-        """
+    def _create_fallback_response(self) -> Dict[str, Any]:
+        """Create fallback response when agent fails completely"""
         
-        theme_name = theme.get("name", "Unknown")
-        theme_prompts = theme.get("conversation_prompts", [])
-        
-        # Use theme conversation prompts as fallback
-        fallback_starters = []
-        if theme_prompts:
-            for prompt in theme_prompts[:3]:
-                fallback_starters.append({
-                    "type": "theme_fallback",
-                    "starter": prompt,
-                    "follow_up": f"Tell me more about {theme_name.lower()}.",
-                    "theme_context": theme_name,
-                    "source": "theme_fallback",
-                    "priority": "medium"
-                })
-        
-        # Ensure at least one fallback starter
-        if not fallback_starters:
-            fallback_starters.append({
-                "type": "theme_general",
-                "starter": f"What does {theme_name.lower()} remind you of?",
-                "follow_up": "Tell me about those memories.",
-                "theme_context": theme_name,
-                "source": "theme_fallback",
-                "priority": "medium"
-            })
+        logger.warning("⚠️ Creating complete fallback response")
         
         return {
-            "vision_analysis": {},
-            "conversation_starters": fallback_starters,
-            "memory_triggers": [f"{theme_name} memories"],
-            "theme_alignment": {"alignment_quality": "fallback"},
-            "status": "fallback"
-        }
-    
-    def _create_theme_fallback_analysis(self, consolidated_info: Dict[str, Any],
-                                      theme: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Create fallback analysis when entire theme analysis fails
-        """
-        
-        theme_name = theme.get("name", "Unknown")
-        
-        return {
-            "photo_analysis": {
-                "status": "fallback",
-                "analysis_type": "theme_fallback",
-                "primary_source": "fallback",
-                
-                "theme_image": {
-                    "image_info": {"filename": "Not found", "exists": False},
-                    "vision_analysis": {},
-                    "conversation_starters": [],
-                    "memory_triggers": [],
-                    "theme_alignment": {"alignment_quality": "fallback"}
-                },
-                
-                "combined_analysis": {
-                    "conversation_starters": [
-                        {
-                            "type": "general",
-                            "starter": "What brings back good memories for you?",
-                            "follow_up": f"Tell me about {theme_name.lower()}.",
-                            "source": "fallback",
-                            "priority": "medium"
-                        }
-                    ],
-                    "memory_triggers": [f"{theme_name} memories"],
-                    "cultural_integration": {"cultural_coherence": "fallback"},
-                    "visual_coherence": {"coherence_level": "fallback"}
-                },
-                
-                "processing_metadata": {
-                    "agent": "photo_cultural_analyzer",
-                    "analysis_sources": ["fallback"],
-                    "theme_context": {"theme_name": theme_name},
-                    "pipeline_mode": "automatic_theme_only",
-                    "personal_photos_excluded": True,
-                    "fallback_reason": "theme_analysis_failure"
-                }
+            "place_photo_analysis": {
+                "available": False,
+                "error": True,
+                "fallback_reason": "agent_failure"
+            },
+            "location_context": {
+                "available": False
+            },
+            "agent_metadata": {
+                "agent": "PhotoCulturalAnalyzer",
+                "mode": "error_fallback",
+                "vision_analysis": False,
+                "timestamp": datetime.now().isoformat()
             }
         }
+
+# Export the main class
+__all__ = ["PhotoCulturalAnalyzerAgent"]

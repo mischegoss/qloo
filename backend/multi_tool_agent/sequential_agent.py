@@ -1,12 +1,12 @@
 """
-Sequential Agent Runner - FIXED All Agent Parameter Names
+Updated Sequential Agent - Photo Analysis Data Flow Fixed
 File: backend/multi_tool_agent/sequential_agent.py
 
-CRITICAL FIXES:
-- Fixed Agent 2 parameter: patient_profile + consolidated_info → consolidated_info only
-- Fixed Agent 5 parameters: photo_data → photo_of_the_day, stored_photo_analysis
-- CulturalProfileBuilderAgent.run() expects only: consolidated_info
-- PhotoCulturalAnalyzerAgent.run() expects: photo_of_the_day, stored_photo_analysis
+UPDATED: Fixed data flow to pass photo_analysis from Agent 5 to Agent 6
+- Agent 5 now analyzes place photos only (not theme photos)
+- Agent 6 receives photo_analysis for Local Memory card creation
+- Maintains all existing functionality and error handling
+- Clean 6-agent pipeline execution
 """
 
 import logging
@@ -17,8 +17,15 @@ logger = logging.getLogger(__name__)
 
 class SequentialAgent:
     """
-    Sequential agent runner that coordinates all 6 agents in order.
-    FIXED: Correct parameter names for Agent 2 and Agent 5.
+    Updated Sequential Agent with corrected photo analysis data flow.
+    
+    PIPELINE FLOW:
+    Agent 1: Information Consolidator (with location prioritization)
+    Agent 2: Cultural Profile Builder  
+    Agent 3: Qloo Cultural Intelligence (places, artists, tv_shows)
+    Agent 4: Sensory Content Generator (music, tv, recipes)
+    Agent 5: Photo Cultural Analyzer (place photos from Qloo)
+    Agent 6: Mobile Synthesizer (4 cards including Local Memory)
     """
     
     def __init__(self, agent1=None, agent2=None, agent3=None, agent4=None, agent5=None, agent6=None):
@@ -26,7 +33,7 @@ class SequentialAgent:
         self.agent2 = agent2  # Cultural Profile Builder
         self.agent3 = agent3  # Qloo Cultural Intelligence  
         self.agent4 = agent4  # Sensory Content Generator
-        self.agent5 = agent5  # Photo Cultural Analyzer (THEME PHOTOS ONLY)
+        self.agent5 = agent5  # Photo Cultural Analyzer (Places Only)
         self.agent6 = agent6  # Mobile Synthesizer
         
         self.agents_available = [
@@ -35,8 +42,8 @@ class SequentialAgent:
         ]
         
         logger.info(f"Sequential Agent initialized with: {', '.join(self.agents_available)}")
-        logger.info("🎯 FIXED: Agent 5 processes THEME PHOTOS ONLY in automatic pipeline")
-        logger.info("📷 Personal photos are now on-demand only (separate from pipeline)")
+        logger.info("🎯 UPDATED: Agent 5 processes PLACE PHOTOS ONLY for Local Memory cards")
+        logger.info("📷 Personal photos removed - hackathon focus on Places + Vision Analysis")
     
     def _transform_theme_data(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -65,213 +72,210 @@ class SequentialAgent:
                   session_id: str = "default",
                   feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Run the complete 6-agent pipeline with FIXED Agent 5 parameter names.
+        Run the complete 6-agent pipeline with UPDATED data flow for Local Memory cards.
         
-        Args:
-            patient_profile: Patient demographic and preference data
-            request_type: Type of request (dashboard, recipe, music, etc.)
-            session_id: Session identifier
-            feedback_data: Previous feedback for learning
-            
-        Returns:
-            Complete cultural intelligence pipeline result with theme photos
+        UPDATED DATA FLOW:
+        - Agent 5 analyzes place photos from Qloo (not theme photos)
+        - Agent 6 receives photo_analysis for Local Memory card creation
+        - All agents receive appropriate inputs for enhanced functionality
         """
         
-        logger.info("🚀 Starting FIXED sequential agent pipeline - THEME PHOTOS ONLY")
-        logger.info(f"📋 Request type: {request_type}")
-        logger.info(f"👤 Patient: {patient_profile.get('first_name', 'Unknown')}")
-        logger.info("📷 Personal photos: REMOVED from automatic pipeline (on-demand only)")
-        
-        pipeline_start_time = datetime.now()
+        logger.info("🚀 Starting UPDATED 6-agent pipeline with Place Photo Analysis")
         
         try:
-            # Initialize variables for pipeline state
-            consolidated_info = {}
-            cultural_profile = {}
-            qloo_intelligence = {}
-            sensory_content = {}
-            photo_analysis_result = {}
+            # ===== AGENT 1: Information Consolidator =====
+            if not self.agent1:
+                logger.error("❌ Agent 1 (Information Consolidator) not available")
+                return {"success": False, "error": "Agent 1 not available"}
             
-            # AGENT 1: Information Consolidator (ENHANCED to include theme images)
-            if self.agent1:
-                try:
-                    logger.info("Executing Agent 1: Information Consolidator with theme support")
-                    
-                    agent1_result = await self.agent1.run(
-                        patient_profile=patient_profile,
-                        request_type=request_type,
-                        session_id=session_id,
-                        feedback_data=feedback_data,
-                        photo_data=None  # FIXED: No personal photos in automatic pipeline
-                    )
-                    consolidated_info = agent1_result.get("consolidated_info", {})
-                    
-                    # Transform theme data for downstream agents
-                    daily_theme_transformed = self._transform_theme_data(consolidated_info)
-                    
-                    logger.info("✅ Agent 1 completed successfully")
-                    logger.info(f"🎯 Daily theme: {daily_theme_transformed.get('theme_of_the_day', {}).get('name', 'Unknown')}")
-                    logger.info(f"🖼️ Theme image: {daily_theme_transformed.get('theme_image', {}).get('filename', 'None')}")
-                    logger.info(f"📋 Theme image exists: {daily_theme_transformed.get('theme_image', {}).get('exists', False)}")
-                    
-                except Exception as e:
-                    logger.error(f"❌ Agent 1 failed: {e}")
-                    consolidated_info = {"error": str(e)}
-                    daily_theme_transformed = {}
+            logger.info("📋 Running Agent 1: Information Consolidator (with location prioritization)")
+            consolidated_info = await self.agent1.run(
+                patient_profile=patient_profile,
+                request_type=request_type,
+                session_id=session_id,
+                feedback_data=feedback_data
+            )
             
-            # AGENT 2: Cultural Profile Builder (FIXED - Correct parameter)
-            if self.agent2:
-                try:
-                    logger.info("Executing Agent 2: Cultural Profile Builder")
-                    
-                    # CRITICAL FIX: Agent 2 only expects consolidated_info parameter
-                    # Patient profile data is already inside consolidated_info from Agent 1
-                    agent2_result = await self.agent2.run(
-                        consolidated_info=consolidated_info  # ✅ CORRECT: only parameter needed
-                    )
-                    cultural_profile = agent2_result.get("cultural_profile", {})
-                    logger.info("✅ Agent 2 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 2 failed: {e}")
-                    cultural_profile = {"error": str(e)}
+            if not consolidated_info:
+                logger.error("❌ Agent 1 failed to produce consolidated information")
+                return {"success": False, "error": "Information consolidation failed"}
             
-            # AGENT 3: Qloo Cultural Intelligence
-            if self.agent3:
-                try:
-                    logger.info("Executing Agent 3: Qloo Cultural Intelligence")
-                    agent3_result = await self.agent3.run(
-                        consolidated_info=consolidated_info,
-                        cultural_profile=cultural_profile
-                    )
-                    qloo_intelligence = agent3_result.get("qloo_intelligence", {})
-                    logger.info("✅ Agent 3 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 3 failed: {e}")
-                    qloo_intelligence = {"error": str(e)}
+            logger.info("✅ Agent 1 completed successfully")
             
-            # AGENT 4: Sensory Content Generator
-            if self.agent4:
-                try:
-                    logger.info("Executing Agent 4: Sensory Content Generator")
-                    
-                    # Create properly formatted consolidated_info for Agent 4
-                    consolidated_info_for_agent4 = consolidated_info.copy()
-                    consolidated_info_for_agent4["daily_theme"] = daily_theme_transformed
-                    
-                    agent4_result = await self.agent4.run(
-                        consolidated_info=consolidated_info_for_agent4,
-                        cultural_profile=cultural_profile,
-                        qloo_intelligence=qloo_intelligence
-                    )
-                    sensory_content = agent4_result.get("sensory_content", {})
-                    logger.info("✅ Agent 4 completed successfully")
-                except Exception as e:
-                    logger.error(f"❌ Agent 4 failed: {e}")
-                    sensory_content = {"error": str(e)}
+            # ===== AGENT 2: Cultural Profile Builder =====
+            if not self.agent2:
+                logger.error("❌ Agent 2 (Cultural Profile Builder) not available")
+                return {"success": False, "error": "Agent 2 not available"}
             
-            # AGENT 5: Photo Cultural Analyzer (FIXED - Correct parameter names)
-            if self.agent5 and daily_theme_transformed.get("theme_image", {}).get("exists"):
-                try:
-                    # FIXED: Agent 5 now only runs with theme photos, always executes when theme is valid
-                    theme_image_available = daily_theme_transformed.get("theme_image", {}).get("exists", False)
-                    
-                    logger.info(f"Executing Agent 5: Photo Cultural Analyzer - THEME PHOTOS ONLY")
-                    logger.info(f"   🎯 Theme image available: {theme_image_available}")
-                    logger.info("   📷 Personal photos: EXCLUDED from automatic pipeline")
-                    
-                    if theme_image_available:
-                        theme_image = daily_theme_transformed.get("theme_image", {})
-                        logger.info(f"   🖼️ Theme image: {theme_image.get('filename', 'Unknown')}")
-                    
-                    # Create consolidated_info with properly formatted theme for Agent 5
-                    consolidated_info_for_agent5 = consolidated_info.copy()
-                    consolidated_info_for_agent5["daily_theme"] = daily_theme_transformed
-                    
-                    # CRITICAL FIX: Use correct parameter names
-                    agent5_result = await self.agent5.run(
-                        consolidated_info=consolidated_info_for_agent5,
-                        cultural_profile=cultural_profile,
-                        qloo_intelligence=qloo_intelligence,
-                        sensory_content=sensory_content,
-                        photo_of_the_day=None,           # ✅ CORRECT: was photo_data
-                        stored_photo_analysis=None       # ✅ CORRECT: added missing parameter
-                    )
-                    photo_analysis_result = agent5_result.get("photo_analysis", {})
-                    
-                    logger.info("✅ Agent 5 completed successfully with THEME PHOTOS ONLY")
-                    logger.info(f"   🔍 Analysis sources: {photo_analysis_result.get('analysis_sources', 'unknown')}")
-                    logger.info(f"   💬 Total conversation starters: {len(photo_analysis_result.get('conversation_starters', []))}")
-                    
-                except Exception as e:
-                    logger.error(f"❌ Agent 5 failed: {e}")
-                    photo_analysis_result = {"error": str(e)}
-            else:
-                # No theme image available
-                logger.info("Agent 5: Photo Cultural Analyzer - SKIPPED (no theme image available)")
-                photo_analysis_result = {"status": "skipped", "reason": "no_theme_image_available"}
+            logger.info("🧠 Running Agent 2: Cultural Profile Builder")
+            cultural_profile = await self.agent2.run(consolidated_info)
             
-            # AGENT 6: Mobile Synthesizer (CRITICAL FIX - Correct data structure)
-            if self.agent6:
-                try:
-                    logger.info("Executing Agent 6: Mobile Synthesizer with correct parameters")
-                    
-                    # CRITICAL FIX: Wrap qloo_intelligence in expected data structure
-                    # Mobile Synthesizer expects audio_content/visual_content to contain "qloo_intelligence" key
-                    # But we were passing qloo_intelligence directly, causing the double-nesting issue
-                    
-                    agent6_result = await self.agent6.run(
-                        audio_content={"qloo_intelligence": qloo_intelligence},    # FIXED: Wrapped properly
-                        visual_content={"qloo_intelligence": qloo_intelligence},   # FIXED: Wrapped properly
-                        sensory_content=sensory_content,
-                        daily_theme=daily_theme_transformed
-                    )
-                    
-                    # Calculate total pipeline time
-                    pipeline_end_time = datetime.now()
-                    total_time = (pipeline_end_time - pipeline_start_time).total_seconds()
-                    
-                    # Add pipeline metadata
-                    agent6_result["pipeline_metadata"] = {
-                        "total_processing_time_seconds": total_time,
-                        "agents_executed": self.agents_available,
-                        "pipeline_version": "fixed_all_agent_parameters",
-                        "personal_photos_excluded": True,
-                        "theme_photos_only": True,
-                        "agent5_parameter_fix_applied": True,  # Agent 5 parameters fixed
-                        "agent2_parameter_fix_applied": True   # NEW: Agent 2 parameters fixed
-                    }
-                    
-                    logger.info(f"✅ Agent 6 completed successfully")
-                    logger.info(f"⏱️ Total pipeline time: {total_time:.2f} seconds")
-                    logger.info("🎯 Pipeline completed with THEME PHOTOS ONLY")
-                    
-                    return agent6_result
-                    
-                except Exception as e:
-                    logger.error(f"❌ Agent 6 failed: {e}")
-                    return {"error": f"Agent 6 failed: {str(e)}"}
+            if not cultural_profile:
+                logger.error("❌ Agent 2 failed to produce cultural profile")
+                return {"success": False, "error": "Cultural profile building failed"}
             
-            # Fallback if Agent 6 not available
-            logger.warning("⚠️ Agent 6 not available, returning combined results")
-            return {
-                "consolidated_info": consolidated_info,
-                "cultural_profile": cultural_profile,
-                "qloo_intelligence": qloo_intelligence,
-                "sensory_content": sensory_content,
-                "photo_analysis": photo_analysis_result,
-                "pipeline_metadata": {
-                    "agents_executed": self.agents_available,
-                    "pipeline_version": "fixed_all_agent_parameters",
-                    "personal_photos_excluded": True,
-                    "theme_photos_only": True,
-                    "agent5_parameter_fix_applied": True,
-                    "agent2_parameter_fix_applied": True
+            logger.info("✅ Agent 2 completed successfully")
+            
+            # ===== AGENT 3: Qloo Cultural Intelligence =====
+            if not self.agent3:
+                logger.error("❌ Agent 3 (Qloo Cultural Intelligence) not available")
+                return {"success": False, "error": "Agent 3 not available"}
+            
+            logger.info("🎯 Running Agent 3: Qloo Cultural Intelligence (places, artists, tv_shows)")
+            qloo_intelligence = await self.agent3.run(consolidated_info, cultural_profile)
+            
+            if not qloo_intelligence:
+                logger.error("❌ Agent 3 failed to produce Qloo intelligence")
+                return {"success": False, "error": "Qloo intelligence failed"}
+            
+            logger.info("✅ Agent 3 completed successfully")
+            
+            # ===== AGENT 4: Sensory Content Generator =====
+            if not self.agent4:
+                logger.error("❌ Agent 4 (Sensory Content Generator) not available")
+                return {"success": False, "error": "Agent 4 not available"}
+            
+            logger.info("🎨 Running Agent 4: Sensory Content Generator")
+            sensory_content = await self.agent4.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence
+            )
+            
+            if not sensory_content:
+                logger.error("❌ Agent 4 failed to produce sensory content")
+                return {"success": False, "error": "Sensory content generation failed"}
+            
+            logger.info("✅ Agent 4 completed successfully")
+            
+            # ===== AGENT 5: Photo Cultural Analyzer (PLACES ONLY) =====
+            if not self.agent5:
+                logger.error("❌ Agent 5 (Photo Cultural Analyzer) not available")
+                return {"success": False, "error": "Agent 5 not available"}
+            
+            logger.info("📸 Running Agent 5: Photo Cultural Analyzer (PLACE PHOTOS ONLY)")
+            photo_analysis = await self.agent5.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence,
+                sensory_content=sensory_content
+            )
+            
+            if not photo_analysis:
+                logger.warning("⚠️ Agent 5 produced no photo analysis - rural fallback will be used")
+                photo_analysis = {"place_photo_analysis": {"available": False, "rural_fallback": True}}
+            
+            logger.info("✅ Agent 5 completed successfully")
+            
+            # ===== AGENT 6: Mobile Synthesizer (WITH PHOTO ANALYSIS) =====
+            if not self.agent6:
+                logger.error("❌ Agent 6 (Mobile Synthesizer) not available")
+                return {"success": False, "error": "Agent 6 not available"}
+            
+            logger.info("📱 Running Agent 6: Mobile Synthesizer (with Local Memory card)")
+            final_result = await self.agent6.run(
+                consolidated_info=consolidated_info,
+                cultural_profile=cultural_profile,
+                qloo_intelligence=qloo_intelligence,
+                sensory_content=sensory_content,
+                photo_analysis=photo_analysis  # CRITICAL: Pass photo analysis to Agent 6
+            )
+            
+            if not final_result:
+                logger.error("❌ Agent 6 failed to produce final dashboard")
+                return {"success": False, "error": "Dashboard synthesis failed"}
+            
+            logger.info("✅ Agent 6 completed successfully")
+            
+            # ===== PIPELINE SUCCESS =====
+            logger.info("🎉 Complete 6-agent pipeline executed successfully!")
+            logger.info("📊 Dashboard generated with 4 cards: Music | TV | Recipe | Local Memory")
+            
+            # Add pipeline metadata to final result
+            final_result["pipeline_metadata"] = {
+                "agents_executed": len(self.agents_available),
+                "execution_timestamp": datetime.now().isoformat(),
+                "pipeline_version": "enhanced_with_local_memory",
+                "photo_analysis_mode": "places_only",
+                "location_prioritization": "hometown_preferred",
+                "rural_area_support": True,
+                "agents_summary": {
+                    "agent1": "Information consolidation with location prioritization",
+                    "agent2": "Cultural profile building", 
+                    "agent3": "Qloo cultural intelligence (places, artists, tv_shows)",
+                    "agent4": "Sensory content generation (music, tv, recipes)",
+                    "agent5": "Place photo analysis with Google Vision",
+                    "agent6": "Dashboard synthesis with Local Memory card"
                 }
             }
             
+            return final_result
+            
         except Exception as e:
             logger.error(f"❌ Sequential agent pipeline failed: {e}")
-            return {"error": f"Pipeline failed: {str(e)}"}
+            return {
+                "success": False,
+                "error": f"Pipeline execution failed: {str(e)}",
+                "pipeline_stage": "unknown",
+                "timestamp": datetime.now().isoformat()
+            }
+    
+    def get_agent_status(self) -> Dict[str, Any]:
+        """Get status of all agents in the pipeline"""
+        
+        agent_status = {
+            "agent1_information_consolidator": self.agent1 is not None,
+            "agent2_cultural_profile_builder": self.agent2 is not None,
+            "agent3_qloo_cultural_intelligence": self.agent3 is not None,
+            "agent4_sensory_content_generator": self.agent4 is not None,
+            "agent5_photo_cultural_analyzer": self.agent5 is not None,
+            "agent6_mobile_synthesizer": self.agent6 is not None
+        }
+        
+        total_agents = len([agent for agent in agent_status.values() if agent])
+        
+        return {
+            "total_agents_available": total_agents,
+            "all_agents_ready": total_agents == 6,
+            "agents": agent_status,
+            "pipeline_mode": "enhanced_with_local_memory",
+            "photo_analysis_mode": "places_only",
+            "ready_for_execution": total_agents >= 4  # Minimum viable pipeline
+        }
+    
+    async def run_individual_agent(self, agent_number: int, **kwargs) -> Dict[str, Any]:
+        """
+        Run individual agent for testing/debugging purposes
+        
+        Args:
+            agent_number: Agent to run (1-6)
+            **kwargs: Arguments for the specific agent
+            
+        Returns:
+            Agent-specific results
+        """
+        
+        agents = {
+            1: self.agent1,
+            2: self.agent2,
+            3: self.agent3,
+            4: self.agent4,
+            5: self.agent5,
+            6: self.agent6
+        }
+        
+        agent = agents.get(agent_number)
+        if not agent:
+            return {"success": False, "error": f"Agent {agent_number} not available"}
+        
+        try:
+            logger.info(f"🧪 Running individual Agent {agent_number} for testing")
+            result = await agent.run(**kwargs)
+            logger.info(f"✅ Agent {agent_number} individual test completed")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Agent {agent_number} individual test failed: {e}")
+            return {"success": False, "error": f"Agent {agent_number} failed: {str(e)}"}
 
 # Export the main class
 __all__ = ["SequentialAgent"]
