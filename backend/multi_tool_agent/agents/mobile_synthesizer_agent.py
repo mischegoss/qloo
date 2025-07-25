@@ -1,18 +1,20 @@
 """
-Mobile Synthesizer Agent - FIXED: Correct Qloo Data Structure Extraction
+Mobile Synthesizer Agent - COMPLETE with Enhanced Multi-Genre Music Selection
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
-CRITICAL FIX:
-- Updated data extraction paths to match improved Qloo tools structure
-- Fixed: artists = cultural_recommendations.get("artists", {}).get("entities", [])
-- Fixed: tv_shows = cultural_recommendations.get("tv_shows", {}).get("entities", [])
-- Now correctly extracts from nested "entities" arrays instead of expecting flat lists
+ENHANCEMENTS:
+- Enhanced music selection from multiple genres (classical, jazz, easy listening)
+- Weighted selection favoring calming music for dementia care
+- Improved fallback options with classical emphasis
+- Better variety logic with daily seeds
+- Enhanced error handling and logging
 """
 
 import logging
 import json
 import os
 import random
+import hashlib
 from datetime import datetime, date
 from typing import Dict, Any, List, Optional
 
@@ -35,43 +37,63 @@ except Exception as e:
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Mobile Synthesizer with FIXED Qloo Data Structure Extraction
+    Agent 6: Mobile Synthesizer with Enhanced Multi-Genre Music Selection
     
-    CRITICAL FIX:
-    - Corrected data extraction paths for improved Qloo tools structure
-    - Now properly finds artists and TV shows from nested "entities" arrays
-    - Should eliminate fallback to hardcoded content when Qloo data is available
+    ENHANCEMENTS:
+    - Multi-genre music selection (classical, jazz, easy listening)
+    - Weighted selection favoring calming music
+    - Enhanced fallbacks with classical emphasis
+    - Daily variety with consistent seeds
+    - Improved data structure handling
     """
     
     def __init__(self):
-        self.fallback_data = self._load_fallback_content()
-        logger.info("Mobile Synthesizer initialized with FIXED Qloo data structure extraction")
+        self.fallback_data = self._load_enhanced_fallback_content()
+        logger.info("Mobile Synthesizer initialized with enhanced multi-genre music selection")
     
     async def run(self, audio_content: Dict[str, Any], 
                   visual_content: Dict[str, Any], 
                   sensory_content: Dict[str, Any],
                   daily_theme: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Main entry point for the Mobile Synthesizer Agent
+        Main entry point for the Enhanced Mobile Synthesizer Agent
         """
-        logger.info("🚀 Mobile Synthesizer Agent starting with FIXED data structure extraction")
+        logger.info("🚀 Mobile Synthesizer Agent starting with enhanced multi-genre music")
         return self.synthesize_dashboard_content(audio_content, visual_content, sensory_content, daily_theme)
     
-    def _load_fallback_content(self) -> Dict[str, Any]:
-        """Load fallback content from JSON file."""
+    def _load_enhanced_fallback_content(self) -> Dict[str, Any]:
+        """Load enhanced fallback content with classical music emphasis."""
         try:
             fallback_path = os.path.join(os.path.dirname(__file__), "../../data/fallback_content.json")
             with open(fallback_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
             logger.warning(f"Could not load fallback content: {e}")
-            return self._get_hardcoded_fallbacks()
+            return self._get_enhanced_hardcoded_fallbacks()
     
-    def _get_hardcoded_fallbacks(self) -> Dict[str, Any]:
-        """Hardcoded fallbacks if JSON file unavailable."""
+    def _get_enhanced_hardcoded_fallbacks(self) -> Dict[str, Any]:
+        """Enhanced hardcoded fallbacks with classical music emphasis."""
         return {
-            "music": [{"artist": "Frank Sinatra", "song": "My Way", "youtube_url": ""}],
-            "tv_shows": [{"name": "I Love Lucy", "genre": "Comedy", "youtube_url": ""}],
+            "music": [
+                # Classical music (most therapeutic)
+                {"artist": "Johann Sebastian Bach", "song": "Air on the G String", "genre": "classical", "youtube_url": ""},
+                {"artist": "Wolfgang Amadeus Mozart", "song": "Eine kleine Nachtmusik", "genre": "classical", "youtube_url": ""},
+                {"artist": "Ludwig van Beethoven", "song": "Moonlight Sonata", "genre": "classical", "youtube_url": ""},
+                {"artist": "Frédéric Chopin", "song": "Nocturne in E-flat", "genre": "classical", "youtube_url": ""},
+                
+                # Jazz standards (nostalgic)
+                {"artist": "Frank Sinatra", "song": "The Way You Look Tonight", "genre": "jazz", "youtube_url": ""},
+                {"artist": "Ella Fitzgerald", "song": "Dream a Little Dream", "genre": "jazz", "youtube_url": ""},
+                {"artist": "Nat King Cole", "song": "Unforgettable", "genre": "jazz", "youtube_url": ""},
+                
+                # Easy listening (gentle)
+                {"artist": "Perry Como", "song": "It's Impossible", "genre": "easy_listening", "youtube_url": ""}
+            ],
+            "tv_shows": [
+                {"name": "I Love Lucy", "genre": "Comedy", "youtube_url": ""},
+                {"name": "The Andy Griffith Show", "genre": "Comedy", "youtube_url": ""},
+                {"name": "The Ed Sullivan Show", "genre": "Variety", "youtube_url": ""}
+            ],
             "recipes": [{
                 "name": "Simple Comfort Food",
                 "ingredients": ["Basic ingredients"],
@@ -86,7 +108,7 @@ class MobileSynthesizerAgent:
                                    sensory_content: Dict[str, Any],
                                    daily_theme: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize content for mobile dashboard with FIXED Qloo data extraction
+        Synthesize content for mobile dashboard with enhanced music selection
         """
         
         current_theme = daily_theme.get("theme_of_the_day", {})
@@ -95,9 +117,9 @@ class MobileSynthesizerAgent:
         logger.info(f"🎯 Synthesizing dashboard content for theme: {theme_name}")
         
         try:
-            # FIXED: Select content with correct Qloo data paths
+            # Enhanced content selection with multi-genre music
             selected_content = {
-                "music": self._select_music_content(audio_content, current_theme),
+                "music": self._select_enhanced_music_content(audio_content, current_theme),
                 "tv_show": self._select_tv_content(visual_content, current_theme),
                 "recipe": self._select_recipe_content(sensory_content, current_theme),
                 "theme_info": {
@@ -110,7 +132,7 @@ class MobileSynthesizerAgent:
             # Generate theme-aware conversation starters
             conversation_starters = self._generate_conversation_starters(selected_content, current_theme)
             
-            # Create clean dashboard response
+            # Create enhanced dashboard response
             dashboard_result = {
                 "status": "success",
                 "dashboard_content": {
@@ -119,19 +141,49 @@ class MobileSynthesizerAgent:
                         "description": current_theme.get("description", "Today's theme for memory sharing"),
                         "id": current_theme.get("id", "")
                     },
-                    "selected_content": selected_content,
-                    "conversation_starters": conversation_starters,
+                    
+                    # Main content cards
+                    "music": selected_content["music"],
+                    "tv_show": selected_content["tv_show"], 
+                    "recipe": selected_content["recipe"],
+                    "conversation_starter": {
+                        "question": conversation_starters[0] if conversation_starters else "Tell me about a favorite memory.",
+                        "alternatives": conversation_starters[1:3] if len(conversation_starters) > 1 else [],
+                        "theme_connection": f"Connected to today's {theme_name} theme"
+                    },
+                    
                     "generation_metadata": {
                         "timestamp": datetime.now().isoformat(),
                         "theme_selection_quality": self._assess_content_quality(selected_content),
                         "agent": "MobileSynthesizer",
-                        "version": "fixed_qloo_data_structure"
+                        "version": "enhanced_multi_genre_music",
+                        "music_enhancement": "classical_jazz_easy_listening_selection"
+                    }
+                },
+                
+                # Backend processing info
+                "content": {
+                    "mobile_experience": {
+                        "dashboard_content": {
+                            "theme_of_the_day": {
+                                "name": theme_name,
+                                "description": current_theme.get("description", "Today's theme"),
+                                "id": current_theme.get("id", "")
+                            },
+                            "music": selected_content["music"],
+                            "tv_show": selected_content["tv_show"],
+                            "recipe": selected_content["recipe"],
+                            "conversation_starter": {
+                                "question": conversation_starters[0] if conversation_starters else "Tell me about a favorite memory.",
+                                "theme_connection": f"Connected to today's {theme_name} theme"
+                            }
+                        }
                     }
                 }
             }
             
             logger.info(f"✅ Dashboard content synthesized successfully for theme: {theme_name}")
-            logger.info(f"🎵 Selected music: {selected_content['music'].get('artist', 'Unknown')} - {selected_content['music'].get('song', 'Unknown')}")
+            logger.info(f"🎵 Selected music: {selected_content['music'].get('artist', 'Unknown')} - {selected_content['music'].get('song', 'Unknown')} ({selected_content['music'].get('genre', 'unknown')})")
             logger.info(f"📺 Selected TV show: {selected_content['tv_show'].get('name', 'Unknown')}")
             logger.info(f"🍽️ Selected recipe: {selected_content['recipe'].get('name', 'Unknown')}")
             
@@ -141,25 +193,63 @@ class MobileSynthesizerAgent:
             logger.error(f"❌ Error synthesizing dashboard content: {e}")
             return self._generate_fallback_dashboard(current_theme)
     
-    def _select_music_content(self, audio_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """FIXED: Select music content from correct Qloo data structure"""
-        logger.info("🎵 Extracting music content from Qloo results")
+    def _select_enhanced_music_content(self, audio_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """ENHANCED: Select music from multiple genres with therapeutic weighting"""
+        logger.info("🎵 Extracting music content from enhanced multi-genre Qloo results")
         
         try:
-            # FIXED: Extract from correct Qloo data structure
+            # Extract from correct Qloo data structure
             qloo_intelligence = audio_content.get("qloo_intelligence", {})
             cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
             
-            # CRITICAL FIX: Extract from nested "entities" array
+            # Extract from nested "entities" array (now contains multiple genres)
             artists_data = cultural_recommendations.get("artists", {})
             artists = artists_data.get("entities", []) if isinstance(artists_data, dict) else []
             
-            logger.info(f"🔍 Found {len(artists)} artists from Qloo")
+            logger.info(f"🔍 Found {len(artists)} artists from multiple genres")
+            
+            # 🎭 DEBUG: Show all available artists with their genres
+            if artists:
+                genres_found = {}
+                for artist in artists:
+                    genre = artist.get("music_genre", "unknown")
+                    if genre not in genres_found:
+                        genres_found[genre] = []
+                    genres_found[genre].append(artist.get("name", "Unknown"))
+                
+                for genre, artist_names in genres_found.items():
+                    sample_display = ', '.join(artist_names[:3]) + ('...' if len(artist_names) > 3 else '')
+                    logger.info(f"🎼 {genre.title()} artists ({len(artist_names)}): {sample_display}")
             
             if artists and len(artists) > 0:
-                selected_artist = artists[0]
+                # 🎯 ENHANCED: Variety selection with therapeutic genre weighting
+                today = date.today().isoformat()
+                theme_name = current_theme.get("name", "default")
+                seed_string = f"{today}-{theme_name}-music"
+                daily_seed = int(hashlib.md5(seed_string.encode()).hexdigest()[:8], 16)
+                
+                # 🎵 ENHANCED: Weighted selection favoring calming genres
+                weighted_artists = []
+                genre_weights = {"classical": 3, "jazz": 2, "easy_listening": 1}  # Classical gets 3x weight
+                
+                for artist in artists:
+                    genre = artist.get("music_genre", "unknown")
+                    weight = genre_weights.get(genre, 1)
+                    
+                    # Add multiple copies based on therapeutic value
+                    weighted_artists.extend([artist] * weight)
+                
+                # Use daily seed for consistent but varied selection
+                random.seed(daily_seed)
+                selected_artist = random.choice(weighted_artists)
+                
                 artist_name = selected_artist.get("name", "Unknown Artist")
-                logger.info(f"✅ Selected artist from Qloo: {artist_name}")
+                artist_genre = selected_artist.get("music_genre", "unknown")
+                selection_rationale = selected_artist.get("selection_rationale", "")
+                
+                logger.info(f"✅ Selected artist: {artist_name} ({artist_genre})")
+                logger.info(f"🎯 Selection rationale: {selection_rationale}")
+                logger.info(f"🎲 Selected from {len(artists)} total artists ({len(weighted_artists)} weighted options)")
                 
                 # Map embeddable_url to youtube_url for frontend
                 youtube_url = selected_artist.get("embeddable_url", "")
@@ -169,42 +259,78 @@ class MobileSynthesizerAgent:
                     "song": selected_artist.get("title", selected_artist.get("name", "Unknown Song")),
                     "youtube_url": youtube_url,
                     "year": selected_artist.get("properties", {}).get("year"),
-                    "genre": selected_artist.get("properties", {}).get("genre"),
-                    "source": "qloo_intelligence"
+                    "genre": artist_genre,
+                    "description": f"Music by {artist_name}",
+                    "theme_connection": f"Therapeutic {artist_genre} music for {current_theme.get('name', 'today')}'s theme",
+                    "selection_rationale": selection_rationale,
+                    "source": "qloo_intelligence_multi_genre",
+                    "selection_method": "daily_variety_weighted_calming",
+                    "available_options": len(artists),
+                    "weighted_options": len(weighted_artists)
                 }
         except Exception as e:
-            logger.warning(f"Error selecting music content from Qloo: {e}")
+            logger.warning(f"Error selecting enhanced music content from Qloo: {e}")
         
-        # Fallback
-        logger.info("🔄 Using fallback music content")
-        fallback_music = self.fallback_data.get("music", [{}])[0]
+        # Enhanced fallback with classical music emphasis
+        logger.info("🔄 Using enhanced fallback music with classical emphasis")
+        enhanced_fallback_options = self.fallback_data.get("music", [])
+        
+        # Weight fallback selection toward classical even in fallback
+        weighted_fallback = []
+        for option in enhanced_fallback_options:
+            genre = option.get("genre", "unknown")
+            if genre == "classical":
+                weighted_fallback.extend([option] * 3)  # 3x weight for classical
+            elif genre == "jazz":
+                weighted_fallback.extend([option] * 2)  # 2x weight for jazz
+            else:
+                weighted_fallback.append(option)  # 1x weight for others
+        
+        # Pick different fallback each day with classical preference
+        daily_fallback_seed = hash(date.today().isoformat())
+        random.seed(daily_fallback_seed)
+        selected_fallback = random.choice(weighted_fallback) if weighted_fallback else enhanced_fallback_options[0]
+        
+        logger.info(f"🎲 Selected enhanced fallback: {selected_fallback.get('artist', 'Unknown')} ({selected_fallback.get('genre', 'unknown')})")
+        
         return {
-            "artist": fallback_music.get("artist", "Classic Artist"),
-            "song": fallback_music.get("song", "Timeless Song"),
-            "youtube_url": fallback_music.get("youtube_url", ""),
-            "year": fallback_music.get("year"),
-            "genre": fallback_music.get("genre"),
-            "source": "fallback"
+            "artist": selected_fallback.get("artist", "Classical Artist"),
+            "song": selected_fallback.get("song", "Calming Song"),
+            "youtube_url": selected_fallback.get("youtube_url", ""),
+            "genre": selected_fallback.get("genre", "classical"),
+            "description": f"Music by {selected_fallback.get('artist', 'Classical Artist')}",
+            "theme_connection": f"Calming {selected_fallback.get('genre', 'classical')} music for {current_theme.get('name', 'today')}'s theme",
+            "selection_rationale": "Calming and therapeutic for dementia care",
+            "source": "enhanced_fallback",
+            "selection_method": "daily_fallback_classical_weighted"
         }
     
     def _select_tv_content(self, visual_content: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """FIXED: Select TV content from correct Qloo data structure"""
+        """Select TV content from Qloo results or fallback"""
         logger.info("📺 Extracting TV content from Qloo results")
         
         try:
-            # FIXED: Extract from correct Qloo data structure
+            # Extract from correct Qloo data structure
             qloo_intelligence = visual_content.get("qloo_intelligence", {})
             cultural_recommendations = qloo_intelligence.get("cultural_recommendations", {})
             
-            # CRITICAL FIX: Extract from nested "entities" array
+            # Extract from nested "entities" array
             tv_shows_data = cultural_recommendations.get("tv_shows", {})
             tv_shows = tv_shows_data.get("entities", []) if isinstance(tv_shows_data, dict) else []
             
             logger.info(f"🔍 Found {len(tv_shows)} TV shows from Qloo")
             
             if tv_shows and len(tv_shows) > 0:
-                selected_show = tv_shows[0]
+                # Use daily variety for TV show selection too
+                today = date.today().isoformat()
+                theme_name = current_theme.get("name", "default")
+                seed_string = f"{today}-{theme_name}-tv"
+                daily_seed = int(hashlib.md5(seed_string.encode()).hexdigest()[:8], 16)
+                
+                random.seed(daily_seed)
+                selected_show = random.choice(tv_shows)
                 show_name = selected_show.get("name", "Unknown Show")
+                
                 logger.info(f"✅ Selected TV show from Qloo: {show_name}")
                 
                 # Map embeddable_url to youtube_url for frontend
@@ -215,21 +341,31 @@ class MobileSynthesizerAgent:
                     "youtube_url": youtube_url,
                     "genre": selected_show.get("properties", {}).get("genre"),
                     "year": selected_show.get("properties", {}).get("year"),
-                    "description": selected_show.get("properties", {}).get("description"),
+                    "description": f"Entertainment from the era",
+                    "theme_connection": f"Perfect viewing for {current_theme.get('name', 'today')}'s theme",
                     "source": "qloo_intelligence"
                 }
         except Exception as e:
             logger.warning(f"Error selecting TV content from Qloo: {e}")
         
-        # Fallback
+        # Fallback with variety
         logger.info("🔄 Using fallback TV content")
-        fallback_tv = self.fallback_data.get("tv_shows", [{}])[0]
+        fallback_tv_options = self.fallback_data.get("tv_shows", [
+            {"name": "I Love Lucy", "genre": "Comedy", "youtube_url": ""},
+            {"name": "The Andy Griffith Show", "genre": "Comedy", "youtube_url": ""},
+            {"name": "The Ed Sullivan Show", "genre": "Variety", "youtube_url": ""}
+        ])
+        
+        # Daily variety for fallback too
+        daily_seed = hash(date.today().isoformat()) % len(fallback_tv_options)
+        selected_fallback = fallback_tv_options[daily_seed]
+        
         return {
-            "name": fallback_tv.get("name", "Classic Television"),
-            "youtube_url": fallback_tv.get("youtube_url", ""),
-            "genre": fallback_tv.get("genre"),
-            "year": fallback_tv.get("year"),
-            "description": fallback_tv.get("description"),
+            "name": selected_fallback.get("name", "Classic Television"),
+            "youtube_url": selected_fallback.get("youtube_url", ""),
+            "genre": selected_fallback.get("genre"),
+            "description": "Classic family entertainment",
+            "theme_connection": f"Nostalgic viewing for {current_theme.get('name', 'today')}'s theme",
             "source": "fallback"
         }
     
@@ -241,7 +377,7 @@ class MobileSynthesizerAgent:
         
         logger.info(f"🔍 Selecting recipe content for theme: {current_theme.get('name', 'Unknown')}")
         
-        # IMPROVED: More robust recipe data extraction with better error handling
+        # Improved recipe data extraction with better error handling
         recipe_data = None
         selection_method = "unknown"
         
@@ -284,9 +420,11 @@ class MobileSynthesizerAgent:
                     "name": recipe_data.get("name", "Unknown Recipe"),
                     "ingredients": recipe_data.get("ingredients", []),
                     "instructions": recipe_data.get("instructions", []),
+                    "total_time": recipe_data.get("total_time", "Unknown"),
                     "notes": recipe_data.get("notes", {}),
                     "conversation_starters": recipe_data.get("conversation_starters", []),
-                    "theme_connection": recipe_data.get("theme_connection", ""),
+                    "theme_connection": recipe_data.get("theme_connection", f"Perfect recipe for {current_theme.get('name', 'today')}'s theme"),
+                    "description": f"A {current_theme.get('name', 'themed')} recipe to share and enjoy",
                     "source": "sensory_content",
                     "selection_method": selection_method
                 }
@@ -301,8 +439,11 @@ class MobileSynthesizerAgent:
             "name": fallback_recipe.get("name", "Simple Comfort Food"),
             "ingredients": fallback_recipe.get("ingredients", ["Basic ingredients"]),
             "instructions": fallback_recipe.get("instructions", ["Simple preparation"]),
+            "total_time": "15 minutes",
             "notes": fallback_recipe.get("notes", {"text": "A comforting choice"}),
             "conversation_starters": fallback_recipe.get("conversation_starters", ["What comfort foods do you remember?"]),
+            "theme_connection": f"Comforting recipe for {current_theme.get('name', 'today')}'s theme",
+            "description": "A simple, comforting recipe to share",
             "source": "fallback"
         }
     
@@ -318,95 +459,97 @@ class MobileSynthesizerAgent:
         music = selected_content.get("music", {})
         if music.get("artist"):
             starters.append(f"Do you remember listening to {music['artist']}?")
-            starters.append(f"What kind of music did you enjoy when you were younger?")
+            if music.get("genre") == "classical":
+                starters.append(f"What classical music brings you peace?")
+            elif music.get("genre") == "jazz":
+                starters.append(f"Did you ever dance to jazz music?")
         
-        # TV-based starters
+        # TV show-based starters
         tv_show = selected_content.get("tv_show", {})
         if tv_show.get("name"):
-            starters.append(f"Did you ever watch {tv_show['name']}?")
-            starters.append("What were your favorite TV programs?")
+            starters.append(f"Did you watch {tv_show['name']} with your family?")
         
         # Recipe-based starters
         recipe = selected_content.get("recipe", {})
         if recipe.get("name"):
-            starters.append(f"Have you ever made {recipe['name']}?")
+            starters.append(f"Have you ever made something like {recipe['name']}?")
         
         # Theme-specific starters
         theme_starters = {
-            "Travel": [
-                "What's the most memorable place you've visited?",
-                "Tell me about a special trip you took."
-            ],
-            "Holidays": [
-                "What holiday traditions did your family have?",
-                "What's your favorite holiday memory?"
-            ],
-            "Music": [
-                "What songs remind you of special times?",
-                "Did you have a favorite singer or band?"
-            ],
-            "Food": [
-                "What was your mother's best dish?",
-                "What foods remind you of home?"
-            ]
+            "Travel": ["What's the most memorable trip you've taken?", "Tell me about a place you'd love to visit again."],
+            "Family": ["Tell me about your favorite family tradition.", "What made family gatherings special?"],
+            "Music": ["What song always makes you smile?", "Did you play any instruments?"],
+            "Food": ["What's your favorite comfort food?", "Tell me about a memorable meal."],
+            "Pets": ["Tell me about a pet you loved.", "What animals bring you joy?"],
+            "Seasons": ["What's your favorite season and why?", "What seasonal activities do you enjoy?"]
         }
         
-        starters.extend(theme_starters.get(theme_name, [f"Tell me about your memories of {theme_name.lower()}."]))
+        if theme_name in theme_starters:
+            starters.extend(theme_starters[theme_name])
         
-        # Return up to 5 unique starters
-        return list(set(starters))[:5]
+        # Ensure we have at least 3 starters
+        while len(starters) < 3:
+            starters.append(f"Tell me about a happy memory related to {theme_name.lower()}.")
+        
+        return starters[:5]  # Return top 5
     
     def _assess_content_quality(self, selected_content: Dict[str, Any]) -> str:
-        """Assess the quality of selected content"""
+        """Assess the quality of content selection"""
         
-        quality_scores = []
+        sources = [
+            selected_content.get("music", {}).get("source", "unknown"),
+            selected_content.get("tv_show", {}).get("source", "unknown"),
+            selected_content.get("recipe", {}).get("source", "unknown")
+        ]
         
-        # Check music source
-        if selected_content.get("music", {}).get("source") == "qloo_intelligence":
-            quality_scores.append("music_from_qloo")
+        qloo_count = sum(1 for s in sources if "qloo" in s)
         
-        # Check TV source
-        if selected_content.get("tv_show", {}).get("source") == "qloo_intelligence":
-            quality_scores.append("tv_from_qloo")
-        
-        # Check recipe source
-        if selected_content.get("recipe", {}).get("source") == "sensory_content":
-            quality_scores.append("recipe_from_sensory")
-        
-        if len(quality_scores) >= 2:
-            return "high_quality"
-        elif len(quality_scores) == 1:
-            return "medium_quality"
+        if qloo_count >= 2:
+            return "high_quality_mostly_qloo"
+        elif qloo_count >= 1:
+            return "medium_quality_mixed_sources"
         else:
-            return "fallback_content"
+            return "fallback_quality_all_fallbacks"
     
     def _generate_fallback_dashboard(self, current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate fallback dashboard when synthesis fails"""
+        """Generate complete fallback dashboard when synthesis fails"""
         
-        logger.warning("🔄 Generating fallback dashboard content")
+        logger.warning("🔄 Generating complete fallback dashboard")
         
-        fallback_content = {
-            "music": self.fallback_data.get("music", [{}])[0],
-            "tv_show": self.fallback_data.get("tv_shows", [{}])[0],
-            "recipe": self.fallback_data.get("recipes", [{}])[0],
-            "theme_info": current_theme
-        }
+        theme_name = current_theme.get("name", "Memory Lane")
         
         return {
-            "status": "success",
+            "status": "fallback",
             "dashboard_content": {
-                "theme_of_the_day": current_theme,
-                "selected_content": fallback_content,
-                "conversation_starters": [
-                    "Tell me about your day.",
-                    "What are you thinking about?",
-                    "Would you like to share a memory?"
-                ],
-                "generation_metadata": {
-                    "timestamp": datetime.now().isoformat(),
-                    "theme_selection_quality": "fallback_only",
-                    "agent": "MobileSynthesizer",
-                    "version": "fixed_qloo_data_structure_fallback"
+                "theme_of_the_day": {
+                    "name": theme_name,
+                    "description": "Today's theme for memory sharing",
+                    "id": current_theme.get("id", "fallback")
+                },
+                "music": {
+                    "artist": "Johann Sebastian Bach",
+                    "song": "Air on the G String",
+                    "genre": "classical",
+                    "youtube_url": "",
+                    "description": "Calming classical music",
+                    "source": "fallback"
+                },
+                "tv_show": {
+                    "name": "I Love Lucy",
+                    "genre": "Comedy",
+                    "youtube_url": "",
+                    "description": "Classic family entertainment",
+                    "source": "fallback"
+                },
+                "recipe": {
+                    "name": "Simple Comfort Food",
+                    "ingredients": ["Basic ingredients"],
+                    "instructions": ["Simple preparation"],
+                    "source": "fallback"
+                },
+                "conversation_starter": {
+                    "question": f"Tell me about a happy memory related to {theme_name.lower()}.",
+                    "theme_connection": f"Connected to today's {theme_name} theme"
                 }
             }
         }

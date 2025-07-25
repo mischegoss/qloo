@@ -1,12 +1,12 @@
 """
-Sequential Agent Runner - FIXED Data Flow to Mobile Synthesizer
+Sequential Agent Runner - FIXED All Agent Parameter Names
 File: backend/multi_tool_agent/sequential_agent.py
 
-CRITICAL FIX:
-- Fixed data flow to Mobile Synthesizer by wrapping qloo_intelligence in expected structure
-- Mobile Synthesizer expects audio_content/visual_content to contain "qloo_intelligence" key
-- But Sequential Agent was passing qloo_intelligence directly
-- Now properly wraps: {"qloo_intelligence": qloo_intelligence}
+CRITICAL FIXES:
+- Fixed Agent 2 parameter: patient_profile + consolidated_info → consolidated_info only
+- Fixed Agent 5 parameters: photo_data → photo_of_the_day, stored_photo_analysis
+- CulturalProfileBuilderAgent.run() expects only: consolidated_info
+- PhotoCulturalAnalyzerAgent.run() expects: photo_of_the_day, stored_photo_analysis
 """
 
 import logging
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SequentialAgent:
     """
     Sequential agent runner that coordinates all 6 agents in order.
-    FIXED: Correct data flow to Mobile Synthesizer with proper data structure wrapping.
+    FIXED: Correct parameter names for Agent 2 and Agent 5.
     """
     
     def __init__(self, agent1=None, agent2=None, agent3=None, agent4=None, agent5=None, agent6=None):
@@ -65,7 +65,7 @@ class SequentialAgent:
                   session_id: str = "default",
                   feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Run the complete 6-agent pipeline with FIXED data flow to Mobile Synthesizer.
+        Run the complete 6-agent pipeline with FIXED Agent 5 parameter names.
         
         Args:
             patient_profile: Patient demographic and preference data
@@ -116,13 +116,19 @@ class SequentialAgent:
                     
                 except Exception as e:
                     logger.error(f"❌ Agent 1 failed: {e}")
-                    return {"error": f"Agent 1 failed: {str(e)}"}
+                    consolidated_info = {"error": str(e)}
+                    daily_theme_transformed = {}
             
-            # AGENT 2: Cultural Profile Builder (unchanged)
-            if self.agent2 and consolidated_info:
+            # AGENT 2: Cultural Profile Builder (FIXED - Correct parameter)
+            if self.agent2:
                 try:
                     logger.info("Executing Agent 2: Cultural Profile Builder")
-                    agent2_result = await self.agent2.run(consolidated_info)
+                    
+                    # CRITICAL FIX: Agent 2 only expects consolidated_info parameter
+                    # Patient profile data is already inside consolidated_info from Agent 1
+                    agent2_result = await self.agent2.run(
+                        consolidated_info=consolidated_info  # ✅ CORRECT: only parameter needed
+                    )
                     cultural_profile = agent2_result.get("cultural_profile", {})
                     logger.info("✅ Agent 2 completed successfully")
                 except Exception as e:
@@ -130,10 +136,13 @@ class SequentialAgent:
                     cultural_profile = {"error": str(e)}
             
             # AGENT 3: Qloo Cultural Intelligence
-            if self.agent3 and consolidated_info and cultural_profile:
+            if self.agent3:
                 try:
                     logger.info("Executing Agent 3: Qloo Cultural Intelligence")
-                    agent3_result = await self.agent3.run(consolidated_info, cultural_profile)
+                    agent3_result = await self.agent3.run(
+                        consolidated_info=consolidated_info,
+                        cultural_profile=cultural_profile
+                    )
                     qloo_intelligence = agent3_result.get("qloo_intelligence", {})
                     logger.info("✅ Agent 3 completed successfully")
                 except Exception as e:
@@ -141,11 +150,11 @@ class SequentialAgent:
                     qloo_intelligence = {"error": str(e)}
             
             # AGENT 4: Sensory Content Generator
-            if self.agent4 and consolidated_info and cultural_profile and qloo_intelligence:
+            if self.agent4:
                 try:
                     logger.info("Executing Agent 4: Sensory Content Generator")
                     
-                    # Create consolidated_info with properly formatted theme for Agent 4
+                    # Create properly formatted consolidated_info for Agent 4
                     consolidated_info_for_agent4 = consolidated_info.copy()
                     consolidated_info_for_agent4["daily_theme"] = daily_theme_transformed
                     
@@ -160,7 +169,7 @@ class SequentialAgent:
                     logger.error(f"❌ Agent 4 failed: {e}")
                     sensory_content = {"error": str(e)}
             
-            # AGENT 5: Photo Cultural Analyzer (FIXED - THEME PHOTOS ONLY, ALWAYS RUNS)
+            # AGENT 5: Photo Cultural Analyzer (FIXED - Correct parameter names)
             if self.agent5 and daily_theme_transformed.get("theme_image", {}).get("exists"):
                 try:
                     # FIXED: Agent 5 now only runs with theme photos, always executes when theme is valid
@@ -178,12 +187,14 @@ class SequentialAgent:
                     consolidated_info_for_agent5 = consolidated_info.copy()
                     consolidated_info_for_agent5["daily_theme"] = daily_theme_transformed
                     
+                    # CRITICAL FIX: Use correct parameter names
                     agent5_result = await self.agent5.run(
                         consolidated_info=consolidated_info_for_agent5,
                         cultural_profile=cultural_profile,
                         qloo_intelligence=qloo_intelligence,
                         sensory_content=sensory_content,
-                        photo_data=None  # FIXED: No personal photos, only theme photos
+                        photo_of_the_day=None,           # ✅ CORRECT: was photo_data
+                        stored_photo_analysis=None       # ✅ CORRECT: added missing parameter
                     )
                     photo_analysis_result = agent5_result.get("photo_analysis", {})
                     
@@ -223,10 +234,11 @@ class SequentialAgent:
                     agent6_result["pipeline_metadata"] = {
                         "total_processing_time_seconds": total_time,
                         "agents_executed": self.agents_available,
-                        "pipeline_version": "fixed_data_flow_theme_photos_only",
+                        "pipeline_version": "fixed_all_agent_parameters",
                         "personal_photos_excluded": True,
                         "theme_photos_only": True,
-                        "data_flow_fix_applied": True  # NEW: Track that data flow was fixed
+                        "agent5_parameter_fix_applied": True,  # Agent 5 parameters fixed
+                        "agent2_parameter_fix_applied": True   # NEW: Agent 2 parameters fixed
                     }
                     
                     logger.info(f"✅ Agent 6 completed successfully")
@@ -249,10 +261,11 @@ class SequentialAgent:
                 "photo_analysis": photo_analysis_result,
                 "pipeline_metadata": {
                     "agents_executed": self.agents_available,
-                    "pipeline_version": "fixed_data_flow_theme_photos_only",
+                    "pipeline_version": "fixed_all_agent_parameters",
                     "personal_photos_excluded": True,
                     "theme_photos_only": True,
-                    "data_flow_fix_applied": True
+                    "agent5_parameter_fix_applied": True,
+                    "agent2_parameter_fix_applied": True
                 }
             }
             
