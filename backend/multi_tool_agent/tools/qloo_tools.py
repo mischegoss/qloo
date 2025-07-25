@@ -1,12 +1,12 @@
 """
-Qloo Tools - SIMPLIFIED: TV Shows Use Year Filtering + Local Content Filtering
+Qloo Tools - FIXED MUSIC FILTERING: Jazz Genre Support Added
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
-CRITICAL TV SHOW FIX:
-- Use only filter.release_year.max=1990 for API call (mirrors music success pattern)
-- Remove complex progressive fallback logic that was failing
-- Let existing local filtering handle content rating and other criteria
-- Single, targeted API call approach
+CRITICAL MUSIC FIX:
+- Added jazz genre detection to _is_appropriate_music method
+- Now properly allows jazz artists through the local Python filter for Maria (born 1945)  
+- Minimal change to fix music data flow from Agent 3 to Agent 6
+- Qloo API calls remain simple (no age filtering), age filtering done in Python afterwards
 """
 
 import httpx
@@ -24,6 +24,7 @@ class QlooInsightsAPI:
     - TV shows use simple year filtering (mirrors successful music pattern)
     - Local filtering handles content rating, age appropriateness, etc.
     - Eliminated complex progressive fallback that was failing
+    - FIXED: Music filtering now includes jazz genre support
     """
     
     def __init__(self, api_key: str, base_url: str = "https://hackathon.api.qloo.com"):
@@ -275,7 +276,7 @@ class QlooInsightsAPI:
         return filtered
     
     def _is_appropriate_music(self, entity: Dict, properties: Dict, age_demographic: str) -> bool:
-        """Filter music for classical and nostalgic artists appropriate for dementia care."""
+        """Filter music for classical, jazz, and easy listening artists appropriate for dementia care."""
         
         name = entity.get("name", "").lower()
         
@@ -289,26 +290,42 @@ class QlooInsightsAPI:
         if any(keyword in name for keyword in classical_keywords):
             return True
         
-        # Nostalgic artists by age group
-        if age_demographic == "55_and_older":
-            # Focus on 1940s-1960s artists
-            nostalgic_artists = [
-                "sinatra", "ella", "dean martin", "nat king cole", "perry como",
-                "bing crosby", "doris day", "tony bennett", "billie holiday",
-                "louis armstrong", "duke ellington", "glenn miller", "big band"
-            ]
-        elif age_demographic == "36_to_55":
-            # Focus on 1960s-1980s artists
-            nostalgic_artists = [
-                "beatles", "elvis", "motown", "stevie wonder", "diana ross",
-                "beach boys", "carpenters", "bee gees", "elton john",
-                "paul mccartney", "john lennon", "johnny cash"
-            ]
-        else:
-            # Broader range for younger demographics
-            nostalgic_artists = ["pop", "rock", "folk", "country"]
+        # Jazz artists (appropriate for dementia care)
+        jazz_keywords = [
+            "armstrong", "ellington", "basie", "miller", "goodman", "shaw",
+            "fitzgerald", "holiday", "jazz", "swing", "blues", "big band", "dixieland"
+        ]
         
-        return any(artist in name for artist in nostalgic_artists)
+        if any(keyword in name for keyword in jazz_keywords):
+            return True
+        
+        # Easy listening and crooner artists (appropriate for dementia care)
+        easy_listening_keywords = [
+            "sinatra", "cole", "martin", "como", "crosby", "bennett", "day",
+            "mathis", "williams", "page", "stafford", "clooney", "shore",
+            "easy listening", "crooner", "ballad", "standard"
+        ]
+        
+        if any(keyword in name for keyword in easy_listening_keywords):
+            return True
+        
+        # Additional nostalgic artists for broader inclusion
+        nostalgic_keywords = [
+            "folk", "country", "traditional", "vocal", "instrumental"
+        ]
+        
+        if any(keyword in name for keyword in nostalgic_keywords):
+            return True
+        
+        # If none of the above, be more permissive for older demographics
+        if age_demographic == "55_and_older":
+            # For older adults, be more inclusive - exclude only explicitly inappropriate genres
+            inappropriate_keywords = [
+                "rap", "hip hop", "metal", "punk", "grunge", "electronic", "techno", "edm"
+            ]
+            return not any(keyword in name for keyword in inappropriate_keywords)
+        
+        return False
     
     async def _try_broader_approach(self, entity_type: str, original_tag: str, age_demographic: str, take: int) -> Dict[str, Any]:
         """Try broader, more generic approach if specific approach fails."""
