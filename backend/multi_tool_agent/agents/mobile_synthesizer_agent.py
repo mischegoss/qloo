@@ -1,8 +1,11 @@
 """
-Mobile Synthesizer Agent - Clean Dashboard with Theme Integration
+Mobile Synthesizer Agent - Clean Dashboard with Theme Integration - FIXED
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
 Agent 6: Returns ONLY the clean dashboard with theme-enhanced content selection
+FIXES: 
+- Fixed recipe data structure path (gustatory.elements instead of gustatory.recipes)
+- Enhanced error handling for data structure mismatches
 """
 
 import logging
@@ -33,10 +36,11 @@ except Exception as e:
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Mobile Synthesizer with Theme Integration
+    Agent 6: Mobile Synthesizer with Theme Integration - FIXED
     
     Returns exactly one result per category in a clean response structure.
     NEW: Incorporates daily theme for enhanced content selection and conversation starters.
+    FIXED: Correctly parses recipe data structure from Agent 4 + proper method signature
     """
     
     def __init__(self):
@@ -78,130 +82,54 @@ class MobileSynthesizerAgent:
                   sensory_content: Dict[str, Any],
                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Create clean dashboard with theme-enhanced content selection.
-        
-        Returns ONLY the dashboard with theme integration - no raw agent outputs.
-        """
-        
-        try:
-            logger.info("📱 Agent 6: Creating theme-aware dashboard (single results only)")
-            
-            # Extract daily theme (NEW)
-            daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
-            theme_name = daily_theme.get("name", "General")
-            
-            # DEBUG: Log theme extraction
-            logger.info(f"🔍 DEBUG Agent 6: consolidated_info keys: {list(consolidated_info.keys())}")
-            logger.info(f"🔍 DEBUG Agent 6: daily_theme structure: {consolidated_info.get('daily_theme', 'MISSING')}")
-            logger.info(f"🔍 DEBUG Agent 6: extracted theme name: {theme_name}")
-            
-            logger.info(f"🎯 Dashboard theme: {theme_name}")
-            
-            # Set daily random seed for uniqueness (existing logic)
-            today = date.today()
-            daily_seed = hash(f"{today.year}-{today.month}-{today.day}")
-            random.seed(daily_seed)
-            
-            # Select exactly one result per category with theme awareness (ENHANCED)
-            selected_results = self._select_theme_aware_single_results(
-                qloo_intelligence, sensory_content, photo_analysis, 
-                consolidated_info.get("patient_profile", {}),
-                daily_theme  # NEW: Theme-aware selection
-            )
-            
-            # Generate theme-aware conversation starters (NEW)
-            if theme_manager and daily_theme:
-                try:
-                    theme_conversation_starters = theme_manager.get_theme_conversation_starters(
-                        daily_theme, selected_results
-                    )
-                except Exception as e:
-                    logger.error(f"Error generating theme conversation starters: {e}")
-                    theme_conversation_starters = [
-                        "What brings back good memories for you?",
-                        "Tell me about something that makes you happy"
-                    ]
-            else:
-                theme_conversation_starters = [
-                    "What brings back good memories for you?",
-                    "Tell me about something that makes you happy"
-                ]
-            
-            # Create ONLY the clean dashboard with theme integration
-            dashboard = {
-                "music": selected_results["music"],
-                "tv_show": selected_results["tv_show"], 
-                "recipe": selected_results["recipe"],
-                "photo": selected_results["photo"],
-                "conversation_starters": theme_conversation_starters,
-                # NEW: Theme information in dashboard
-                "theme_of_the_day": {
-                    "name": daily_theme.get("name", "General"),
-                    "description": daily_theme.get("description", "General daily activities"),
-                    "applied_to_content": True,
-                    "sensory_focus": theme_manager.get_theme_sensory_focus(daily_theme) if theme_manager and daily_theme else "visual"
-                }
-            }
-            
-            logger.info(f"✅ Theme-aware dashboard created: {theme_name} theme with single results")
-            
-            # Return ONLY the dashboard with theme metadata
-            return {
-                "dashboard": dashboard,
-                "metadata": {
-                    "timestamp": datetime.now().isoformat(),
-                    "request_type": "dashboard",
-                    "results_per_category": 1,
-                    "daily_seed": daily_seed,
-                    "theme_applied": theme_name,
-                    "theme_enhanced_selection": True,
-                    "fallbacks_used": selected_results.get("fallbacks_used", []),
-                    "response_type": "clean_dashboard_with_theme"
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Agent 6 failed: {e}")
-            return self._create_fallback_dashboard(consolidated_info)
-    
-    def _select_theme_aware_single_results(self, 
-                                         qloo_intelligence: Dict[str, Any],
-                                         sensory_content: Dict[str, Any], 
-                                         photo_analysis: Dict[str, Any],
-                                         patient_profile: Dict[str, Any],
-                                         daily_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        ENHANCED: Select exactly ONE result per category with theme awareness.
+        Clean dashboard synthesis with FIXED recipe data parsing.
         
         Args:
+            consolidated_info: Consolidated information including patient profile and daily theme
+            cultural_profile: Cultural profile data
             qloo_intelligence: Qloo API results
-            sensory_content: Recipe and sensory data
+            sensory_content: Recipe and sensory data (FIXED parsing)
             photo_analysis: Photo analysis results
-            patient_profile: Patient information
-            daily_theme: Current daily theme configuration
             
         Returns:
             Single selected result per category with theme consideration
         """
+        
+        # Extract data from consolidated_info
+        patient_profile = consolidated_info.get("patient_profile", {})
+        daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
         
         results = {}
         fallbacks_used = []
         theme_name = daily_theme.get("name", "General")
         
         # Get content priority with fallback
+        content_priority = "places"  # Default fallback
         if theme_manager and daily_theme:
             try:
-                content_priority = theme_manager.get_theme_content_priority(daily_theme)
+                if hasattr(theme_manager, 'get_theme_content_priority'):
+                    content_priority = theme_manager.get_theme_content_priority(daily_theme)
+                else:
+                    logger.warning("theme_manager does not have get_theme_content_priority method")
             except Exception as e:
                 logger.warning(f"Error getting theme content priority: {e}")
-                content_priority = "places"
         else:
-            content_priority = "places"
+            logger.info("No theme_manager or daily_theme available, using default content priority")
         
         logger.info(f"🎯 Theme-aware selection for '{theme_name}' with priority on '{content_priority}'")
         
+        # DEBUG: Log theme extraction path  
+        logger.info(f"🔍 DEBUG: consolidated_info keys: {list(consolidated_info.keys())}")
+        logger.info(f"🔍 DEBUG: daily_theme structure: {consolidated_info.get('daily_theme', 'MISSING')}")
+        logger.info(f"🔍 DEBUG: extracted theme: {daily_theme}")
+        
         # MUSIC: Enhanced with theme awareness
-        music_result = self._select_theme_aware_music(sensory_content, qloo_intelligence, daily_theme)
+        try:
+            music_result = self._select_theme_aware_music(sensory_content, qloo_intelligence, daily_theme)
+        except Exception as e:
+            logger.error(f"Error in theme-aware music selection: {e}")
+            music_result = None
+        
         if not music_result:
             music_result = random.choice(self.fallback_data["music"])
             fallbacks_used.append("music")
@@ -209,129 +137,86 @@ class MobileSynthesizerAgent:
         logger.info(f"Selected music: {music_result.get('song', 'Unknown')} (theme: {theme_name})")
         
         # TV SHOWS: Enhanced with theme awareness  
-        tv_result = self._select_theme_aware_tv_show(qloo_intelligence, daily_theme)
+        try:
+            tv_result = self._select_theme_aware_tv_show(qloo_intelligence, daily_theme)
+        except Exception as e:
+            logger.error(f"Error in theme-aware TV show selection: {e}")
+            tv_result = None
+            
         if not tv_result:
             tv_result = random.choice(self.fallback_data["tv_shows"])
             fallbacks_used.append("tv_show")
         results["tv_show"] = tv_result
         logger.info(f"Selected TV show: {tv_result.get('name', 'Unknown')} (theme: {theme_name})")
         
-        # RECIPE: Enhanced with theme consideration
-        recipe_result = self._select_theme_aware_recipe(sensory_content, daily_theme)
+        # RECIPE: Enhanced with theme consideration - FIXED DATA STRUCTURE
+        try:
+            recipe_result = self._select_theme_aware_recipe_FIXED(sensory_content, daily_theme)
+        except Exception as e:
+            logger.error(f"Error in FIXED recipe selection: {e}")
+            recipe_result = None
+            
         if not recipe_result:
             recipe_result = {
                 "name": "Simple Comfort Recipe",
                 "total_time": "15 minutes",
-                "ingredients": ["Basic ingredients"],
-                "instructions": ["Simple preparation steps"],
-                "theme_connection": f"Selected for {theme_name} theme"
+                "ingredients": ["Simple ingredients"],
+                "instructions": ["Easy preparation"],
+                "nostalgic_description": "Comforting home-style cooking",
+                "theme_connection": f"Perfect for {theme_name} theme",
+                "theme_selected": False,
+                "source": "fallback"
             }
             fallbacks_used.append("recipe")
         results["recipe"] = recipe_result
         logger.info(f"Selected recipe: {recipe_result.get('name', 'Unknown')} (theme: {theme_name})")
         
-        # PHOTO: Existing logic (could be enhanced with theme in future)
-        photo_result = self._select_single_photo(photo_analysis, patient_profile)
-        results["photo"] = photo_result
-        
-        results["fallbacks_used"] = fallbacks_used
-        return results
-    
-    def _select_theme_aware_music(self, 
-                                sensory_content: Dict[str, Any],
-                                qloo_intelligence: Dict[str, Any],
-                                daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        ENHANCED: Select music with theme awareness.
-        
-        Args:
-            sensory_content: Sensory content from Agent 4
-            qloo_intelligence: Qloo results from Agent 3
-            daily_theme: Current theme configuration
+        # CONVERSATION: Theme-enhanced conversation starters
+        try:
+            conversation_result = self._select_theme_aware_conversation(daily_theme, patient_profile)
+        except Exception as e:
+            logger.error(f"Error in theme-aware conversation selection: {e}")
+            conversation_result = "What brings back good memories for you?"
             
-        Returns:
-            Single music selection with theme consideration
-        """
+        results["conversation_starter"] = conversation_result
+        logger.info(f"Selected conversation: {conversation_result[:50]}... (theme: {theme_name})")
         
-        # Try to get music from Qloo results first
-        qloo_artists = self._get_english_filtered_qloo_results(
-            qloo_intelligence, "cultural_recommendations", "artists"
-        )
-        
-        # If theme prioritizes music content, prefer Qloo artists
-        theme_priority = theme_manager.get_theme_content_priority(daily_theme) if daily_theme else "places"
-        
-        if qloo_artists and (theme_priority == "artists" or daily_theme.get("name") == "Music"):
-            # Select first English artist from Qloo for theme-appropriate music
-            artist_data = qloo_artists[0]
-            return {
-                "artist": artist_data.get("name", "Unknown Artist"),
-                "song": "Popular song",  # Could be enhanced with specific song lookup
-                "youtube_url": "",
-                "theme_selected": True,
-                "source": "qloo_theme_priority"
-            }
-        
-        # Fallback to general music selection
-        return self._select_single_music(sensory_content)
-    
-    def _select_theme_aware_tv_show(self,
-                                  qloo_intelligence: Dict[str, Any],
-                                  daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        ENHANCED: Select TV show with theme awareness.
-        
-        Args:
-            qloo_intelligence: Qloo results from Agent 3
-            daily_theme: Current theme configuration
+        # PHOTO: Keep existing logic but theme-enhance
+        try:
+            photo_result = self._select_single_photo(photo_analysis, patient_profile)
+        except Exception as e:
+            logger.error(f"Error in photo selection: {e}")
+            photo_result = None
             
-        Returns:
-            Single TV show selection with theme consideration
-        """
+        if photo_result:
+            results["photo"] = photo_result
+            logger.info(f"Selected photo: {photo_result.get('title', 'Unknown')}")
         
-        # Get English-filtered TV shows from Qloo
-        qloo_tv_shows = self._get_english_filtered_qloo_results(
-            qloo_intelligence, "cultural_recommendations", "tv_shows"
-        )
-        
-        if not qloo_tv_shows:
-            return None
-        
-        # Theme-aware selection logic
-        theme_name = daily_theme.get("name", "General")
-        
-        # Get theme priority with fallback
-        if theme_manager and daily_theme:
-            try:
-                theme_priority = theme_manager.get_theme_content_priority(daily_theme)
-            except Exception as e:
-                logger.warning(f"Error getting theme priority: {e}")
-                theme_priority = "places"
-        else:
-            theme_priority = "places"
-        
-        # If theme emphasizes visual content, prioritize TV shows
-        if theme_priority == "tv_shows" or theme_name in ["Movies", "Childhood", "Family"]:
-            # Select the first available TV show for theme relevance
-            selected_show = qloo_tv_shows[0]
-            logger.info(f"Theme-prioritized TV show selection for '{theme_name}'")
-        else:
-            # Random selection from available shows
-            selected_show = random.choice(qloo_tv_shows)
+        # Dashboard metadata with theme info
+        dashboard_metadata = {
+            "theme": {
+                "name": theme_name,
+                "content_priority": content_priority,
+                "theme_applied": True
+            },
+            "fallbacks_used": fallbacks_used,
+            "total_fallbacks": len(fallbacks_used),
+            "content_quality": "high" if len(fallbacks_used) == 0 else "mixed",
+            "generation_timestamp": datetime.now().isoformat()
+        }
         
         return {
-            "name": selected_show.get("name", "Classic TV Show"),
-            "description": selected_show.get("description", "Nostalgic television program"),
-            "youtube_url": "",  # Could be enhanced with YouTube search
-            "theme_selected": theme_priority == "tv_shows",
-            "source": "qloo_theme_aware"
+            "mobile_experience": {
+                "dashboard_content": results,
+                "dashboard_metadata": dashboard_metadata
+            }
         }
     
-    def _select_theme_aware_recipe(self,
-                                 sensory_content: Dict[str, Any],
-                                 daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _select_theme_aware_recipe_FIXED(self, 
+                                       sensory_content: Dict[str, Any], 
+                                       daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-        ENHANCED: Select recipe with theme consideration.
+        FIXED: Select theme-aware recipe with correct data structure parsing.
         
         Args:
             sensory_content: Sensory content including theme-filtered recipes
@@ -343,58 +228,77 @@ class MobileSynthesizerAgent:
         
         # DEBUG: Log sensory_content structure to understand the data format
         logger.info(f"🔍 DEBUG: sensory_content keys: {list(sensory_content.keys())}")
-        if sensory_content.get("sensory_content"):
-            logger.info(f"🔍 DEBUG: inner sensory_content keys: {list(sensory_content['sensory_content'].keys())}")
+        if sensory_content.get("content_by_sense"):
+            logger.info(f"🔍 DEBUG: content_by_sense keys: {list(sensory_content['content_by_sense'].keys())}")
+            if sensory_content.get("content_by_sense", {}).get("gustatory"):
+                gustatory = sensory_content["content_by_sense"]["gustatory"]
+                logger.info(f"🔍 DEBUG: gustatory keys: {list(gustatory.keys()) if isinstance(gustatory, dict) else 'not a dict'}")
+                if isinstance(gustatory, dict) and gustatory.get("elements"):
+                    logger.info(f"🔍 DEBUG: gustatory.elements count: {len(gustatory['elements'])}")
         
-        # Try multiple possible paths where recipes might be stored
-        recipes_data = None
+        # Try multiple possible paths where recipes might be stored - CORRECTED PATHS
+        recipe_data = None
         
-        # Path 1: sensory_content.sensory_content.recipes (most likely)
-        if sensory_content.get("sensory_content", {}).get("recipes"):
-            recipes_data = sensory_content["sensory_content"]["recipes"]
-            logger.info(f"🔍 DEBUG: Found recipes via path 1: {len(recipes_data)} recipes")
+        # Path 1: sensory_content.content_by_sense.gustatory.elements (CORRECTED - no double nesting)
+        try:
+            gustatory_content = sensory_content.get("content_by_sense", {}).get("gustatory")
+            if isinstance(gustatory_content, dict) and gustatory_content.get("elements"):
+                recipe_elements = gustatory_content["elements"]
+                if recipe_elements and len(recipe_elements) > 0:
+                    recipe_data = recipe_elements[0]  # Take first element
+                    logger.info(f"🔍 SUCCESS: Found recipe via CORRECTED path (content_by_sense.gustatory.elements): {recipe_data.get('name', 'Unknown')}")
+        except Exception as e:
+            logger.warning(f"Error parsing gustatory elements: {e}")
         
-        # Path 2: sensory_content.recipes (alternative)
-        elif sensory_content.get("recipes"):
-            recipes_data = sensory_content["recipes"]
-            logger.info(f"🔍 DEBUG: Found recipes via path 2: {len(recipes_data)} recipes")
+        # Path 2: Legacy fallback paths (kept for compatibility)
+        if not recipe_data:
+            # Check sensory_content.recipes (direct)
+            if sensory_content.get("recipes"):
+                recipes_data = sensory_content["recipes"]
+                recipe_data = recipes_data[0] if recipes_data else None
+                logger.info(f"🔍 DEBUG: Found recipes via legacy direct path: {recipe_data.get('name', 'Unknown') if recipe_data else 'None'}")
         
-        # Path 3: Check for gustatory content
-        elif sensory_content.get("sensory_content", {}).get("content_by_sense", {}).get("gustatory"):
-            gustatory_content = sensory_content["sensory_content"]["content_by_sense"]["gustatory"]
-            if isinstance(gustatory_content, dict) and gustatory_content.get("recipes"):
-                recipes_data = gustatory_content["recipes"]
-                logger.info(f"🔍 DEBUG: Found recipes via path 3 (gustatory): {len(recipes_data)} recipes")
+        # Path 3: Check for nested sensory_content (legacy)
+        if not recipe_data:
+            if sensory_content.get("sensory_content", {}).get("content_by_sense", {}).get("gustatory"):
+                gustatory_content = sensory_content["sensory_content"]["content_by_sense"]["gustatory"]
+                if isinstance(gustatory_content, dict) and gustatory_content.get("elements"):
+                    recipe_elements = gustatory_content["elements"]
+                    if recipe_elements and len(recipe_elements) > 0:
+                        recipe_data = recipe_elements[0]
+                        logger.info(f"🔍 DEBUG: Found recipes via legacy nested path: {recipe_data.get('name', 'Unknown')}")
         
-        if not recipes_data:
-            logger.warning("🔍 DEBUG: No recipes found in sensory_content - using fallback")
+        if not recipe_data:
+            logger.warning("🔍 WARNING: No recipes found in sensory_content - using fallback")
             return None
-        
-        # Select first recipe (Agent 4 already did theme filtering and prioritization)
-        selected_recipe = recipes_data[0]
         
         # Ensure theme connection is included
         theme_name = daily_theme.get("name", "General")
-        if not selected_recipe.get("theme_connection"):
-            selected_recipe["theme_connection"] = f"Selected for {theme_name} theme"
+        if not recipe_data.get("theme_connection"):
+            recipe_data["theme_connection"] = f"Selected for {theme_name} theme"
         
-        logger.info(f"🎯 SUCCESS: Selected theme-filtered recipe: {selected_recipe.get('name', 'Unknown')}")
+        logger.info(f"🎯 SUCCESS: Selected theme-filtered recipe: {recipe_data.get('name', 'Unknown')}")
         
-        # Format for dashboard
+        # Format for dashboard - NORMALIZED STRUCTURE
         return {
-            "name": selected_recipe.get("name", "Comfort Recipe"),
-            "total_time": self._estimate_recipe_time(selected_recipe),
-            "ingredients": selected_recipe.get("ingredients", []),
-            "instructions": selected_recipe.get("instructions", []),
-            "nostalgic_description": selected_recipe.get("nostalgic_description", ""),
-            "theme_connection": selected_recipe.get("theme_connection", ""),
-            "youtube_url": selected_recipe.get("youtube_url", ""),
+            "name": recipe_data.get("name", "Comfort Recipe"),
+            "total_time": self._estimate_recipe_time(recipe_data),
+            "ingredients": recipe_data.get("ingredients", []),
+            "instructions": recipe_data.get("instructions", []),
+            "nostalgic_description": recipe_data.get("description", recipe_data.get("heritage_connection", "")),
+            "theme_connection": recipe_data.get("theme_connection", ""),
+            "youtube_url": recipe_data.get("youtube_url", ""),
+            "cultural_context": recipe_data.get("cultural_context", ""),
             "theme_selected": True,
             "source": "sensory_content_theme_filtered"
         }
     
     def _estimate_recipe_time(self, recipe: Dict[str, Any]) -> str:
         """Estimate total time for a recipe"""
+        # Look for existing time info first
+        if recipe.get("total_time"):
+            return recipe["total_time"]
+        
         # Look for time indicators in instructions
         instructions = recipe.get("instructions", [])
         if any("microwave" in str(inst).lower() for inst in instructions):
@@ -404,98 +308,133 @@ class MobileSynthesizerAgent:
         else:
             return "10-15 minutes"
     
-    def _select_single_music(self, sensory_content: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Select one music result from sensory content (existing logic with minor enhancements)."""
+    def _select_theme_aware_music(self, 
+                                sensory_content: Dict[str, Any], 
+                                qloo_intelligence: Dict[str, Any], 
+                                daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Select theme-aware music with enhanced logic."""
         
-        # This is the existing logic - kept for compatibility
         try:
-            # Try to extract music from sensory content
-            # (This would need to be implemented based on actual sensory content structure)
+            # Try to get music from sensory content first
+            auditory_content = sensory_content.get("sensory_content", {}).get("content_by_sense", {}).get("auditory")
+            if auditory_content and auditory_content.get("elements"):
+                music_elements = auditory_content["elements"]
+                if music_elements:
+                    music_data = music_elements[0]
+                    theme_name = daily_theme.get("name", "General")
+                    
+                    return {
+                        "artist": music_data.get("artist", "Unknown Artist"),
+                        "song": music_data.get("title", music_data.get("song", "Unknown Song")),
+                        "youtube_url": music_data.get("youtube_url", ""),
+                        "description": music_data.get("description", ""),
+                        "theme_connection": f"Selected for {theme_name} theme",
+                        "source": "sensory_content"
+                    }
+            
+            # Fallback to Qloo intelligence
+            qloo_artists = qloo_intelligence.get("cultural_recommendations", {}).get("artists", {})
+            if qloo_artists.get("available") and qloo_artists.get("entities"):
+                artist_data = qloo_artists["entities"][0]
+                return {
+                    "artist": artist_data.get("name", "Unknown Artist"),
+                    "song": "Classic Hit",
+                    "youtube_url": "",
+                    "description": f"Music by {artist_data.get('name', 'Unknown Artist')}",
+                    "theme_connection": f"Cultural match for {daily_theme.get('name', 'General')} theme",
+                    "source": "qloo_intelligence"
+                }
+            
             return None
+            
         except Exception as e:
-            logger.warning(f"Error selecting music from sensory content: {e}")
+            logger.error(f"Error selecting theme-aware music: {e}")
             return None
+    
+    def _select_theme_aware_tv_show(self, 
+                                  qloo_intelligence: Dict[str, Any], 
+                                  daily_theme: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Select theme-aware TV show."""
+        
+        try:
+            qloo_tv = qloo_intelligence.get("cultural_recommendations", {}).get("tv_shows", {})
+            if qloo_tv.get("available") and qloo_tv.get("entities"):
+                tv_data = qloo_tv["entities"][0]
+                theme_name = daily_theme.get("name", "General")
+                
+                return {
+                    "name": tv_data.get("name", "Classic TV Show"),
+                    "description": tv_data.get("description", f"Entertainment from the era"),
+                    "youtube_url": tv_data.get("youtube_url", ""),
+                    "theme_connection": f"Perfect viewing for {theme_name} theme",
+                    "source": "qloo_intelligence"
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error selecting theme-aware TV show: {e}")
+            return None
+    
+    def _select_theme_aware_conversation(self, 
+                                       daily_theme: Dict[str, Any], 
+                                       patient_profile: Dict[str, Any]) -> str:
+        """Generate theme-aware conversation starter."""
+        
+        theme_name = daily_theme.get("name", "General")
+        heritage = patient_profile.get("cultural_heritage", "American")
+        
+        # Theme-specific conversation starters
+        theme_conversations = {
+            "Memory Lane": [
+                f"What was your favorite {heritage} tradition growing up?",
+                "Tell me about a special meal your family used to make",
+                "What music did you dance to when you were young?"
+            ],
+            "Cultural Heritage": [
+                f"What do you remember about {heritage} celebrations?",
+                "Tell me about the neighborhood where you grew up",
+                "What stories did your parents tell you about the old country?"
+            ],
+            "Family Traditions": [
+                "What holiday traditions meant the most to your family?",
+                "Tell me about Sunday dinners when you were young",
+                "What songs did your family sing together?"
+            ]
+        }
+        
+        conversations = theme_conversations.get(theme_name, [
+            "What's your favorite memory from when you were young?",
+            "Tell me about something that always makes you smile",
+            "What reminds you of home?"
+        ])
+        
+        return random.choice(conversations)
     
     def _select_single_photo(self, 
                            photo_analysis: Dict[str, Any], 
                            patient_profile: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Select one photo result (existing logic)."""
         
-        if not photo_analysis or photo_analysis.get("status") == "skipped":
+        try:
+            if not photo_analysis or not photo_analysis.get("photos"):
+                return None
+            
+            photos = photo_analysis["photos"]
+            if not photos:
+                return None
+            
+            # Select first available photo
+            selected_photo = photos[0]
+            
+            return {
+                "title": selected_photo.get("title", "Photo of the Day"),
+                "description": selected_photo.get("description", "A meaningful moment"),
+                "cultural_context": selected_photo.get("cultural_context", ""),
+                "conversation_starter": selected_photo.get("conversation_starter", "Tell me about this photo"),
+                "source": "photo_analysis"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error selecting photo: {e}")
             return None
-        
-        try:
-            # Extract photo information
-            photo_data = photo_analysis.get("photo_analysis", {})
-            if photo_data and photo_data.get("available"):
-                return {
-                    "description": photo_data.get("description", "Personal photo"),
-                    "emotional_context": photo_data.get("emotional_context", ""),
-                    "conversation_starters": photo_data.get("conversation_starters", []),
-                    "available": True,
-                    "source": "photo_analysis"
-                }
-        except Exception as e:
-            logger.warning(f"Error selecting photo: {e}")
-        
-        return None
-    
-    def _get_english_filtered_qloo_results(self, 
-                                         qloo_intelligence: Dict[str, Any],
-                                         category: str,
-                                         subcategory: str) -> List[Dict[str, Any]]:
-        """Extract English-filtered results from Qloo intelligence (existing helper method)."""
-        
-        try:
-            results = qloo_intelligence.get("qloo_intelligence", {}).get(category, {}).get(subcategory, {})
-            if results.get("available") and results.get("entities"):
-                return results["entities"]
-        except Exception as e:
-            logger.warning(f"Error extracting Qloo results for {subcategory}: {e}")
-        
-        return []
-    
-    def _create_fallback_dashboard(self, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback dashboard if main processing fails."""
-        
-        logger.warning("Creating fallback dashboard with theme information")
-        
-        # Extract theme for fallback
-        daily_theme = consolidated_info.get("daily_theme", {}).get("theme", {})
-        theme_name = daily_theme.get("name", "Comfort")
-        
-        # Create simple fallback dashboard
-        fallback_dashboard = {
-            "music": {"artist": "Frank Sinatra", "song": "My Way", "youtube_url": ""},
-            "tv_show": {"name": "I Love Lucy", "description": "Classic comedy", "youtube_url": ""},
-            "recipe": {
-                "name": "Warm Comfort Food",
-                "ingredients": ["Simple ingredients"],
-                "instructions": ["Easy preparation"],
-                "theme_connection": f"Selected for {theme_name} theme"
-            },
-            "photo": None,
-            "conversation_starters": [
-                f"Let's talk about {theme_name.lower()}",
-                "What brings back good memories for you?",
-                "Tell me about something that makes you happy"
-            ],
-            "theme_of_the_day": {
-                "name": theme_name,
-                "description": daily_theme.get("description", "Daily comfort activities"),
-                "applied_to_content": False,
-                "sensory_focus": "comfort"
-            }
-        }
-        
-        return {
-            "dashboard": fallback_dashboard,
-            "metadata": {
-                "timestamp": datetime.now().isoformat(),
-                "request_type": "dashboard",
-                "results_per_category": 1,
-                "theme_applied": theme_name,
-                "fallback_used": True,
-                "response_type": "fallback_dashboard_with_theme"
-            }
-        }

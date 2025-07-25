@@ -1,11 +1,12 @@
 """
-Sensory Content Generator Agent with LIMITED API Calls - RATE LIMITING SOLUTION
+Sensory Content Generator Agent with LIMITED API Calls - FIXED DATA STRUCTURE
 File: backend/multi_tool_agent/agents/sensory_content_generator_agent.py
 
 FIXES:
 - Only use FIRST/BEST result from Qloo (not all results)
 - Only make ONE YouTube call per dashboard refresh
 - Only make ONE Gemini call per dashboard refresh (with caching)
+- FIXED: Ensure gustatory content has proper 'elements' structure for Agent 6
 - Early exit strategies to prevent unnecessary API calls
 """
 
@@ -28,13 +29,17 @@ class SensoryContentGeneratorAgent:
     - Makes maximum 1 YouTube call per dashboard refresh
     - Makes maximum 1 Gemini call per dashboard refresh
     - Leverages daily caching in both APIs
+    
+    DATA STRUCTURE FIXES:
+    - Ensures gustatory content has proper 'elements' array for Agent 6
+    - Maintains consistent structure across all sensory content
     """
     
     def __init__(self, gemini_tool, youtube_tool):
         self.gemini_tool = gemini_tool
         self.youtube_tool = youtube_tool
         self.recipes_data = self._load_recipes_json()
-        logger.info("Sensory Content Generator initialized with LIMITED API calls")
+        logger.info("Sensory Content Generator initialized with LIMITED API calls and FIXED data structure")
     
     def _load_recipes_json(self) -> List[Dict[str, Any]]:
         """Load simple recipes from JSON file."""
@@ -62,6 +67,12 @@ class SensoryContentGeneratorAgent:
                 "ingredients": ["1/2 cup oats", "1 cup milk", "1 tbsp raisins", "Dash cinnamon"],
                 "instructions": ["Mix all ingredients in microwave-safe bowl", "Microwave 90 seconds to 2 minutes", "Let cool 1 minute before serving"],
                 "notes": "Warm and sweet, often served by grandparents."
+            },
+            {
+                "name": "Simple Comfort Bread",
+                "ingredients": ["2 slices bread", "1 tbsp butter", "Dash cinnamon"],
+                "instructions": ["Toast bread lightly", "Spread butter while warm", "Sprinkle with cinnamon"],
+                "notes": "Simple, comforting, and familiar."
             }
         ]
     
@@ -70,17 +81,20 @@ class SensoryContentGeneratorAgent:
                   cultural_profile: Dict[str, Any], 
                   qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate sensory content with LIMITED API calls to prevent rate limiting.
+        Generate sensory content with LIMITED API calls and FIXED data structure.
         
         RATE LIMITING STRATEGY:
         - Extract ONLY first/best results from Qloo
         - Make maximum 1 YouTube API call
         - Make maximum 1 Gemini API call  
         - Use caching for daily consistency
+        
+        DATA STRUCTURE FIX:
+        - Ensure gustatory content returns proper 'elements' array
         """
         
         try:
-            logger.info("🎵 Agent 4: Starting LIMITED sensory content generation")
+            logger.info("🎵 Agent 4: Starting LIMITED sensory content generation with FIXED structure")
             
             # Extract key information
             patient_profile = consolidated_info.get("patient_profile", {})
@@ -104,8 +118,8 @@ class SensoryContentGeneratorAgent:
             # Generate content for each sense with LIMITED API calls
             sensory_content = {}
             
-            # TASTE: ONE Gemini call maximum with caching
-            sensory_content["gustatory"] = await self._generate_limited_recipe(heritage, age)
+            # TASTE: ONE Gemini call maximum with caching - FIXED STRUCTURE
+            sensory_content["gustatory"] = await self._generate_limited_recipe_FIXED(heritage, age)
             
             # SOUND: ONE YouTube call maximum with caching
             sensory_content["auditory"] = await self._generate_limited_music_content(heritage, first_artist)
@@ -125,13 +139,14 @@ class SensoryContentGeneratorAgent:
                         "heritage_used": heritage,
                         "age_optimized_for": age,
                         "rate_limiting_applied": True,
+                        "data_structure_fixed": True,
                         "max_api_calls": {
                             "youtube": 1,
                             "gemini": 1,
                             "qloo": 0  # Already called by Agent 3
                         },
                         "generation_timestamp": datetime.now().isoformat(),
-                        "agent_version": "limited_api_calls"
+                        "agent_version": "limited_api_calls_fixed_structure"
                     }
                 }
             }
@@ -155,13 +170,14 @@ class SensoryContentGeneratorAgent:
         logger.info(f"No {category} results available from Qloo")
         return None
     
-    async def _generate_limited_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
+    async def _generate_limited_recipe_FIXED(self, heritage: str, age: int) -> Dict[str, Any]:
         """
         Generate recipe with LIMITED Gemini calls (maximum 1 per day via caching).
+        FIXED: Returns proper 'elements' structure for Agent 6.
         """
         
         try:
-            logger.info(f"LIMITED recipe generation for {heritage} heritage")
+            logger.info(f"LIMITED recipe generation for {heritage} heritage with FIXED structure")
             
             # Step 1: Select appropriate base recipe (no API call)
             base_recipe = self._select_base_recipe(heritage, age)
@@ -169,9 +185,9 @@ class SensoryContentGeneratorAgent:
             # Step 2: ONE Gemini call maximum (cached daily)
             customized_recipe = await self._apply_limited_customization(base_recipe, heritage, age)
             
-            # Step 3: Format response
+            # Step 3: Format response with FIXED structure (elements array)
             if customized_recipe:
-                recipe_elements = [{
+                recipe_element = {
                     "content_type": "customized_recipe",
                     "name": customized_recipe.get("name", base_recipe["name"]),
                     "description": customized_recipe.get("description", f"Simple {heritage} comfort recipe"),
@@ -181,25 +197,86 @@ class SensoryContentGeneratorAgent:
                     "instructions": customized_recipe.get("instructions", base_recipe["instructions"]),
                     "cultural_context": customized_recipe.get("cultural_context", f"Traditional {heritage} comfort food"),
                     "heritage_connection": customized_recipe.get("heritage_connection", base_recipe.get("notes", "")),
+                    "nostalgic_description": customized_recipe.get("description", base_recipe.get("notes", "")),
                     "source": "recipes_json_limited_customization",
-                    "base_recipe": base_recipe["name"]
-                }]
+                    "base_recipe": base_recipe["name"],
+                    "youtube_url": customized_recipe.get("youtube_url", "")
+                }
                 
+                # FIXED: Return with proper 'elements' array structure
                 return {
                     "sense_type": "gustatory", 
                     "available": True,
-                    "elements": recipe_elements,
-                    "api_calls_made": 1 if customized_recipe else 0,
+                    "elements": [recipe_element],  # FIXED: Array with single recipe element
+                    "api_calls_made": 1,
+                    "customization_applied": True,
                     "caching_used": True
                 }
             else:
-                # Use base recipe without customization
+                # Use base recipe without customization - FIXED STRUCTURE
                 logger.info("Using base recipe without Gemini customization")
-                return self._format_base_recipe(base_recipe, heritage)
+                return self._format_base_recipe_FIXED(base_recipe, heritage)
                 
         except Exception as e:
             logger.error(f"LIMITED recipe generation failed: {e}")
-            return self._format_base_recipe(random.choice(self.recipes_data), heritage)
+            return self._format_base_recipe_FIXED(random.choice(self.recipes_data), heritage)
+    
+    def _format_base_recipe_FIXED(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
+        """Format base recipe without customization (no API calls) - FIXED STRUCTURE."""
+        
+        recipe_element = {
+            "content_type": "base_recipe",
+            "name": f"Simple {heritage} {base_recipe['name']}",
+            "description": f"Comforting {heritage} style {base_recipe['name'].lower()}",
+            "total_time": "20 minutes",
+            "difficulty": "very_easy",
+            "ingredients": base_recipe["ingredients"],
+            "instructions": base_recipe["instructions"],
+            "cultural_context": f"Traditional {heritage} comfort food",
+            "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
+            "nostalgic_description": base_recipe.get("notes", "Simple, familiar comfort food"),
+            "source": "recipes_json_base_no_customization",
+            "youtube_url": ""
+        }
+        
+        # FIXED: Return with proper 'elements' array structure
+        return {
+            "sense_type": "gustatory",
+            "available": True,
+            "elements": [recipe_element],  # FIXED: Array with single recipe element
+            "api_calls_made": 0,
+            "customization_applied": False
+        }
+    
+    def _select_base_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
+        """Select culturally appropriate base recipe without API calls."""
+        
+        # Heritage-based preferences
+        heritage_preferences = {
+            "Italian-American": ["apple", "oatmeal", "bread", "cocoa"],
+            "Mexican-American": ["cinnamon", "cocoa", "banana"],
+            "Irish-American": ["oatmeal", "bread", "cocoa"],
+            "German-American": ["apple", "bread", "cocoa"],
+            "American": ["apple", "oatmeal", "banana", "bread"]
+        }
+        
+        preferred_keywords = heritage_preferences.get(heritage, heritage_preferences["American"])
+        
+        # Find recipes matching heritage preferences
+        matching_recipes = []
+        for recipe in self.recipes_data:
+            recipe_text = (recipe["name"] + " " + " ".join(recipe["ingredients"])).lower()
+            if any(keyword in recipe_text for keyword in preferred_keywords):
+                matching_recipes.append(recipe)
+        
+        # If no matches, use any recipe
+        if not matching_recipes:
+            matching_recipes = self.recipes_data
+        
+        # Select random from matching recipes
+        selected = random.choice(matching_recipes)
+        logger.info(f"Selected base recipe: {selected['name']} for {heritage}")
+        return selected
     
     async def _apply_limited_customization(self, base_recipe: Dict[str, Any], heritage: str, age: int) -> Optional[Dict[str, Any]]:
         """Apply customization with LIMITED Gemini calls (cached daily)."""
@@ -254,211 +331,177 @@ class SensoryContentGeneratorAgent:
         """Generate music content with LIMITED YouTube calls (maximum 1)."""
         
         try:
-            # If we have a Qloo artist, use it for ONE YouTube search
-            if first_artist and first_artist.get("name"):
-                artist_name = first_artist["name"]
-                logger.info(f"LIMITED YouTube search for first artist: {artist_name}")
-                
-                # ONE YouTube call maximum (with daily caching built into the tool)
-                youtube_results = await self.youtube_tool.search_music(f"{artist_name} classic songs", max_results=3)
-                
-                if youtube_results and youtube_results.get("items"):
-                    music_elements = []
-                    for item in youtube_results["items"]:  # Use all results from the single call
-                        music_elements.append({
-                            "title": item.get("snippet", {}).get("title", "Classic Song"),
-                            "description": item.get("snippet", {}).get("description", "")[:100],
-                            "id": item.get("id", {}),
-                            "cultural_relevance": "high",
-                            "source": "limited_qloo_youtube",
-                            "artist_source": artist_name
-                        })
-                    
-                    return {
-                        "sense_type": "auditory",
-                        "available": True, 
-                        "elements": music_elements,
-                        "api_calls_made": 1,
-                        "caching_used": True,
-                        "artist_used": artist_name
-                    }
+            # Step 1: Determine search query (no API call)
+            if first_artist:
+                search_query = first_artist["name"]
+                logger.info(f"LIMITED music search for Qloo artist: {search_query}")
+            else:
+                # Fallback to heritage-based search
+                heritage_music = {
+                    "Italian-American": "Frank Sinatra Dean Martin",
+                    "Irish-American": "Celtic Irish traditional",
+                    "Mexican-American": "mariachi traditional Mexican",
+                    "German-American": "polka traditional German",
+                    "American": "classic American standards"
+                }
+                search_query = heritage_music.get(heritage, "classic nostalgic music")
+                logger.info(f"LIMITED music search for heritage {heritage}: {search_query}")
             
-            # Fallback: No YouTube call, use heritage-based suggestion
-            logger.info("No Qloo artist available - using fallback music suggestion")
-            return {
-                "sense_type": "auditory",
-                "available": True,
-                "elements": [{
-                    "title": f"{heritage} Traditional Music",
-                    "description": f"Gentle traditional {heritage} music",
-                    "source": "heritage_fallback_no_api",
-                    "cultural_relevance": "high"
-                }],
-                "api_calls_made": 0,
-                "fallback_used": True
-            }
-        
+            # Step 2: ONE YouTube call maximum (cached daily)
+            youtube_results = await self.youtube_tool.search_music(search_query, max_results=3)
+            
+            # Step 3: Format response
+            if youtube_results and youtube_results.get("items"):
+                music_elements = []
+                for item in youtube_results["items"][:2]:  # Limit to 2 results
+                    snippet = item.get("snippet", {})
+                    video_id = item.get("id", {}).get("videoId", "")
+                    
+                    music_elements.append({
+                        "content_type": "youtube_music",
+                        "title": snippet.get("title", "Classic Music"),
+                        "artist": first_artist["name"] if first_artist else "Classic Artist",
+                        "description": snippet.get("description", "Nostalgic music from the era")[:200],
+                        "youtube_url": f"https://www.youtube.com/watch?v={video_id}" if video_id else "",
+                        "thumbnail_url": snippet.get("thumbnails", {}).get("medium", {}).get("url", ""),
+                        "cultural_context": f"Music popular in {heritage} heritage",
+                        "source": "youtube_limited_search"
+                    })
+                
+                return {
+                    "sense_type": "auditory",
+                    "available": True,
+                    "elements": music_elements,
+                    "api_calls_made": 1,
+                    "search_query_used": search_query
+                }
+            else:
+                # Fallback without API calls
+                logger.info("LIMITED music generation using fallback (no YouTube results)")
+                return self._generate_music_fallback(heritage, first_artist)
+                
         except Exception as e:
-            logger.error(f"LIMITED music content generation failed: {e}")
-            # Return fallback without any API calls
-            return {
-                "sense_type": "auditory",
-                "available": True,
-                "elements": [{
-                    "title": f"{heritage} Music",
-                    "description": "Traditional background music",
-                    "source": "error_fallback_no_api"
-                }],
-                "api_calls_made": 0,
-                "fallback_used": True
-            }
+            logger.error(f"LIMITED music generation failed: {e}")
+            return self._generate_music_fallback(heritage, first_artist)
+    
+    def _generate_music_fallback(self, heritage: str, first_artist: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate music fallback without API calls."""
+        
+        if first_artist:
+            title = f"Music by {first_artist['name']}"
+            description = f"Classic songs by {first_artist['name']}"
+        else:
+            title = f"{heritage} Traditional Music"
+            description = f"Classic {heritage} music and songs"
+        
+        fallback_element = {
+            "content_type": "music_fallback",
+            "title": title,
+            "artist": first_artist["name"] if first_artist else "Classic Artist",
+            "description": description,
+            "youtube_url": "",
+            "cultural_context": f"Traditional {heritage} music",
+            "source": "fallback_no_api"
+        }
+        
+        return {
+            "sense_type": "auditory",
+            "available": True,
+            "elements": [fallback_element],
+            "api_calls_made": 0,
+            "fallback_used": True
+        }
     
     def _generate_visual_from_qloo_only(self, first_tv_show: Optional[Dict[str, Any]], heritage: str) -> Dict[str, Any]:
-        """Generate visual content using ONLY Qloo data (no additional API calls)."""
+        """Generate visual content using only Qloo data (no additional API calls)."""
         
         visual_elements = []
         
-        try:
-            # Use the first TV show from Qloo (no additional API calls)
-            if first_tv_show and first_tv_show.get("name"):
-                show_name = first_tv_show["name"]
-                
-                visual_elements.append({
-                    "content_type": "tv_show",
-                    "title": show_name,
-                    "description": first_tv_show.get("properties", {}).get("description", f"Classic show: {show_name}")[:100],
-                    "cultural_relevance": "high",
-                    "source": "qloo_only_no_additional_api",
-                    "viewing_notes": ["Watch together", "Pause for discussion", "Choose comfortable time"]
-                })
-        except Exception as e:
-            logger.warning(f"TV show visual content failed: {e}")
-        
-        # Add heritage photo suggestions (no API calls)
-        visual_elements.append({
-            "content_type": "photo_collection",
-            "title": f"{heritage} Heritage Photos",
-            "description": f"Traditional images and scenes from {heritage} culture",
-            "suggestions": [
-                f"Traditional {heritage} landscapes",
-                f"{heritage} cultural celebrations", 
-                f"Historical {heritage} photography"
-            ],
-            "cultural_relevance": "high",
-            "source": "heritage_based_no_api"
-        })
+        if first_tv_show:
+            visual_elements.append({
+                "content_type": "tv_show_qloo",
+                "title": first_tv_show.get("name", "Classic TV Show"),
+                "description": first_tv_show.get("description", "Entertainment from the era"),
+                "cultural_context": f"Popular show in {heritage} heritage",
+                "era": first_tv_show.get("era", "Classic Era"),
+                "source": "qloo_intelligence_only"
+            })
+        else:
+            # Heritage-based fallback
+            heritage_shows = {
+                "Italian-American": "Classic variety shows and family entertainment",
+                "Irish-American": "Traditional storytelling and music shows",
+                "Mexican-American": "Family variety shows and cultural programming",
+                "German-American": "Community and cultural programming",
+                "American": "Classic American television and variety shows"
+            }
+            
+            visual_elements.append({
+                "content_type": "visual_fallback",
+                "title": f"{heritage} Traditional Entertainment",
+                "description": heritage_shows.get(heritage, "Classic television programming"),
+                "cultural_context": f"Entertainment popular in {heritage} culture",
+                "source": "heritage_fallback_no_api"
+            })
         
         return {
             "sense_type": "visual",
-            "available": True if visual_elements else False,
+            "available": True,
             "elements": visual_elements,
             "api_calls_made": 0,
-            "data_source": "qloo_only"
-        }
-    
-    def _select_base_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
-        """Select most appropriate base recipe from JSON (no API calls)."""
-        
-        # Heritage-based preferences
-        heritage_preferences = {
-            "Italian-American": ["apple", "oatmeal", "bread", "cocoa"],
-            "Mexican-American": ["cinnamon", "cocoa", "banana"],
-            "Irish-American": ["oatmeal", "bread", "cocoa"],
-            "German-American": ["apple", "bread", "cocoa"],
-            "American": ["apple", "oatmeal", "banana", "bread"]
-        }
-        
-        preferred_keywords = heritage_preferences.get(heritage, heritage_preferences["American"])
-        
-        # Find recipes matching heritage preferences
-        matching_recipes = []
-        for recipe in self.recipes_data:
-            recipe_text = (recipe["name"] + " " + " ".join(recipe["ingredients"])).lower()
-            if any(keyword in recipe_text for keyword in preferred_keywords):
-                matching_recipes.append(recipe)
-        
-        # If no matches, use any recipe
-        if not matching_recipes:
-            matching_recipes = self.recipes_data
-        
-        # Select random from matching recipes
-        selected = random.choice(matching_recipes)
-        logger.info(f"Selected base recipe: {selected['name']} for {heritage}")
-        return selected
-    
-    def _format_base_recipe(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
-        """Format base recipe without customization (no API calls)."""
-        
-        recipe_elements = [{
-            "content_type": "base_recipe",
-            "name": f"Simple {heritage} {base_recipe['name']}",
-            "description": f"Comforting {heritage} style {base_recipe['name'].lower()}",
-            "total_time": "20 minutes",
-            "difficulty": "very_easy",
-            "ingredients": base_recipe["ingredients"],
-            "instructions": base_recipe["instructions"],
-            "cultural_context": f"Traditional {heritage} comfort food",
-            "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
-            "source": "recipes_json_base_no_customization"
-        }]
-        
-        return {
-            "sense_type": "gustatory",
-            "available": True,
-            "elements": recipe_elements,
-            "api_calls_made": 0,
-            "customization_applied": False
+            "qloo_based": True
         }
     
     def _generate_olfactory_content(self, heritage: str) -> Dict[str, Any]:
         """Generate cultural scent experiences (no API calls)."""
         
         heritage_scents = {
-            "Italian-American": ["basil", "oregano", "fresh bread"],
-            "Irish-American": ["fresh bread", "tea", "herbs"],
-            "Mexican-American": ["cinnamon", "vanilla", "lime"],
-            "German-American": ["apple", "pine", "herbs"],
-            "American": ["vanilla", "apple pie", "coffee"]
+            "Italian-American": ["garlic and herbs", "fresh basil", "baking bread", "tomato sauce"],
+            "Mexican-American": ["cumin and chili", "fresh cilantro", "corn tortillas", "lime"],
+            "Irish-American": ["fresh baked soda bread", "hearty stew", "peat fire", "fresh air"],
+            "German-American": ["baking bread", "apple strudel", "pine forest", "hearty soup"],
+            "American": ["apple pie", "fresh bread", "coffee brewing", "vanilla"]
         }
         
         scents = heritage_scents.get(heritage, heritage_scents["American"])
         
-        scent_elements = []
-        for scent in scents:
-            scent_elements.append({
-                "scent_type": scent,
-                "description": f"Gentle {scent} aroma",
-                "source_suggestions": [f"{scent} essential oil", f"fresh {scent}", f"{scent} candle"],
-                "cultural_relevance": "traditional",
-                "safety_notes": ["Use mild concentrations", "Check for allergies"]
-            })
+        olfactory_elements = [{
+            "content_type": "cultural_scents",
+            "title": f"{heritage} Comfort Scents",
+            "scents": scents[:3],  # Top 3 scents
+            "description": f"Familiar scents from {heritage} heritage",
+            "cultural_context": f"Scents that evoke {heritage} memories",
+            "source": "cultural_knowledge_static"
+        }]
         
         return {
             "sense_type": "olfactory",
             "available": True,
-            "elements": scent_elements,
+            "elements": olfactory_elements,
             "api_calls_made": 0
         }
     
     def _generate_tactile_content(self, heritage: str) -> Dict[str, Any]:
-        """Generate tactile experiences (no API calls)."""
+        """Generate cultural tactile experiences (no API calls)."""
         
-        tactile_elements = [
-            {
-                "content_type": "fabric_textures",
-                "title": "Comfort Fabrics",
-                "items": ["soft wool", "cotton", "silk", "fleece"],
-                "cultural_connection": f"Traditional {heritage} textiles",
-                "implementation": "Provide fabric samples to touch and hold"
-            },
-            {
-                "content_type": "sensory_objects", 
-                "title": "Familiar Objects",
-                "items": ["smooth stones", "wooden items", "soft brushes", "textured balls"],
-                "cultural_connection": "Objects that evoke positive memories",
-                "implementation": "Gentle touching and manipulation activities"
-            }
-        ]
+        heritage_textures = {
+            "Italian-American": ["smooth pasta", "crusty bread", "soft cheese", "warm fabric"],
+            "Mexican-American": ["smooth avocado", "textured corn", "soft tortilla", "warm clay"],
+            "Irish-American": ["soft wool", "smooth stone", "coarse fabric", "cool metal"],
+            "German-American": ["smooth wood", "soft fabric", "cool metal", "warm bread"],
+            "American": ["soft cotton", "smooth wood", "warm fabric", "cool metal"]
+        }
+        
+        textures = heritage_textures.get(heritage, heritage_textures["American"])
+        
+        tactile_elements = [{
+            "content_type": "cultural_textures",
+            "title": f"{heritage} Comfort Textures",
+            "textures": textures[:3],  # Top 3 textures
+            "description": f"Familiar textures from {heritage} heritage",
+            "cultural_context": f"Textures that evoke {heritage} memories",
+            "source": "cultural_knowledge_static"
+        }]
         
         return {
             "sense_type": "tactile",
@@ -480,12 +523,13 @@ class SensoryContentGeneratorAgent:
             "total_content_elements": total_elements,
             "total_api_calls_made": total_api_calls,
             "rate_limiting_applied": True,
+            "data_structure_fixed": True,
             "cross_sensory_potential": len(available_senses) >= 3,
             "generation_success": len(available_senses) >= 2
         }
     
     def _create_fallback_sensory_content(self, consolidated_info: Dict[str, Any], cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback sensory content when generation fails (no API calls)."""
+        """Create fallback sensory content when generation fails (no API calls) - FIXED STRUCTURE."""
         
         heritage = consolidated_info.get("patient_profile", {}).get("cultural_heritage", "American")
         
@@ -499,29 +543,20 @@ class SensoryContentGeneratorAgent:
         return {
             "sensory_content": {
                 "content_by_sense": {
-                    "gustatory": self._format_base_recipe(base_recipe, heritage),
-                    "auditory": {
-                        "sense_type": "auditory",
-                        "available": True,
-                        "elements": [{
-                            "title": f"{heritage} Traditional Music",
-                            "description": "Gentle background music",
-                            "source": "fallback_no_api"
-                        }],
-                        "api_calls_made": 0,
-                        "fallback_used": True
-                    }
+                    "gustatory": self._format_base_recipe_FIXED(base_recipe, heritage),
+                    "auditory": self._generate_music_fallback(heritage, None)
                 },
                 "sensory_summary": {
                     "total_senses_activated": 2,
                     "available_senses": ["gustatory", "auditory"],
                     "total_api_calls_made": 0,
                     "generation_success": True,
-                    "rate_limiting_applied": True
+                    "rate_limiting_applied": True,
+                    "data_structure_fixed": True
                 },
                 "generation_metadata": {
                     "heritage_used": heritage,
-                    "status": "fallback_no_api_calls",
+                    "status": "fallback_no_api_calls_fixed_structure",
                     "generation_timestamp": datetime.now().isoformat()
                 }
             }
