@@ -259,12 +259,26 @@ class QlooCulturalIntelligenceAgent:
             else:
                 selected_genre = random.choice(filtered_genres)
             
-            music_query = f"{base_query} {selected_genre}"
+            # Use proper URN-formatted tags (FIXED)
+            if selected_genre == "classical":
+                music_tag = "urn:tag:genre:music:classical"
+            elif selected_genre == "jazz standards":
+                music_tag = "urn:tag:genre:music:jazz"
+            elif selected_genre == "easy listening":
+                music_tag = "urn:tag:genre:music:pop"
+            elif selected_genre == "folk traditional":
+                music_tag = "urn:tag:genre:music:folk"
+            elif selected_genre == "big band swing":
+                music_tag = "urn:tag:genre:music:jazz"
+            else:
+                music_tag = "urn:tag:genre:music:classical"  # fallback
             
-            # Make Qloo API call (ORIGINAL)
-            music_results = await self.qloo_tool.get_recommendations("artists", music_query, age_demographic)
+            # Make Qloo API call (FIXED METHOD CALL)
+            music_result = await self.qloo_tool.simple_tag_insights("urn:entity:artist", music_tag, age_demographic)
             
-            if music_results:
+            if music_result and music_result.get("success"):
+                music_results = music_result.get("entities", [])
+                
                 # Filter results by dislikes (ADDITIVE)
                 filtered_results = []
                 for item in music_results:
@@ -273,7 +287,7 @@ class QlooCulturalIntelligenceAgent:
                 
                 return {
                     "entities": filtered_results,
-                    "query": music_query,
+                    "query": music_tag,
                     "genres_used": [selected_genre],
                     "available": len(filtered_results) > 0,
                     "entity_count": len(filtered_results),
@@ -290,10 +304,22 @@ class QlooCulturalIntelligenceAgent:
         """Places call with dislike filtering (ORIGINAL + ENHANCED)."""
         
         try:
-            # Make Qloo API call (ORIGINAL)
-            places_results = await self.qloo_tool.get_recommendations("places", base_query, age_demographic)
+            # Use proper URN-formatted tags (FIXED)
+            if "italian" in base_query.lower():
+                place_tag = "urn:tag:cuisine:italian"
+            elif "irish" in base_query.lower():
+                place_tag = "urn:tag:cuisine:irish"
+            elif "german" in base_query.lower():
+                place_tag = "urn:tag:cuisine:german"
+            else:
+                place_tag = "urn:tag:cuisine:american"  # fallback
             
-            if places_results:
+            # Make Qloo API call (FIXED METHOD CALL)
+            places_result = await self.qloo_tool.simple_tag_insights("urn:entity:place", place_tag, age_demographic)
+            
+            if places_result and places_result.get("success"):
+                places_results = places_result.get("entities", [])
+                
                 # Filter results by dislikes (ADDITIVE)
                 filtered_results = []
                 for item in places_results:
@@ -302,7 +328,7 @@ class QlooCulturalIntelligenceAgent:
                 
                 return {
                     "entities": filtered_results,
-                    "query": base_query,
+                    "query": place_tag,
                     "available": len(filtered_results) > 0,
                     "entity_count": len(filtered_results),
                     "filtered_count": len(places_results) - len(filtered_results)  # ADDITIVE
@@ -318,10 +344,22 @@ class QlooCulturalIntelligenceAgent:
         """TV shows call with dislike filtering (ORIGINAL + ENHANCED)."""
         
         try:
-            # Make Qloo API call (ORIGINAL)
-            tv_results = await self.qloo_tool.get_recommendations("tv_shows", base_query, age_demographic)
+            # Use proper URN-formatted tags (FIXED)
+            if "italian" in base_query.lower():
+                tv_tag = "urn:tag:genre:tv:family"
+            elif "irish" in base_query.lower():
+                tv_tag = "urn:tag:genre:tv:drama"
+            elif "german" in base_query.lower():
+                tv_tag = "urn:tag:genre:tv:cultural"
+            else:
+                tv_tag = "urn:tag:genre:tv:classic"  # fallback
             
-            if tv_results:
+            # Make Qloo API call (FIXED METHOD CALL)
+            tv_result = await self.qloo_tool.simple_tag_insights("urn:entity:tv_show", tv_tag, age_demographic)
+            
+            if tv_result and tv_result.get("success"):
+                tv_results = tv_result.get("entities", [])
+                
                 # Filter results by dislikes (ADDITIVE)
                 filtered_results = []
                 for item in tv_results:
@@ -330,7 +368,7 @@ class QlooCulturalIntelligenceAgent:
                 
                 return {
                     "entities": filtered_results,
-                    "query": base_query,
+                    "query": tv_tag,
                     "available": len(filtered_results) > 0,
                     "entity_count": len(filtered_results),
                     "filtered_count": len(tv_results) - len(filtered_results)  # ADDITIVE

@@ -148,7 +148,7 @@ class SensoryContentGeneratorAgent:
         """Load theme-aligned recipes from JSON file (ORIGINAL)."""
         
         try:
-            recipes_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "recipes.json")
+            recipes_path = os.path.join(os.path.dirname(__file__), "..", "..", "config", "recipes.json")
             if os.path.exists(recipes_path):
                 with open(recipes_path, 'r') as f:
                     recipes = json.load(f)

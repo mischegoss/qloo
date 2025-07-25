@@ -39,9 +39,9 @@ class MobileSynthesizerAgent:
         """Load fallback data for when API calls fail."""
         try:
             fallback_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                "static", "demo", "data", "fallback_content.json"
-            )
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "data", "fallback_content.json"
+)
             
             if os.path.exists(fallback_path):
                 with open(fallback_path, 'r', encoding='utf-8') as f:
