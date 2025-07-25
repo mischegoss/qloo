@@ -3,6 +3,7 @@ Complete Fixed main.py with Theme Image Support - ENHANCED VERSION
 File: backend/main.py
 
 Main FastAPI application for CareConnect Cultural Intelligence API
+FIXED: Personal photos removed from automatic pipeline, theme photos only
 """
 
 import os
@@ -53,6 +54,14 @@ except ImportError as e:
     logger.error(f"❌ Failed to import theme manager: {e}")
     theme_manager = None
 
+# NEW: Import personal photo analyzer (will be added separately)
+try:
+    from multi_tool_agent.personal_photo_analyzer import PersonalPhotoAnalyzer
+    logger.info("✅ Personal photo analyzer imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Personal photo analyzer not yet available: {e}")
+    PersonalPhotoAnalyzer = None
+
 # Configuration
 class Config:
     PORT = int(os.getenv("PORT", 8000))
@@ -68,13 +77,10 @@ class PatientProfile(BaseModel):
     first_name: str
     birth_year: Optional[int] = None
     birth_month: Optional[str] = None
+    cultural_heritage: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
-    cultural_heritage: Optional[str] = None
-    languages: Optional[str] = None
-    spiritual_traditions: Optional[str] = None
     additional_context: Optional[str] = None
-    caregiver_notes: Optional[str] = None
 
 class CareConnectRequest(BaseModel):
     patient_profile: PatientProfile
@@ -82,49 +88,25 @@ class CareConnectRequest(BaseModel):
     session_id: Optional[str] = None
     feedback_history: Optional[Dict[str, Any]] = None
 
-# Fallback VisionAI class if import fails
-class FallbackVisionAI:
-    """Fallback vision analyzer for demo purposes"""
-    
-    def __init__(self, api_key):
-        self.api_key = api_key
-        logger.info("Using fallback Vision AI analyzer")
-    
-    async def analyze_with_google_vision(self, image_base64):
-        """Fallback analysis with demo data"""
-        logger.info("Using fallback vision analysis")
-        return {
-            "success": True,
-            "objects": ["photo", "people", "memory"],
-            "labels": ["family", "personal", "meaningful"],
-            "people": ["person"],
-            "activities": ["remembering", "sharing"],
-            "settings": ["home", "personal space"]
-        }
+# Global variables
+tools = None
+sequential_agent = None
+patient_manager = None
+personal_photo_analyzer = None  # NEW: For on-demand personal photo analysis
 
-# Demo Patient Manager with New File Structure
+# Demo Patient Manager class with enhanced photo handling
 class DemoPatientManager:
-    """Patient data manager for hackathon demo - NEW FILE STRUCTURE"""
+    """Enhanced demo patient manager with theme image support"""
     
     def __init__(self):
-        # NEW PATHS - Updated for frontend/static/demo structure
-        self.data_dir = Path("frontend/static/demo/data")
-        self.images_dir = Path("frontend/static/demo/images")
+        self.data_dir = Path(__file__).parent / "frontend" / "static" / "demo" / "data"
+        self.images_dir = Path(__file__).parent / "frontend" / "static" / "demo" / "images"
+        self.patients_file = self.data_dir / "patients.json"
+        self.dashboard_cache = {"content": None, "timestamp": None, "expiry_minutes": 5}
         
         # Ensure directories exist
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.images_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize with demo patients
-        self.patients_file = self.data_dir / "patients.json"
-        self._initialize_demo_patients()
-        
-        # Cache for dashboard content
-        self.dashboard_cache = {
-            "content": None,
-            "timestamp": None,
-            "expiry_minutes": 5  # Cache expires in 5 minutes
-        }
         
         logger.info(f"🎯 Demo Patient Manager initialized")
         logger.info(f"📂 Data directory: {self.data_dir}")
@@ -146,8 +128,33 @@ class DemoPatientManager:
             "expiry_minutes": 5
         }
     
+    def get_patient(self):
+        """Get the demo patient data"""
+        if not self.patients_file.exists():
+            return self._create_demo_patient()
+        
+        try:
+            with open(self.patients_file, 'r') as f:
+                data = json.load(f)
+                return data.get("demo_patient")
+        except Exception as e:
+            logger.error(f"❌ Failed to load patient data: {e}")
+            return self._create_demo_patient()
+    
+    def update_patient(self, updates: Dict[str, Any]):
+        """Update patient data"""
+        current_data = {"demo_patient": self.get_patient() or {}}
+        current_data["demo_patient"].update(updates)
+        
+        try:
+            with open(self.patients_file, 'w') as f:
+                json.dump(current_data, f, indent=2)
+            logger.info("✅ Patient data updated")
+        except Exception as e:
+            logger.error(f"❌ Failed to update patient data: {e}")
+    
     def select_photo_of_the_day(self):
-        """Rotate through available photos"""
+        """KEPT FOR MANUAL USE ONLY - Not used in automatic pipeline"""
         patient = self.get_patient()
         if not patient or not patient.get("photo_library"):
             return None
@@ -179,182 +186,175 @@ class DemoPatientManager:
             timestamp = int(time.time())
             file_extension = Path(file.filename).suffix or ".jpg"
             filename = f"user_upload_{timestamp}{file_extension}"
-            file_path = self.images_dir / filename
             
             # Save file
+            file_path = self.images_dir / filename
             content = await file.read()
             with open(file_path, "wb") as f:
                 f.write(content)
             
-            # Process with Vision AI
-            google_cloud_api_key = os.getenv("GOOGLE_CLOUD_API_KEY")
-            if google_cloud_api_key:
-                vision_analyzer = VisionAIAnalyzer(google_cloud_api_key)
-                image_base64 = base64.b64encode(content).decode('utf-8')
-                vision_result = await vision_analyzer.analyze_with_google_vision(image_base64)
-                
-                if vision_result and vision_result.get("success"):
-                    vision_analysis = {
-                        "objects": vision_result.get("objects", []),
-                        "labels": vision_result.get("labels", []),
-                        "people": vision_result.get("people", []),
-                        "activities": vision_result.get("activities", []),
-                        "settings": vision_result.get("settings", [])
-                    }
-                else:
-                    logger.warning("Vision AI analysis failed, using fallback")
-                    vision_analysis = {
-                        "objects": ["photo", "uploaded_image"],
-                        "labels": ["personal", "memory"],
-                        "people": [],
-                        "activities": [],
-                        "settings": []
-                    }
-            else:
-                logger.warning("No Google Cloud API key, using fallback analysis")
-                vision_analysis = {
-                    "objects": ["photo", "uploaded_image"],
-                    "labels": ["personal", "memory"],
-                    "people": [],
-                    "activities": [],
-                    "settings": []
-                }
+            # Immediate Vision analysis
+            vision_analyzer = VisionAIAnalyzer(config.GOOGLE_CLOUD_API_KEY)
+            vision_result = await vision_analyzer.analyze_image(str(file_path))
             
-            # Update patient data
+            if "error" in vision_result:
+                logger.warning(f"⚠️ Vision analysis failed: {vision_result['error']}")
+            
+            # Update patient photo library and analysis
             patient = self.get_patient()
-            if patient:
-                photo_url = f"static/demo/images/{filename}"
-                
-                # Add to photo library
-                photo_library = patient.get("photo_library", [])
-                photo_library.append(photo_url)
-                
-                # Add analysis data
-                photo_analyses = patient.get("photo_analyses", {})
-                photo_analyses[photo_url] = {
-                    "vision_analysis": vision_analysis,
-                    "processed_date": "2025-01-23T00:00:00Z"
-                }
-                
-                # Update patient record
-                updates = {
-                    "photo_library": photo_library,
-                    "photo_analyses": photo_analyses
-                }
-                self.update_patient(updates)
-                
-                logger.info(f"📷 Photo processed and stored: {photo_url}")
-                
-                return {
-                    "success": True,
-                    "filename": filename,
-                    "photo_url": photo_url,
-                    "vision_analysis": vision_analysis,
-                    "message": "Photo uploaded and analyzed successfully"
-                }
-            else:
-                raise Exception("Demo patient not found")
-                
+            if not patient:
+                patient = self._create_demo_patient()
+            
+            photo_url = f"static/demo/images/{filename}"
+            
+            # Add to photo library
+            if "photo_library" not in patient:
+                patient["photo_library"] = []
+            patient["photo_library"].append(photo_url)
+            
+            # Store vision analysis
+            if "photo_analyses" not in patient:
+                patient["photo_analyses"] = {}
+            
+            patient["photo_analyses"][photo_url] = {
+                "vision_analysis": vision_result,
+                "processed_date": datetime.now().isoformat()
+            }
+            
+            # Save updated patient data
+            self.update_patient(patient)
+            
+            return {
+                "success": True,
+                "message": "Photo uploaded and analyzed successfully",
+                "filename": filename,
+                "photo_url": photo_url,
+                "vision_analysis": vision_result
+            }
+            
         except Exception as e:
-            logger.error(f"Photo processing failed: {e}")
+            logger.error(f"❌ Photo upload failed: {e}")
             return {
                 "success": False,
-                "error": str(e),
-                "message": "Photo upload failed"
+                "message": f"Upload failed: {str(e)}"
             }
     
-    def _initialize_demo_patients(self):
-        """Initialize demo patient data if not exists"""
-        if self.patients_file.exists():
-            return
-        
-        # Create sample demo patient
-        demo_data = {
-            "demo_patient": {
-                "first_name": "Maria",
-                "birth_year": 1950,
-                "birth_month": "June",
-                "city": "San Antonio",
-                "state": "Texas",
-                "cultural_heritage": "Mexican",
-                "languages": "Spanish, English",
-                "spiritual_traditions": "Catholic",
-                "additional_context": "Loves cooking traditional Mexican food, especially for family gatherings. Has 4 children and 7 grandchildren.",
-                "caregiver_notes": "Responds well to music from the 1960s-70s. Enjoys looking at family photos.",
-                "photo_library": [
-                    "static/demo/images/maria_sample_wedding.jpg",
-                    "static/demo/images/maria_sample_family.jpg"
-                ],
-                "photo_analyses": {
-                    "static/demo/images/maria_sample_wedding.jpg": {
-                        "vision_analysis": {
-                            "objects": ["people", "dress", "church", "flowers"],
-                            "labels": ["wedding", "celebration", "formal wear", "ceremony"],
-                            "people": ["bride", "groom"],
-                            "activities": ["celebration", "ceremony"],
-                            "settings": ["church", "indoor"]
-                        },
-                        "processed_date": "2025-01-23T00:00:00Z"
+    def _create_demo_patient(self):
+        """Create demo patient data if none exists"""
+        demo_patient = {
+            "first_name": "Maria",
+            "birth_year": 1945,
+            "birth_month": "March",
+            "cultural_heritage": "Italian-American",
+            "city": "Brooklyn",
+            "state": "New York",
+            "additional_context": "Loves music and cooking. Has 4 children and 7 grandchildren.",
+            "caregiver_notes": "Responds well to music from the 1960s-70s. Enjoys looking at family photos.",
+            "photo_library": [
+                "static/demo/images/maria_sample_wedding.jpg",
+                "static/demo/images/maria_sample_family.jpg"
+            ],
+            "photo_analyses": {
+                "static/demo/images/maria_sample_wedding.jpg": {
+                    "vision_analysis": {
+                        "objects": ["people", "dress", "church", "flowers"],
+                        "labels": ["wedding", "celebration", "formal wear", "ceremony"],
+                        "people": ["bride", "groom"],
+                        "activities": ["celebration", "ceremony"],
+                        "settings": ["church", "indoor"]
                     },
-                    "static/demo/images/maria_sample_family.jpg": {
-                        "vision_analysis": {
-                            "objects": ["people", "table", "food", "kitchen"],
-                            "labels": ["family", "gathering", "cooking", "home"],
-                            "people": ["family_members"],
-                            "activities": ["cooking", "gathering"],
-                            "settings": ["kitchen", "home", "indoor"]
-                        },
-                        "processed_date": "2025-01-23T00:00:00Z"
-                    }
+                    "processed_date": "2025-01-23T00:00:00Z"
                 },
-                "feedback_points": 3,
-                "demo_dislikes": [],
-                "last_photo_shown": None,
-                "photo_rotation_index": 0
-            }
+                "static/demo/images/maria_sample_family.jpg": {
+                    "vision_analysis": {
+                        "objects": ["people", "table", "food", "kitchen"],
+                        "labels": ["family", "gathering", "cooking", "home"],
+                        "people": ["family_members"],
+                        "activities": ["cooking", "gathering"],
+                        "settings": ["kitchen", "home", "indoor"]
+                    },
+                    "processed_date": "2025-01-23T00:00:00Z"
+                }
+            },
+            "feedback_points": 3,
+            "demo_dislikes": [],
+            "last_photo_shown": None,
+            "photo_rotation_index": 0
         }
         
-        with open(self.patients_file, 'w') as f:
-            json.dump(demo_data, f, indent=2)
-        
-        logger.info("✅ Single demo patient initialized with sample data")
-    
-    def get_patient(self):
-        """Get the single demo patient"""
+        # Save demo patient data
+        patient_data = {"demo_patient": demo_patient}
         try:
-            with open(self.patients_file, 'r') as f:
-                data = json.load(f)
-                return data.get("demo_patient")
-        except FileNotFoundError:
-            return None
-    
-    def update_patient(self, updates: dict):
-        """Update the single demo patient data"""
-        try:
-            with open(self.patients_file, 'r') as f:
-                data = json.load(f)
-            
-            if "demo_patient" in data:
-                data["demo_patient"].update(updates)
-                
-                with open(self.patients_file, 'w') as f:
-                    json.dump(data, f, indent=2)
-                
-                return data["demo_patient"]
+            with open(self.patients_file, 'w') as f:
+                json.dump(patient_data, f, indent=2)
+            logger.info("✅ Demo patient data created")
         except Exception as e:
-            logger.error(f"Failed to update patient: {e}")
-            return None
+            logger.error(f"❌ Failed to create demo patient data: {e}")
+        
+        return demo_patient
 
-# Global variables for multi-agent system
-tools = None
-sequential_agent = None
-patient_manager = DemoPatientManager()
-
-# NEW: Function to setup and validate backend data directories
-def setup_backend_data_directories():
-    """Set up and validate backend data directories including theme images"""
+# Tool initialization functions
+def initialize_tools():
+    """Initialize all tools"""
+    if not initialize_all_tools:
+        logger.error("❌ initialize_all_tools not available")
+        return None
     
-    # Set up backend/data/images directory for theme images
+    try:
+        tools = initialize_all_tools()  # REMOVED: await - this is not an async function
+        logger.info(f"✅ Initialized {len(tools)} tools")
+        return tools
+    except Exception as e:
+        logger.error(f"❌ Tool initialization failed: {e}")
+        return None
+
+def initialize_sequential_agent(tools):
+    """Initialize sequential agent with all agents"""
+    if not SequentialAgent or not tools:
+        logger.error("❌ SequentialAgent or tools not available")
+        return None
+    
+    try:
+        from multi_tool_agent.agents.information_consolidator_agent import InformationConsolidatorAgent
+        from multi_tool_agent.agents.cultural_profile_agent import CulturalProfileBuilderAgent  # FIXED: correct module name
+        from multi_tool_agent.agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
+        from multi_tool_agent.agents.sensory_content_generator_agent import SensoryContentGeneratorAgent
+        from multi_tool_agent.agents.photo_cultural_analyzer_agent import PhotoCulturalAnalyzerAgent
+        from multi_tool_agent.agents.mobile_synthesizer_agent import MobileSynthesizerAgent
+        
+        # Initialize all agents with correct import paths
+        agent1 = InformationConsolidatorAgent()
+        agent2 = CulturalProfileBuilderAgent()
+        agent3 = QlooCulturalIntelligenceAgent(tools.get("qloo_tool"))  # FIXED: tool name
+        agent4 = SensoryContentGeneratorAgent(
+            tools.get("youtube_tool"),  # FIXED: tool name
+            tools.get("gemini_tool")    # FIXED: tool name
+        )
+        agent5 = PhotoCulturalAnalyzerAgent(tools.get("vision_ai_tool"))  # FIXED: tool name
+        agent6 = MobileSynthesizerAgent()
+        
+        # Create sequential agent
+        sequential_agent = SequentialAgent(agent1, agent2, agent3, agent4, agent5, agent6)
+        logger.info("✅ Sequential agent initialized with all 6 agents")
+        return sequential_agent
+        
+    except Exception as e:
+        logger.error(f"❌ Sequential agent initialization failed: {e}")
+        return None
+
+def initialize_patient_manager():
+    """Initialize patient manager"""
+    try:
+        patient_manager = DemoPatientManager()
+        logger.info("✅ Patient manager initialized")
+        return patient_manager
+    except Exception as e:
+        logger.error(f"❌ Patient manager initialization failed: {e}")
+        return None
+
+def setup_backend_directories():
+    """Setup backend data directories including theme images"""
+    # Create backend data directories
     backend_images_dir = Path(__file__).parent / "data" / "images"
     backend_images_dir.mkdir(parents=True, exist_ok=True)
     
@@ -388,160 +388,45 @@ def setup_backend_data_directories():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize tools and agents on startup."""
-    global tools, sequential_agent
+    global tools, sequential_agent, patient_manager, personal_photo_analyzer
     
-    logger.info("🚀 Starting CareConnect Cultural Intelligence API...")
-    
-    # NEW: Setup backend data directories and theme images
-    backend_images_dir = setup_backend_data_directories()
-    
-    # Initialize tools
-    if initialize_all_tools:
-        try:
-            tools = initialize_all_tools()
-            logger.info(f"✅ Initialized {len(tools)} tools")
-            
-            # Test tools
-            if test_all_tools:
-                test_results = await test_all_tools(tools)
-                working_tools = sum(1 for result in test_results.values() if result)
-                logger.info(f"✅ {working_tools}/{len(test_results)} tools are working")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize tools: {e}")
-            tools = {}
-    else:
-        logger.warning("⚠️  Tools initialization not available")
-        tools = {}
-    
-    # Initialize Enhanced Sequential Agent
-    if SequentialAgent and tools:
-        try:
-            # Import agents with error handling
-            try:
-                from multi_tool_agent.agents.information_consolidator_agent import InformationConsolidatorAgent
-            except ImportError:
-                InformationConsolidatorAgent = None
-                
-            try:
-                from multi_tool_agent.agents.cultural_profile_agent import CulturalProfileBuilderAgent
-            except ImportError:
-                CulturalProfileBuilderAgent = None
-                
-            try:
-                from multi_tool_agent.agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
-            except ImportError:
-                QlooCulturalIntelligenceAgent = None
-                
-            try:
-                from multi_tool_agent.agents.sensory_content_generator_agent import SensoryContentGeneratorAgent
-            except ImportError:
-                SensoryContentGeneratorAgent = None
-                
-            try:
-                from multi_tool_agent.agents.photo_cultural_analyzer_agent import PhotoCulturalAnalyzerAgent
-            except ImportError:
-                PhotoCulturalAnalyzerAgent = None
-                
-            try:
-                from multi_tool_agent.agents.mobile_synthesizer_agent import MobileSynthesizerAgent
-            except ImportError:
-                MobileSynthesizerAgent = None
-            
-            # Extract tools
-            qloo_tool = tools.get("qloo_tool")
-            youtube_tool = tools.get("youtube_tool") 
-            gemini_tool = tools.get("gemini_tool")
-            vision_ai_tool = tools.get("vision_ai_tool")
-            session_storage_tool = tools.get("session_storage_tool")
-            
-            # Create individual agents with proper method checking
-            agent1 = InformationConsolidatorAgent() if InformationConsolidatorAgent else None
-            agent2 = CulturalProfileBuilderAgent() if CulturalProfileBuilderAgent else None
-            agent3 = QlooCulturalIntelligenceAgent(qloo_tool) if QlooCulturalIntelligenceAgent and qloo_tool else None
-            
-            # Agent 4: Check if it has 'run' method, otherwise skip
-            agent4 = None
-            if SensoryContentGeneratorAgent and gemini_tool:
-                temp_agent4 = SensoryContentGeneratorAgent(gemini_tool, youtube_tool)
-                if hasattr(temp_agent4, 'run'):
-                    agent4 = temp_agent4
-                    logger.info("✅ Agent 4 (SensoryContentGenerator) - has 'run' method")
-                else:
-                    logger.warning("⚠️ Agent 4 (SensoryContentGenerator) - no 'run' method, skipping")
-            
-            agent5 = PhotoCulturalAnalyzerAgent(vision_ai_tool) if PhotoCulturalAnalyzerAgent and vision_ai_tool else None
-            
-            # Agent 6: Check if it has 'run' method, otherwise skip  
-            agent6 = None
-            if MobileSynthesizerAgent:
-                temp_agent6 = MobileSynthesizerAgent()
-                if hasattr(temp_agent6, 'run'):
-                    agent6 = temp_agent6
-                    logger.info("✅ Agent 6 (MobileSynthesizer) - has 'run' method")
-                else:
-                    logger.warning("⚠️ Agent 6 (MobileSynthesizer) - no 'run' method, skipping")
-            
-            # Initialize Enhanced Sequential Agent with individual agents
-            sequential_agent = SequentialAgent(
-                agent1=agent1,
-                agent2=agent2, 
-                agent3=agent3,
-                agent4=agent4,
-                agent5=agent5,
-                agent6=agent6
-            )
-            
-            # NEW: Inject theme manager into the sequential agent for proper theme integration
-            if theme_manager:
-                sequential_agent.theme_manager = theme_manager
-                # Test theme integration
-                test_theme = theme_manager.get_daily_theme()
-                test_theme_name = test_theme.get("theme_of_the_day", {}).get("name", "Unknown")
-                logger.info(f"✅ Theme manager injected: Today's theme = {test_theme_name}")
-            else:
-                logger.warning("⚠️ Theme manager not available for injection")
-            
-            # Count active agents and verify methods
-            active_agents = sum(1 for agent in [agent1, agent2, agent3, agent4, agent5, agent6] if agent is not None)
-            logger.info(f"✅ Enhanced Sequential Agent initialized with {active_agents}/6 agents active")
-            
-            # Debug: Check which agents have run methods
-            agent_methods = []
-            for i, agent in enumerate([agent1, agent2, agent3, agent4, agent5, agent6], 1):
-                if agent:
-                    has_run = hasattr(agent, 'run')
-                    agent_methods.append(f"Agent{i}:{'✅' if has_run else '❌'}")
-            logger.info(f"🔍 Agent methods check: {', '.join(agent_methods)}")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize Enhanced Sequential Agent: {e}")
-            sequential_agent = None
-    else:
-        logger.warning("⚠️  Enhanced Sequential Agent not available")
-        sequential_agent = None
-    
-    # NEW: Validate theme manager and log theme status
-    if theme_manager:
-        try:
-            daily_theme = theme_manager.get_daily_theme()
-            theme_name = daily_theme.get("theme_of_the_day", {}).get("name", "Unknown")
-            theme_image = daily_theme.get("theme_image", {})
-            
-            logger.info(f"🎯 Theme system ready:")
-            logger.info(f"   📅 Today's theme: {theme_name}")
-            logger.info(f"   🖼️ Theme image: {theme_image.get('filename', 'Not found')} (exists: {theme_image.get('exists', False)})")
-            logger.info(f"   📚 Total themes available: {len(theme_manager.themes_list)}")
-        except Exception as e:
-            logger.error(f"❌ Theme manager validation failed: {e}")
-    else:
-        logger.warning("⚠️ Theme manager not available")
-    
-    logger.info("🎯 CareConnect API ready!")
-    
-    yield
-    
-    logger.info("🔽 Shutting down CareConnect API...")
+    try:
+        logger.info("🚀 Initializing CareConnect API...")
+        
+        # Initialize tools
+        tools = initialize_tools()  # REMOVED: await - this is now synchronous
+        if not tools:
+            logger.error("❌ Failed to initialize tools")
+            yield
+            return
+        
+        # Initialize sequential agent
+        sequential_agent = initialize_sequential_agent(tools)
+        if not sequential_agent:
+            logger.error("❌ Failed to initialize sequential agent")
+            yield  
+            return
+        
+        # NEW: Initialize personal photo analyzer (if available)
+        vision_ai_tool = tools.get("vision_ai_analyzer")
+        if PersonalPhotoAnalyzer and vision_ai_tool:
+            personal_photo_analyzer = PersonalPhotoAnalyzer(vision_ai_tool)
+            logger.info("✅ Personal photo analyzer initialized")
+        else:
+            logger.warning("⚠️ Personal photo analyzer not available - some features disabled")
+        
+        # Initialize patient manager and setup directories
+        patient_manager = initialize_patient_manager()
+        setup_backend_directories()
+        
+        logger.info("✅ CareConnect API initialization complete")
+        yield
+        
+    except Exception as e:
+        logger.error(f"❌ API initialization failed: {e}")
+        yield
+    finally:
+        logger.info("🔄 CareConnect API shutting down")
 
 # Create FastAPI app
 app = FastAPI(
@@ -560,10 +445,168 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static file serving - UPDATED PATHS
+# Static file serving
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
-# ===== PHOTO UPLOAD ENDPOINT (NEW WITH PRE-PROCESSING) =====
+# ===== MAIN DASHBOARD ENDPOINT (FIXED - THEME PHOTOS ONLY) =====
+
+@app.get("/dashboard")
+async def get_dashboard():
+    """FIXED: Generate dashboard with THEME PHOTOS ONLY (no personal photos in automatic pipeline)"""
+    global patient_manager, sequential_agent
+    
+    if not sequential_agent:
+        return {"error": "Sequential agent not initialized"}
+    
+    try:
+        # Check for cached dashboard
+        cached_dashboard = patient_manager.get_cached_dashboard()
+        if cached_dashboard and cached_dashboard.get("content"):
+            logger.info("📊 Returning cached dashboard")
+            return cached_dashboard["content"]
+        
+        # If no cache, generate new dashboard
+        return await refresh_dashboard()
+        
+    except Exception as e:
+        logger.error(f"❌ Dashboard generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Dashboard generation failed: {str(e)}")
+
+@app.post("/refresh-dashboard")
+async def refresh_dashboard():
+    """FIXED: Refresh dashboard with THEME PHOTOS ONLY (no personal photos in automatic pipeline)"""
+    global patient_manager, sequential_agent
+    
+    if not sequential_agent:
+        return {"error": "Sequential agent not initialized"}
+    
+    try:
+        # Get patient profile
+        patient = patient_manager.get_patient()
+        if not patient:
+            return {"error": "No patient data found"}
+        
+        # FIXED: NO personal photo selection in automatic pipeline
+        logger.info("🎯 Refreshing dashboard with THEME PHOTOS ONLY")
+        logger.info("📷 Personal photos: EXCLUDED from automatic pipeline")
+        
+        # Generate session ID for this request
+        session_id = f"refresh_{int(time.time())}"
+        
+        # FIXED: Run sequential agent pipeline with theme photos only
+        result = await sequential_agent.run(
+            patient_profile=patient,
+            request_type="dashboard", 
+            session_id=session_id
+            # REMOVED: photo_of_the_day parameter (no personal photos)
+            # REMOVED: photo_analysis parameter (no personal photos)
+        )
+        
+        if result and "error" not in result:
+            # Cache the result
+            patient_manager.cache_dashboard(result)
+            
+            logger.info("✅ Dashboard refreshed successfully with THEME PHOTOS ONLY")
+            return {
+                "status": "success",
+                "source": "generated",
+                "patient_name": patient["first_name"],
+                "content": result,
+                "generation_mode": "theme_photos_only",
+                "personal_photos_excluded": True,
+                "message": "Dashboard refreshed successfully!"
+            }
+        else:
+            logger.error("❌ Pipeline execution failed")
+            raise HTTPException(status_code=500, detail="Pipeline execution failed")
+            
+    except Exception as e:
+        logger.error(f"❌ Dashboard refresh failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Dashboard refresh failed: {str(e)}")
+
+# ===== PERSONAL PHOTO ENDPOINTS (NEW - ON-DEMAND ONLY) =====
+
+@app.get("/personal-photos")
+async def get_personal_photos():
+    """Get list of available personal photos for UI buttons (on-demand analysis only)"""
+    global patient_manager
+    
+    try:
+        patient = patient_manager.get_patient()
+        if not patient:
+            return {"error": "No patient data found"}
+        
+        photo_library = patient.get("photo_library", [])
+        photo_analyses = patient.get("photo_analyses", {})
+        
+        # Format photo information for UI
+        available_photos = []
+        for photo_path in photo_library:
+            photo_info = {
+                "photo_path": photo_path,
+                "filename": Path(photo_path).name,
+                "display_name": Path(photo_path).stem.replace("_", " ").title(),
+                "has_analysis": photo_path in photo_analyses,
+                "frontend_path": photo_path  # For displaying in UI
+            }
+            available_photos.append(photo_info)
+        
+        return {
+            "personal_photos": available_photos,
+            "total_count": len(available_photos),
+            "analysis_mode": "on_demand_only",
+            "note": "These photos are analyzed only when user clicks 'Discuss this photo' button"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to get personal photos: {e}")
+        return {"error": f"Failed to get personal photos: {str(e)}"}
+
+@app.post("/analyze-personal-photo")
+async def analyze_personal_photo(request: Dict[str, Any]):
+    """Analyze personal photo on-demand (when user clicks button)"""
+    global patient_manager, personal_photo_analyzer
+    
+    if not personal_photo_analyzer:
+        return {"error": "Personal photo analyzer not available - feature disabled"}
+    
+    try:
+        photo_path = request.get("photo_path")
+        if not photo_path:
+            return {"error": "No photo path provided"}
+        
+        # Get patient profile
+        patient = patient_manager.get_patient()
+        if not patient:
+            return {"error": "No patient data found"}
+        
+        # Get stored analysis for this photo (if available)
+        stored_analyses = patient.get("photo_analyses", {})
+        stored_analysis = stored_analyses.get(photo_path)
+        
+        logger.info(f"🔍 Processing on-demand personal photo analysis: {Path(photo_path).name}")
+        
+        # Run dedicated personal photo analysis
+        result = await personal_photo_analyzer.analyze_personal_photo(
+            photo_path=photo_path,
+            patient_profile=patient,
+            stored_analysis=stored_analysis
+        )
+        
+        logger.info(f"✅ Personal photo analysis completed for: {Path(photo_path).name}")
+        
+        return {
+            "success": True,
+            "personal_photo_analysis": result,
+            "analysis_mode": "on_demand_user_request",
+            "trigger": "user_button_click"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Personal photo analysis failed: {e}")
+        return {"error": f"Personal photo analysis failed: {str(e)}"}
+
+# ===== PHOTO UPLOAD ENDPOINT =====
 
 @app.post("/upload-photo")
 async def upload_photo(file: UploadFile = File(...)):
@@ -585,7 +628,8 @@ async def upload_photo(file: UploadFile = File(...)):
                     "objects_detected": len(result["vision_analysis"]["objects"]),
                     "labels_found": len(result["vision_analysis"]["labels"]),
                     "people_detected": len(result["vision_analysis"]["people"])
-                }
+                },
+                "note": "Photo added to personal library - use 'Discuss this photo' button for conversation analysis"
             }
         else:
             raise HTTPException(status_code=500, detail=result["message"])
@@ -609,110 +653,55 @@ async def get_patient_profile():
         "personalization_status": {
             "feedback_points": patient.get("feedback_points", 0),
             "status": "Getting started!" if patient.get("feedback_points", 0) < 3 else "Learning well!",
-            "dislikes_count": len(patient.get("demo_dislikes", [])),
-            "photo_count": len(patient.get("photo_library", []))
+            "blocked_items_count": len(patient.get("demo_dislikes", [])),
+            "photo_library_count": len(patient.get("photo_library", []))
         }
     }
 
-@app.post("/patient")
-async def update_patient_profile(updates: dict):
-    """Update patient profile from profile page"""
-    updated_patient = patient_manager.update_patient(updates)
-    if not updated_patient:
-        raise HTTPException(status_code=404, detail="Demo patient not found")
-    
-    return {
-        "status": "success", 
-        "message": "Profile updated successfully",
-        "patient": updated_patient
-    }
-
-@app.get("/dashboard")
-async def get_dashboard():
-    """Get dashboard content (cached or generate new)"""
-    cached = patient_manager.get_cached_dashboard()
-    if cached:
-        return {
-            "status": "success",
-            "source": "cached",
-            "patient_name": patient_manager.get_patient()["first_name"],
-            "content": cached["content"],
-            "cached_at": cached["timestamp"]
-        }
-    
-    # If no cache, generate new dashboard
-    return await refresh_dashboard()
-
-@app.post("/refresh-dashboard")
-async def refresh_dashboard():
-    """Refresh dashboard by running full CareConnect pipeline"""
-    patient = patient_manager.get_patient()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Demo patient not found")
-    
-    global sequential_agent
+@app.post("/feedback")
+async def submit_feedback(request: Dict[str, Any]):
+    """Submit user feedback for learning"""
+    global patient_manager
     
     try:
-        # Select photo of the day if available
-        photo_of_the_day = None
-        photo_analysis = None
+        feedback_type = request.get("feedback_type")  # "like" or "dislike"
+        item_type = request.get("item_type")  # "music", "recipe", "tv_show", etc.
+        item_id = request.get("item_id")
         
-        if patient.get("photo_library") and len(patient["photo_library"]) >= 1:
-            selected_photo = patient_manager.select_photo_of_the_day()
-            if selected_photo:
-                photo_of_the_day = selected_photo
-                # Get stored analysis
-                photo_analyses = patient.get("photo_analyses", {})
-                photo_analysis = photo_analyses.get(selected_photo, {})
-                logger.info(f"📷 Using photo of the day: {selected_photo}")
+        if not all([feedback_type, item_type, item_id]):
+            raise HTTPException(status_code=400, detail="Missing required feedback fields")
         
-        # Run pipeline if agent available
-        if sequential_agent:
-            result = await sequential_agent.run_full_pipeline(
-                patient_profile=patient,
-                request_type="dashboard",
-                session_id=f"ui_session_demo",
-                feedback_data=None,
-                photo_of_the_day=photo_of_the_day,
-                photo_analysis=photo_analysis
-            )
+        patient = patient_manager.get_patient()
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        # Update feedback points
+        current_points = patient.get("feedback_points", 0)
+        patient["feedback_points"] = current_points + 1
+        
+        # Track dislikes for demo purposes
+        if feedback_type == "dislike":
+            if "demo_dislikes" not in patient:
+                patient["demo_dislikes"] = []
             
-            if result.get("status") == "success":
-                # Cache the result
-                patient_manager.cache_dashboard(result["content"])
-                
-                return {
-                    "status": "success",
-                    "source": "generated",
-                    "patient_name": patient["first_name"],
-                    "content": result["content"],
-                    "pipeline_metadata": result["content"].get("pipeline_metadata", {}),
-                    "message": "Dashboard refreshed successfully!"
-                }
-            else:
-                raise HTTPException(status_code=500, detail="Pipeline execution failed")
-        else:
-            # Fallback dashboard if no agent
-            fallback_content = {
-                "consolidated_info": {"patient_profile": patient},
-                "cultural_profile": {"heritage": patient.get("cultural_heritage", "American")},
-                "qloo_intelligence": {"music": {"artist": "Elvis Presley", "genre": "Rock"}},
-                "sensory_content": {"recipe": {"name": "Traditional Soup", "description": "A comforting recipe"}},
-                "photo_analysis": {"conversation_starters": [{"starter": "Tell me about your family", "type": "general"}]},
-                "mobile_experience": {"status": "demo_mode"}
-            }
-            
-            return {
-                "status": "success",
-                "source": "fallback",
-                "patient_name": patient["first_name"],
-                "content": fallback_content,
-                "message": "Using demo data (agent not available)"
-            }
-            
+            dislike_entry = f"{item_type}:{item_id}"
+            if dislike_entry not in patient["demo_dislikes"]:
+                patient["demo_dislikes"].append(dislike_entry)
+        
+        # Save updated patient data
+        patient_manager.update_patient(patient)
+        
+        return {
+            "status": "success",
+            "message": f"Feedback recorded: {feedback_type} for {item_type}",
+            "feedback_points": patient["feedback_points"]
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Dashboard refresh failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Dashboard refresh failed: {str(e)}")
+        logger.error(f"❌ Feedback submission failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Feedback submission failed: {str(e)}")
 
 # ===== API ENDPOINTS =====
 
@@ -726,7 +715,7 @@ async def careconnect_endpoint(request: CareConnectRequest):
     
     try:
         # Run the enhanced sequential agent pipeline
-        result = await sequential_agent.run_full_pipeline(
+        result = await sequential_agent.run(
             patient_profile=request.patient_profile.dict(),
             request_type=request.request_type,
             session_id=request.session_id,
@@ -773,6 +762,7 @@ async def health_check():
         "timestamp": "2025-01-23T00:00:00Z",
         "tools_available": len(tools) if tools else 0,
         "agent_available": sequential_agent is not None,
+        "personal_photo_analyzer_available": personal_photo_analyzer is not None,
         "config": {
             "qloo_api_configured": bool(config.QLOO_API_KEY),
             "youtube_api_configured": bool(config.YOUTUBE_API_KEY),
@@ -784,7 +774,11 @@ async def health_check():
             "images_dir": str(patient_manager.images_dir),
             "demo_patient_loaded": patient_manager.get_patient() is not None
         },
-        "theme_images": theme_images_status  # NEW: Theme images directory status
+        "theme_images": theme_images_status,  # NEW: Theme images directory status
+        "pipeline_mode": {
+            "automatic_photos": "theme_only",
+            "personal_photos": "on_demand_only"
+        }
     }
 
 @app.get("/tools/status")
@@ -825,9 +819,14 @@ async def get_configuration():
         "port": config.PORT,
         "tools_initialized": tools is not None,
         "agent_available": sequential_agent is not None,
+        "personal_photo_analyzer_available": personal_photo_analyzer is not None,
         "file_structure": {
             "patients_json": str(patient_manager.patients_file),
             "images_directory": str(patient_manager.images_dir)
+        },
+        "pipeline_configuration": {
+            "automatic_pipeline": "theme_photos_only",
+            "personal_photos": "on_demand_button_click_only"
         }
     }
 
@@ -841,19 +840,27 @@ async def root():
         "health_check": "/health",
         "tools_status": "/tools/status",
         "upload_photo": "/upload-photo",
-        "data_location": "frontend/static/demo/"
+        "personal_photos": "/personal-photos",
+        "analyze_personal_photo": "/analyze-personal-photo",
+        "data_location": "frontend/static/demo/",
+        "pipeline_mode": {
+            "automatic_dashboard": "theme_photos_only",
+            "personal_photos": "on_demand_analysis_only"
+        }
     }
 
 if __name__ == "__main__":
     # Run the server
     logger.info(f"Starting CareConnect API server on port {config.PORT}")
-    logger.info(f"Data directory: {patient_manager.data_dir}")
-    logger.info(f"Images directory: {patient_manager.images_dir}")
+    logger.info(f"Data directory: {patient_manager.data_dir if patient_manager else 'Not initialized'}")
+    logger.info(f"Images directory: {patient_manager.images_dir if patient_manager else 'Not initialized'}")
     
     # NEW: Log theme images directory on startup
     if theme_manager:
         logger.info(f"🎯 Theme images directory: {theme_manager.theme_images_dir}")
     
+    logger.info("🎯 FIXED: Personal photos removed from automatic pipeline")
+    logger.info("📷 Personal photos available via on-demand analysis only")
     logger.info("🎯 Single patient demo mode enabled")
     uvicorn.run(
         "main:app",
