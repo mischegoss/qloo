@@ -379,34 +379,49 @@ class MobileSynthesizerAgent:
     def _select_theme_aware_conversation(self, 
                                        daily_theme: Dict[str, Any], 
                                        patient_profile: Dict[str, Any]) -> str:
-        """Generate theme-aware conversation starter."""
+        """Generate SIMPLE theme-aware conversation starter for dementia care."""
         
         theme_name = daily_theme.get("name", "General")
-        heritage = patient_profile.get("cultural_heritage", "American")
         
-        # Theme-specific conversation starters
+        # SIMPLE theme-specific conversation starters (5-8 words max)
         theme_conversations = {
             "Memory Lane": [
-                f"What was your favorite {heritage} tradition growing up?",
-                "Tell me about a special meal your family used to make",
-                "What music did you dance to when you were young?"
+                "What do you remember?",
+                "Tell me about the old days.",
+                "What made you happy then?"
             ],
             "Cultural Heritage": [
-                f"What do you remember about {heritage} celebrations?",
-                "Tell me about the neighborhood where you grew up",
-                "What stories did your parents tell you about the old country?"
+                "What was your family like?",
+                "Tell me about your home.",
+                "What did you celebrate?"
             ],
             "Family Traditions": [
-                "What holiday traditions meant the most to your family?",
-                "Tell me about Sunday dinners when you were young",
-                "What songs did your family sing together?"
+                "What did your family do together?",
+                "Tell me about family dinners.",
+                "What holidays did you like?"
+            ],
+            "Music": [
+                "What music do you like?",
+                "Did you like to dance?",
+                "What songs do you remember?"
+            ],
+            "Clothing": [
+                "What did you like to wear?",
+                "Did you have pretty clothes?",
+                "What was your favorite outfit?"
+            ],
+            "Family": [
+                "Tell me about your family.",
+                "Who do you love?",
+                "What makes you smile?"
             ]
         }
         
+        # Simple fallback conversations
         conversations = theme_conversations.get(theme_name, [
-            "What's your favorite memory from when you were young?",
-            "Tell me about something that always makes you smile",
-            "What reminds you of home?"
+            "What makes you happy?",
+            "Tell me something nice.",
+            "What do you like?"
         ])
         
         return random.choice(conversations)

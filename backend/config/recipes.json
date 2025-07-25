@@ -1,172 +1,174 @@
 [
   {
-    "name": "Warm Cinnamon Apples",
+    "name": "Warm Apple Slices",
     "ingredients": [
-      "1 apple (soft or pre-sliced)",
-      "1/2 tsp cinnamon",
-      "1 tsp brown sugar",
-      "1 tsp butter"
+      "1/2 cup canned apple slices (or 1 small apple, peeled, cored, and sliced very thinly)",
+      "Pinch of cinnamon (optional)"
     ],
     "instructions": [
       "Place apple slices in a microwave-safe bowl.",
-      "Sprinkle with cinnamon and sugar, dot with butter.",
-      "Microwave 1–2 minutes until soft and aromatic."
-    ],
-    "notes": "Smells like apple pie. Substitute with pears or canned peaches for variety."
-  },
-  {
-    "name": "Microwave Oatmeal with Raisins",
-    "ingredients": [
-      "1/2 cup oats",
-      "1 cup milk or water",
-      "1 tbsp raisins",
-      "Dash of cinnamon"
-    ],
-    "instructions": [
-      "Mix all ingredients in a microwave-safe bowl.",
-      "Microwave 90 seconds to 2 minutes.",
-      "Let cool 1 minute before serving."
-    ],
-    "notes": "Warm and sweet, often served by grandparents. Can add a splash of vanilla."
-  },
-  {
-    "name": "Peanut Butter & Banana Mug",
-    "ingredients": [
-      "1 ripe banana",
-      "1 tbsp peanut butter",
-      "Dash of cinnamon (optional)"
-    ],
-    "instructions": [
-      "Mash banana in a bowl with peanut butter.",
-      "Microwave for 30 seconds until warm and soft."
-    ],
-    "notes": "Nostalgic smell of lunchboxes and childhood snacks. Swap with almond or sunflower butter if needed."
-  },
-  {
-    "name": "Bread & Milk Pudding Mug",
-    "ingredients": [
-      "1 slice soft bread",
-      "1/2 cup milk",
-      "1 tsp sugar",
-      "Dash nutmeg or cinnamon"
-    ],
-    "instructions": [
-      "Tear bread into pieces in a mug.",
-      "Pour milk over, sprinkle sugar and spice.",
-      "Microwave for 1–2 minutes until warm and soft."
-    ],
-    "notes": "Inspired by wartime and Depression-era desserts. Smells comforting and familiar."
-  },
-  {
-    "name": "Butter Noodles",
-    "ingredients": ["1/2 cup cooked egg noodles", "1 tsp butter", "Pinch salt"],
-    "instructions": [
-      "Place noodles in a bowl.",
-      "Add butter and salt, microwave 1 minute.",
-      "Stir and serve warm."
-    ],
-    "notes": "Reminiscent of school lunches or Sunday dinners. Use cooked pasta to avoid boiling."
-  },
-  {
-    "name": "Microwave Cocoa",
-    "ingredients": [
-      "1 cup milk",
-      "1 tbsp cocoa powder",
-      "1 tsp sugar",
-      "Splash of vanilla (optional)"
-    ],
-    "instructions": [
-      "Mix cocoa and sugar into milk in a mug.",
-      "Microwave 90 seconds. Stir well."
-    ],
-    "notes": "Smells like winter memories and family evenings. Add cinnamon for Mexican-style cocoa."
-  },
-  {
-    "name": "Mashed Banana Toast",
-    "ingredients": ["1 slice bread", "1 banana", "Drizzle of honey (optional)"],
-    "instructions": [
-      "Toast bread in toaster or microwave.",
-      "Mash banana on top. Warm briefly in microwave."
-    ],
-    "notes": "Popular Depression-era treat. Sweet, familiar, and safe for soft eating."
-  },
-  {
-    "name": "Microwave Rice with Butter and Sugar",
-    "ingredients": ["1/2 cup cooked rice", "1 tsp butter", "1 tsp sugar"],
-    "instructions": [
-      "Mix all in a microwave-safe bowl.",
-      "Microwave 1 minute until warm."
-    ],
-    "notes": "Old-fashioned sweet rice from many cultures. Add cinnamon, milk, or jam."
-  },
-  {
-    "name": "Cream of Wheat or Farina",
-    "ingredients": ["2 tbsp cream of wheat", "1 cup milk", "1 tsp sugar"],
-    "instructions": [
-      "Stir all in a bowl. Microwave for 1–2 minutes, stirring halfway.",
-      "Let sit 1 minute before serving."
-    ],
-    "notes": "Breakfast comfort food from mid-century kitchens. Add jam or butter for nostalgia."
-  },
-  {
-    "name": "Microwave Cheese Toast",
-    "ingredients": ["1 slice bread", "1 slice cheese or shredded cheese"],
-    "instructions": [
-      "Place cheese on bread, microwave 30–45 seconds.",
-      "Let cool slightly before eating."
-    ],
-    "notes": "Smells like grilled cheese. Use regional cheeses or even chutney for flavor."
-  },
-  {
-    "name": "Honey Butter Carrots",
-    "ingredients": ["1/2 cup baby carrots", "1 tsp honey", "1 tsp butter"],
-    "instructions": [
-      "Place carrots with 1 tbsp water in dish, cover.",
-      "Microwave 2 minutes. Drain, then add honey and butter.",
-      "Microwave another 30 seconds."
-    ],
-    "notes": "Sweet smell and soft texture—often served in childhood meals."
-  },
-  {
-    "name": "Microwave Apple Bread Snack",
-    "ingredients": ["1 slice bread", "1 tbsp applesauce", "Cinnamon"],
-    "instructions": [
-      "Spread applesauce on bread, sprinkle cinnamon.",
-      "Microwave 20–30 seconds."
-    ],
-    "notes": "Tastes like apple pie on toast. Simple and gentle."
-  },
-  {
-    "name": "Instant Noodle Cup with Egg",
-    "ingredients": ["1 cup instant noodles", "1 egg (optional)", "1 cup water"],
-    "instructions": [
-      "Add noodles and water to bowl. Microwave 2 minutes.",
-      "Crack egg in, stir, microwave 1 more minute.",
-      "Let sit before serving."
-    ],
-    "notes": "Smells familiar from childhood. Omit egg for safety if needed."
-  },
-  {
-    "name": "Microwave Cinnamon Toast",
-    "ingredients": [
-      "1 slice bread",
-      "1 tsp butter",
-      "1 tsp sugar",
-      "Dash cinnamon"
-    ],
-    "instructions": [
-      "Butter bread, sprinkle sugar and cinnamon.",
-      "Microwave 30–45 seconds."
-    ],
-    "notes": "Smell triggers strong memories for many older adults."
-  },
-  {
-    "name": "Microwave Corn Porridge",
-    "ingredients": ["1/2 cup cornmeal", "1 cup milk or water", "1 tsp sugar"],
-    "instructions": [
-      "Mix all in a deep bowl. Microwave 2 minutes, stirring once.",
+      "Sprinkle with cinnamon if desired.",
+      "Microwave for 30-45 seconds until warm and slightly softened.",
       "Let cool slightly before serving."
     ],
-    "notes": "Similar to grits or polenta. Add cultural toppings like cheese, molasses, or coconut milk."
+    "notes": {
+      "text": "The warm, sweet scent of apples and cinnamon can evoke memories of autumn, holidays, or homemade pies, connecting to seasonal changes and cozy feelings.",
+      "theme": "seasons"
+    },
+    "conversation_starters": [
+      "What's your favorite season, and why?",
+      "Do you remember picking apples or making apple pie?",
+      "What smells remind you of different seasons?"
+    ]
+  },
+  {
+    "name": "Microwave Steamed Carrots with Butter",
+    "ingredients": [
+      "1/2 cup baby carrots (or sliced carrots)",
+      "1/2 teaspoon butter (optional)",
+      "Pinch of salt (optional)"
+    ],
+    "instructions": [
+      "Place carrots in a microwave-safe bowl with 1-2 tablespoons of water.",
+      "Cover with a microwave-safe plate or plastic wrap (vented).",
+      "Microwave for 2-3 minutes, or until tender.",
+      "Drain excess water. Add butter and salt if desired, and stir gently.",
+      "Let cool slightly before serving."
+    ],
+    "notes": {
+      "text": "The simple, wholesome nature of cooked carrots can bring to mind basic comforts and perhaps even the treats given to beloved pets.",
+      "theme": "pets"
+    },
+    "conversation_starters": [
+      "Tell me about a pet you had. What did they like to eat?",
+      "What was your favorite animal growing up?",
+      "Do you remember any special stories about your pets?"
+    ]
+  },
+  {
+    "name": "Warm Berry Compote",
+    "ingredients": [
+      "1/2 cup frozen mixed berries",
+      "1 teaspoon sugar (optional)"
+    ],
+    "instructions": [
+      "Place frozen berries in a microwave-safe bowl.",
+      "Microwave for 60-90 seconds, stirring halfway through, until berries are warm and saucy.",
+      "Stir in sugar if desired.",
+      "Let cool slightly before serving."
+    ],
+    "notes": {
+      "text": "The bright colors and sweet-tart flavor of berries can evoke festive holiday meals and celebrations.",
+      "theme": "holidays"
+    },
+    "conversation_starters": [
+      "What holidays were special in your family?",
+      "Do you remember any special holiday foods or desserts?",
+      "What traditions did you have for holidays?"
+    ]
+  },
+  {
+    "name": "Cream of Wheat (Instant)",
+    "ingredients": [
+      "1 packet instant Cream of Wheat (or similar hot cereal)",
+      "1 cup water or milk"
+    ],
+    "instructions": [
+      "Empty contents of packet into a microwave-safe bowl.",
+      "Add water or milk.",
+      "Microwave on high for 60-90 seconds, or until thickened, stirring halfway through.",
+      "Let cool slightly before serving."
+    ],
+    "notes": {
+      "text": "A warm, comforting bowl of cereal is often associated with cozying up indoors during cold weather or enjoying a warm start to a chilly day.",
+      "theme": "weather"
+    },
+    "conversation_starters": [
+      "What kind of weather do you enjoy the most?",
+      "What did you do on a rainy or snowy day?",
+      "Do you remember a particularly memorable weather event?"
+    ]
+  },
+  {
+    "name": "Hard-Boiled Egg (pre-cooked, microwaved to warm)",
+    "ingredients": ["1 pre-cooked, peeled hard-boiled egg"],
+    "instructions": [
+      "Place the hard-boiled egg in a microwave-safe bowl with a small amount of water (just enough to cover the bottom).",
+      "Cover the bowl with a microwave-safe plate or plastic wrap (vented).",
+      "Microwave for 15-20 seconds to warm through. **Do not microwave for too long as eggs can explode.**",
+      "Carefully remove and let cool slightly before serving, perhaps sliced or mashed."
+    ],
+    "notes": {
+      "text": "A simple, nourishing item often found in packed lunches or served in school cafeterias, evoking memories of school days.",
+      "theme": "school"
+    },
+    "conversation_starters": [
+      "What did you eat for lunch at school?",
+      "What was your favorite subject in school?",
+      "Do you remember any of your teachers?"
+    ]
+  },
+  {
+    "name": "Ice Cream Sundae (softened)",
+    "ingredients": [
+      "1/2 cup vanilla ice cream",
+      "1 tablespoon chocolate syrup or fruit topping"
+    ],
+    "instructions": [
+      "Scoop ice cream into a small bowl.",
+      "Microwave for 10-15 seconds to slightly soften (do not melt completely).",
+      "Drizzle with chocolate syrup or fruit topping.",
+      "Serve immediately."
+    ],
+    "notes": {
+      "text": "An iconic birthday treat, the sweetness and visual appeal of a sundae can instantly bring to mind birthday celebrations and joyful memories.",
+      "theme": "birthday"
+    },
+    "conversation_starters": [
+      "How did you celebrate birthdays when you were young?",
+      "What was your favorite kind of birthday cake?",
+      "Do you remember a special birthday gift?"
+    ]
+  },
+  {
+    "name": "Plain Oatmeal (Instant)",
+    "ingredients": ["1 packet plain instant oatmeal", "1 cup water or milk"],
+    "instructions": [
+      "Empty contents of packet into a microwave-safe bowl.",
+      "Add water or milk.",
+      "Microwave on high for 60-90 seconds, or until thickened, stirring halfway through.",
+      "Let cool slightly before serving."
+    ],
+    "notes": {
+      "text": "A fundamental comfort food, often a staple in many households, bringing to mind memories of home cooking and familiar flavors.",
+      "theme": "food"
+    },
+    "conversation_starters": [
+      "What was your favorite food growing up?",
+      "Did you enjoy cooking, or did someone special cook for you?",
+      "What foods remind you most of home?"
+    ]
+  },
+  {
+    "name": "Warm Applesauce",
+    "ingredients": [
+      "1/2 cup unsweetened applesauce",
+      "Pinch of cinnamon (optional)"
+    ],
+    "instructions": [
+      "Spoon applesauce into a microwave-safe bowl.",
+      "Microwave for 30-45 seconds until warm.",
+      "Stir in cinnamon if desired.",
+      "Let cool slightly before serving."
+    ],
+    "notes": {
+      "text": "A simple, sweet, and widely available food that might have been part of meals while traveling or visiting new places.",
+      "theme": "travel"
+    },
+    "conversation_starters": [
+      "Where did you like to travel?",
+      "What places did you visit that had interesting foods?",
+      "Tell me about a special trip you took."
+    ]
   }
 ]

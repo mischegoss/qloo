@@ -1,228 +1,18 @@
 {
   "themes": [
     {
-      "id": "music",
-      "name": "Music",
-      "description": "Songs and musical memories",
+      "id": "travel",
+      "name": "Travel",
+      "description": "Travel memories and places visited",
       "conversation_prompts": [
-        "What was your favorite song when you were young?",
-        "Did you ever dance to this kind of music?",
-        "What music did your family listen to together?"
+        "Where did you like to travel?",
+        "What places did you visit?",
+        "Tell me about a special trip"
       ],
-      "recipe_keywords": ["comfort", "celebration", "gathering"],
-      "content_preferences": {
-        "qloo_priority": "artists",
-        "sensory_focus": "auditory"
-      }
-    },
-    {
-      "id": "pets",
-      "name": "Pets",
-      "description": "Beloved animal companions",
-      "conversation_prompts": [
-        "Tell me about pets you've had",
-        "What was your favorite animal growing up?",
-        "Did you have a special pet story?"
-      ],
-      "recipe_keywords": ["simple", "comfort", "wholesome"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "seasons",
-      "name": "Seasons",
-      "description": "Seasonal memories and changes",
-      "conversation_prompts": [
-        "What's your favorite season?",
-        "What did you do in spring/summer/fall/winter?",
-        "What seasonal activities did you enjoy?"
-      ],
-      "recipe_keywords": ["seasonal", "fresh", "warm"],
+      "recipe_keywords": ["adventure", "discovery", "exotic"],
       "content_preferences": {
         "qloo_priority": "places",
         "sensory_focus": "visual"
-      }
-    },
-    {
-      "id": "holidays",
-      "name": "Holidays",
-      "description": "Holiday traditions and celebrations",
-      "conversation_prompts": [
-        "What holidays were special in your family?",
-        "Tell me about holiday traditions",
-        "What holiday foods did you enjoy?"
-      ],
-      "recipe_keywords": ["celebration", "traditional", "festive"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
-      }
-    },
-    {
-      "id": "food",
-      "name": "Food",
-      "description": "Favorite foods and cooking memories",
-      "conversation_prompts": [
-        "What was your favorite food growing up?",
-        "Did you enjoy cooking?",
-        "What foods remind you of home?"
-      ],
-      "recipe_keywords": ["traditional", "comfort", "homemade"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
-      }
-    },
-    {
-      "id": "school",
-      "name": "School",
-      "description": "School days and learning memories",
-      "conversation_prompts": [
-        "Tell me about your school days",
-        "What was your favorite subject?",
-        "Did you have a favorite teacher?"
-      ],
-      "recipe_keywords": ["simple", "nostalgic", "childhood"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "visual"
-      }
-    },
-    {
-      "id": "clothing",
-      "name": "Clothing",
-      "description": "Fashion and clothing memories",
-      "conversation_prompts": [
-        "What did you like to wear?",
-        "Do you remember fashion trends?",
-        "Did you have a special outfit?"
-      ],
-      "recipe_keywords": ["elegant", "simple", "classic"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "weather",
-      "name": "Weather",
-      "description": "Weather memories and preferences",
-      "conversation_prompts": [
-        "What kind of weather do you enjoy?",
-        "Do you remember any special weather days?",
-        "What did you do on rainy/sunny days?"
-      ],
-      "recipe_keywords": ["comfort", "warming", "soothing"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "flowers",
-      "name": "Flowers",
-      "description": "Gardens and flower memories",
-      "conversation_prompts": [
-        "Did you have a garden?",
-        "What are your favorite flowers?",
-        "Do you remember picking flowers?"
-      ],
-      "recipe_keywords": ["fresh", "delicate", "natural"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "olfactory"
-      }
-    },
-    {
-      "id": "colors",
-      "name": "Colors",
-      "description": "Favorite colors and visual memories",
-      "conversation_prompts": [
-        "What's your favorite color?",
-        "What colors do you remember from your home?",
-        "Did you have colorful clothes or decorations?"
-      ],
-      "recipe_keywords": ["colorful", "vibrant", "appealing"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "visual"
-      }
-    },
-    {
-      "id": "games",
-      "name": "Games",
-      "description": "Games and play memories",
-      "conversation_prompts": [
-        "What games did you play as a child?",
-        "Did you play card games or board games?",
-        "What was your favorite way to have fun?"
-      ],
-      "recipe_keywords": ["playful", "fun", "social"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "movies",
-      "name": "Movies",
-      "description": "Favorite films and movie memories",
-      "conversation_prompts": [
-        "What movies did you enjoy?",
-        "Did you go to the movie theater?",
-        "Who were your favorite movie stars?"
-      ],
-      "recipe_keywords": ["classic", "entertaining", "nostalgic"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "visual"
-      }
-    },
-    {
-      "id": "books",
-      "name": "Books",
-      "description": "Reading and literature memories",
-      "conversation_prompts": [
-        "Did you enjoy reading?",
-        "What were your favorite books?",
-        "Did anyone read to you as a child?"
-      ],
-      "recipe_keywords": ["thoughtful", "quiet", "comforting"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "family",
-      "name": "Family",
-      "description": "Family memories and relationships",
-      "conversation_prompts": [
-        "Tell me about your family",
-        "What family traditions did you have?",
-        "What did you do together as a family?"
-      ],
-      "recipe_keywords": ["traditional", "sharing", "gathering"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
-      }
-    },
-    {
-      "id": "neighbors",
-      "name": "Neighbors",
-      "description": "Neighborhood and community memories",
-      "conversation_prompts": [
-        "Tell me about your neighborhood",
-        "Did you have good neighbors?",
-        "What was your community like?"
-      ],
-      "recipe_keywords": ["community", "sharing", "familiar"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "social"
       }
     },
     {
@@ -241,63 +31,123 @@
       }
     },
     {
-      "id": "travel",
-      "name": "Travel",
-      "description": "Travel memories and places visited",
+      "id": "weather",
+      "name": "Weather",
+      "description": "Weather memories and preferences",
       "conversation_prompts": [
-        "Where did you like to travel?",
-        "What places did you visit?",
-        "Tell me about a special trip"
+        "What kind of weather do you enjoy?",
+        "Do you remember any special weather days?",
+        "What did you do on rainy/sunny days?"
       ],
-      "recipe_keywords": ["adventure", "discovery", "exotic"],
+      "recipe_keywords": ["comfort", "warming", "soothing"],
+      "content_preferences": {
+        "qloo_priority": "places",
+        "sensory_focus": "tactile"
+      }
+    },
+    {
+      "id": "clothing",
+      "name": "Clothing",
+      "description": "Fashion and clothing memories",
+      "conversation_prompts": [
+        "What did you like to wear?",
+        "Do you remember fashion trends?",
+        "Did you have a special outfit?"
+      ],
+      "recipe_keywords": ["elegant", "simple", "classic"],
+      "content_preferences": {
+        "qloo_priority": "tv_shows",
+        "sensory_focus": "tactile"
+      }
+    },
+    {
+      "id": "school",
+      "name": "School",
+      "description": "School days and learning memories",
+      "conversation_prompts": [
+        "Tell me about your school days",
+        "What was your favorite subject?",
+        "Did you have a favorite teacher?"
+      ],
+      "recipe_keywords": ["simple", "nostalgic", "childhood"],
+      "content_preferences": {
+        "qloo_priority": "tv_shows",
+        "sensory_focus": "visual"
+      }
+    },
+    {
+      "id": "food",
+      "name": "Food",
+      "description": "Favorite foods and cooking memories",
+      "conversation_prompts": [
+        "What was your favorite food growing up?",
+        "Did you enjoy cooking?",
+        "What foods remind you of home?"
+      ],
+      "recipe_keywords": ["traditional", "comfort", "homemade"],
+      "content_preferences": {
+        "qloo_priority": "places",
+        "sensory_focus": "gustatory"
+      }
+    },
+    {
+      "id": "holidays",
+      "name": "Holidays",
+      "description": "Holiday traditions and celebrations",
+      "conversation_prompts": [
+        "What holidays were special in your family?",
+        "Tell me about holiday traditions",
+        "What holiday foods did you enjoy?"
+      ],
+      "recipe_keywords": ["celebration", "traditional", "festive"],
+      "content_preferences": {
+        "qloo_priority": "places",
+        "sensory_focus": "gustatory"
+      }
+    },
+    {
+      "id": "seasons",
+      "name": "Seasons",
+      "description": "Seasonal memories and changes",
+      "conversation_prompts": [
+        "What's your favorite season?",
+        "What did you do in spring/summer/fall/winter?",
+        "What seasonal activities did you enjoy?"
+      ],
+      "recipe_keywords": ["seasonal", "fresh", "warm"],
       "content_preferences": {
         "qloo_priority": "places",
         "sensory_focus": "visual"
       }
     },
     {
-      "id": "dancing",
-      "name": "Dancing",
-      "description": "Dancing and movement memories",
+      "id": "pets",
+      "name": "Pets",
+      "description": "Beloved animal companions",
       "conversation_prompts": [
-        "Did you enjoy dancing?",
-        "What dances did you know?",
-        "Where did you go dancing?"
+        "Tell me about pets you've had",
+        "What was your favorite animal growing up?",
+        "Did you have a special pet story?"
       ],
-      "recipe_keywords": ["energetic", "celebratory", "social"],
-      "content_preferences": {
-        "qloo_priority": "artists",
-        "sensory_focus": "kinesthetic"
-      }
-    },
-    {
-      "id": "friends",
-      "name": "Friends",
-      "description": "Friendship memories and social connections",
-      "conversation_prompts": [
-        "Tell me about your friends",
-        "What did you do with friends?",
-        "Do you have a special friendship memory?"
-      ],
-      "recipe_keywords": ["social", "sharing", "fun"],
+      "recipe_keywords": ["simple", "comfort", "wholesome"],
       "content_preferences": {
         "qloo_priority": "places",
-        "sensory_focus": "social"
+        "sensory_focus": "tactile"
       }
     },
     {
-      "id": "childhood",
-      "name": "Childhood",
-      "description": "Early childhood memories and experiences",
+      "id": "music",
+      "name": "Music",
+      "description": "Songs and musical memories",
       "conversation_prompts": [
-        "What do you remember from being little?",
-        "What was your childhood home like?",
-        "What did you enjoy doing as a child?"
+        "What was your favorite song when you were young?",
+        "Did you ever dance to this kind of music?",
+        "What music did your family listen to together?"
       ],
-      "recipe_keywords": ["simple", "innocent", "nostalgic"],
+      "recipe_keywords": ["comfort", "celebration", "gathering"],
       "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "tactile"
+        "qloo_priority": "artists",
+        "sensory_focus": "auditory"
       }
     }
   ]

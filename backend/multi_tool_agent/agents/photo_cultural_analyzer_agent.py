@@ -1,410 +1,372 @@
 """
-Updated Photo Cultural Analyzer Agent
+Photo Cultural Analyzer Agent - SIMPLIFIED for Dementia Care
 File: backend/multi_tool_agent/agents/photo_cultural_analyzer_agent.py
 
-Now handles photo selection with stored analysis and generates fresh conversation starters.
+FIXES:
+- Simple, short conversation starters (2-3 questions)
+- Plain language appropriate for dementia patients
+- Removed complex multi-part questions
 """
 
 import logging
 import random
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Dict, Any, List, Optional
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 class PhotoCulturalAnalyzerAgent:
     """
-    Agent 5: Photo Cultural Analyzer Agent
+    Agent 5: Photo Cultural Analyzer with SIMPLIFIED conversation starters for dementia care.
     
-    UPDATED FUNCTIONALITY:
-    - Uses pre-processed photo analysis from storage
-    - Selects photo of the day with rotation
-    - Generates fresh conversation starters aligned with cultural context
-    - Integrates stored vision data with current pipeline context
+    SIMPLIFIED APPROACH:
+    - Short, simple questions (5-10 words)
+    - Plain language only
+    - 2-3 questions maximum
+    - Easy to understand for dementia patients
     """
     
-    def __init__(self, vision_ai_tool: Optional[Any] = None):
+    def __init__(self, vision_ai_tool):
         self.vision_ai_tool = vision_ai_tool
-        logger.info("📷 Photo Cultural Analyzer Agent initialized for photo selection")
+        logger.info("Photo Cultural Analyzer initialized with SIMPLIFIED conversation starters")
     
-    async def run(self, 
-                 consolidated_info: Dict[str, Any],
-                 cultural_profile: Dict[str, Any],
-                 qloo_intelligence: Dict[str, Any],
-                 sensory_content: Dict[str, Any],
-                 photo_of_the_day: Optional[str] = None,
-                 stored_photo_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def run(self,
+                  consolidated_info: Dict[str, Any],
+                  cultural_profile: Dict[str, Any],
+                  qloo_intelligence: Dict[str, Any],
+                  sensory_content: Dict[str, Any],
+                  photo_of_the_day: str,
+                  stored_photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process selected photo with stored analysis and generate culturally-aligned conversation.
-        
-        NEW APPROACH:
-        1. Use stored vision analysis (no real-time processing)
-        2. Generate fresh conversation starters using cultural context
-        3. Create memory triggers aligned with patient's heritage
+        Analyze photo and generate SIMPLE conversation starters for dementia care.
         """
         
         try:
-            logger.info("🔍 Starting photo cultural analysis with stored data")
-            
-            # Validate inputs
-            if not photo_of_the_day or not stored_photo_analysis:
-                return {
-                    "photo_analysis": {
-                        "status": "skipped",
-                        "reason": "no_photo_or_analysis_available"
-                    }
-                }
-            
-            # Extract stored vision analysis
-            vision_analysis = stored_photo_analysis.get("vision_analysis", {})
-            if not vision_analysis:
-                logger.warning("No vision analysis found in stored data")
-                return {
-                    "photo_analysis": {
-                        "status": "failed",
-                        "reason": "missing_vision_analysis"
-                    }
-                }
-            
+            logger.info("🔍 Starting photo cultural analysis with SIMPLE conversation starters")
             logger.info(f"📷 Processing photo: {photo_of_the_day}")
+            
+            # Extract patient info
+            patient_profile = consolidated_info.get("patient_profile", {})
+            heritage = patient_profile.get("cultural_heritage", "American")
+            birth_year = patient_profile.get("birth_year")
+            
+            # Use stored vision analysis data
+            vision_analysis = stored_photo_analysis.get("vision_analysis", {})
             logger.info(f"🔍 Vision data: {len(vision_analysis.get('objects', []))} objects, {len(vision_analysis.get('labels', []))} labels")
             
-            # Generate cultural context integration
-            cultural_integration = self._integrate_cultural_context(
-                vision_analysis=vision_analysis,
-                cultural_profile=cultural_profile,
-                consolidated_info=consolidated_info
+            # Generate SIMPLE conversation starters
+            conversation_starters = self._generate_simple_conversation_starters(
+                vision_analysis, heritage, birth_year
             )
             
-            # Generate fresh conversation starters (aligned with current cultural context)
-            conversation_starters = self._generate_dynamic_conversation_starters(
-                vision_analysis=vision_analysis,
-                cultural_profile=cultural_profile,
-                qloo_intelligence=qloo_intelligence,
-                cultural_integration=cultural_integration
-            )
+            # Generate simple memory triggers
+            memory_triggers = self._generate_simple_memory_triggers(vision_analysis, heritage)
             
-            # Generate memory triggers
-            memory_triggers = self._generate_memory_triggers(
-                vision_analysis=vision_analysis,
-                cultural_profile=cultural_profile,
-                cultural_integration=cultural_integration
-            )
+            # Cultural integration (simplified)
+            cultural_integration = self._analyze_cultural_alignment(vision_analysis, heritage)
             
-            # Create era analysis based on cultural profile
-            era_analysis = self._analyze_era_context(
-                vision_analysis=vision_analysis,
-                cultural_profile=cultural_profile
-            )
-            
-            # Compile final photo analysis
-            photo_analysis_result = {
-                "status": "success",
-                "photo_path": photo_of_the_day,
-                "analysis_source": "stored_vision_with_dynamic_conversation",
-                "vision_analysis": vision_analysis,
-                "cultural_integration": cultural_integration,
-                "conversation_starters": conversation_starters,
-                "memory_triggers": memory_triggers,
-                "era_analysis": era_analysis,
-                "processing_metadata": {
-                    "agent": "photo_cultural_analyzer",
-                    "analysis_type": "stored_with_fresh_conversation",
-                    "cultural_alignment": True,
-                    "conversation_count": len(conversation_starters),
-                    "memory_trigger_count": len(memory_triggers)
-                }
-            }
-            
-            logger.info(f"✅ Photo analysis completed: {len(conversation_starters)} conversation starters generated")
+            logger.info(f"✅ Photo analysis completed: {len(conversation_starters)} simple conversation starters generated")
             
             return {
-                "photo_analysis": photo_analysis_result
+                "photo_analysis": {
+                    "status": "success",
+                    "photo_path": photo_of_the_day,
+                    "analysis_source": "stored_vision_with_simple_conversation",
+                    "vision_analysis": vision_analysis,
+                    "cultural_integration": cultural_integration,
+                    "conversation_starters": conversation_starters,
+                    "memory_triggers": memory_triggers,
+                    "era_analysis": self._simple_era_analysis(birth_year),
+                    "processing_metadata": {
+                        "agent": "photo_cultural_analyzer",
+                        "analysis_type": "stored_with_simple_conversation",
+                        "cultural_alignment": cultural_integration.get("cultural_alignment_detected", False),
+                        "conversation_count": len(conversation_starters),
+                        "memory_trigger_count": len(memory_triggers),
+                        "simplified_approach": True
+                    }
+                }
             }
             
         except Exception as e:
             logger.error(f"❌ Photo cultural analysis failed: {e}")
-            return {
-                "photo_analysis": {
-                    "status": "error",
-                    "error": str(e),
-                    "photo_path": photo_of_the_day
-                }
-            }
+            return self._create_simple_fallback_analysis(photo_of_the_day, consolidated_info)
     
-    def _integrate_cultural_context(self, 
-                                  vision_analysis: Dict[str, Any],
-                                  cultural_profile: Dict[str, Any],
-                                  consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Integrate photo content with patient's cultural background."""
+    def _generate_simple_conversation_starters(self, 
+                                             vision_analysis: Dict[str, Any], 
+                                             heritage: str, 
+                                             birth_year: Optional[int]) -> List[Dict[str, Any]]:
+        """
+        Generate 2-3 SIMPLE conversation starters for dementia patients.
         
-        integration = {
-            "cultural_alignment_detected": False,
-            "heritage_connections": [],
-            "era_consistency": False,
-            "family_context_likely": False
-        }
+        RULES:
+        - Maximum 10 words per question
+        - Plain, simple language
+        - No complex sentences
+        - Easy to understand
+        """
         
-        # Extract cultural elements
-        heritage = cultural_profile.get("cultural_elements", {}).get("heritage", "")
-        era_context = cultural_profile.get("era_context", {})
-        
-        # Analyze objects for cultural relevance
-        objects = vision_analysis.get("objects", [])
-        labels = vision_analysis.get("labels", [])
-        all_content = objects + labels
-        
-        # Check for heritage-specific items
-        heritage_keywords = {
-            "Italian": ["pasta", "wine", "church", "family", "cooking", "kitchen"],
-            "Irish": ["music", "pub", "green", "family", "celebration"],
-            "Mexican": ["family", "celebration", "food", "church", "colorful"],
-            "Jewish": ["family", "celebration", "religious", "ceremony", "gathering"],
-            "Chinese": ["family", "food", "red", "celebration", "gathering"],
-            "German": ["beer", "family", "celebration", "outdoor", "gathering"]
-        }
-        
-        for heritage_type, keywords in heritage_keywords.items():
-            if heritage_type.lower() in heritage.lower():
-                for keyword in keywords:
-                    if any(keyword in item.lower() for item in all_content):
-                        integration["heritage_connections"].append({
-                            "heritage": heritage_type,
-                            "keyword": keyword,
-                            "connection_strength": "strong"
-                        })
-                        integration["cultural_alignment_detected"] = True
-        
-        # Check for family/gathering context
-        family_indicators = ["people", "family", "gathering", "celebration", "home", "kitchen"]
-        if any(indicator in item.lower() for item in all_content for indicator in family_indicators):
-            integration["family_context_likely"] = True
-        
-        # Era consistency check
-        birth_year = consolidated_info.get("patient_profile", {}).get("birth_year")
-        if birth_year and era_context:
-            photo_era_indicators = ["vintage", "old", "black and white", "sepia", "formal"]
-            if any(indicator in item.lower() for item in all_content for indicator in photo_era_indicators):
-                integration["era_consistency"] = True
-        
-        return integration
-    
-    def _generate_dynamic_conversation_starters(self, 
-                                              vision_analysis: Dict[str, Any],
-                                              cultural_profile: Dict[str, Any],
-                                              qloo_intelligence: Dict[str, Any],
-                                              cultural_integration: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate fresh conversation starters aligned with cultural context."""
-        
-        starters = []
-        heritage = cultural_profile.get("cultural_elements", {}).get("heritage", "")
-        first_name = cultural_profile.get("cultural_elements", {}).get("patient_name", "")
-        
-        # Extract photo content
         objects = vision_analysis.get("objects", [])
         labels = vision_analysis.get("labels", [])
         people = vision_analysis.get("people", [])
         activities = vision_analysis.get("activities", [])
-        settings = vision_analysis.get("settings", [])
         
-        # Generate culturally-informed conversation starters
+        simple_starters = []
         
-        # Object-based starters with cultural context
-        if objects:
-            primary_object = objects[0]
-            if cultural_integration.get("heritage_connections"):
-                heritage_connection = cultural_integration["heritage_connections"][0]
-                starters.append({
-                    "type": "cultural_object_discussion",
-                    "starter": f"I notice {primary_object} in this photo. In {heritage} families, this often brings back special memories. What does this remind you of?",
-                    "follow_up": f"Did your family have traditions around {primary_object}?",
-                    "cultural_context": heritage_connection["heritage"],
-                    "caregiver_guidance": "Encourage storytelling about family traditions and cultural memories"
-                })
-            else:
-                starters.append({
-                    "type": "object_memory_discussion",
-                    "starter": f"I see {primary_object} in this photo. Does this bring back any memories for you?",
-                    "follow_up": "Tell me about times when this was important in your life",
-                    "caregiver_guidance": "Let them lead the conversation about personal connections"
-                })
+        # SIMPLE questions based on what's in the photo
         
-        # People and family context
-        if people and cultural_integration.get("family_context_likely"):
-            starters.append({
-                "type": "family_cultural_discussion",
-                "starter": f"This looks like a wonderful family moment. {heritage} families often have such rich traditions. Who are the important people in this photo?",
-                "follow_up": "What family traditions were most meaningful to you?",
-                "cultural_context": heritage,
-                "caregiver_guidance": "Focus on relationships and feelings rather than specific names if memory is unclear"
-            })
-        elif people:
-            starters.append({
-                "type": "people_discussion",
-                "starter": "I can see there are people in this photo who were important to you. Tell me about them.",
-                "follow_up": "What made your relationships with these people special?",
-                "caregiver_guidance": "Be patient if names aren't remembered - focus on emotions and relationships"
+        # People questions (if people detected)
+        if people or "people" in objects:
+            simple_starters.append({
+                "type": "people",
+                "starter": "Who do you see here?",
+                "follow_up": "Tell me about them.",
+                "caregiver_guidance": "Let them share memories about people they know"
             })
         
-        # Activity and celebration context
-        if activities:
-            primary_activity = activities[0]
-            if "celebration" in primary_activity.lower() or "ceremony" in primary_activity.lower():
-                starters.append({
-                    "type": "celebration_cultural_discussion",
-                    "starter": f"This looks like a special {primary_activity}. What celebrations were most important in your family?",
-                    "follow_up": f"How did your family celebrate special occasions?",
-                    "cultural_context": heritage,
-                    "caregiver_guidance": "Encourage sharing about meaningful celebrations and traditions"
-                })
-        
-        # Setting-based discussions
-        if settings:
-            primary_setting = settings[0]
-            if "home" in primary_setting.lower() or "kitchen" in primary_setting.lower():
-                starters.append({
-                    "type": "home_cultural_discussion",
-                    "starter": f"This {primary_setting} looks like it held many memories. What was your favorite room in your family home?",
-                    "follow_up": "What activities did your family enjoy doing at home?",
-                    "cultural_context": heritage,
-                    "caregiver_guidance": "Home environments often trigger rich sensory memories"
-                })
-        
-        # Qloo-informed cultural discussions
-        qloo_recommendations = qloo_intelligence.get("cultural_recommendations", {})
-        if qloo_recommendations and heritage:
-            starters.append({
-                "type": "qloo_cultural_connection",
-                "starter": f"Looking at this photo reminds me that {heritage} culture has such rich traditions. What aspects of your heritage were most important to your family?",
-                "follow_up": "Are there traditions you'd like to share or continue?",
-                "cultural_context": heritage,
-                "caregiver_guidance": "Connect photo memories to broader cultural identity and pride"
+        # Family/celebration questions
+        if any(word in labels for word in ["family", "celebration", "wedding", "gathering"]):
+            simple_starters.append({
+                "type": "celebration",
+                "starter": "What celebration is this?",
+                "follow_up": "Do you like parties?",
+                "caregiver_guidance": "Encourage sharing about happy times"
             })
         
-        # Ensure variety with randomization
-        if len(starters) > 3:
-            selected_starters = random.sample(starters, 3)
-        else:
-            selected_starters = starters
-        
-        # Add general fallback if no specific starters generated
-        if not selected_starters:
-            selected_starters.append({
-                "type": "general_photo_discussion",
-                "starter": "This is a beautiful photo. What story does it tell?",
-                "follow_up": "What emotions does this photo bring up for you?",
-                "caregiver_guidance": "Allow open-ended storytelling and follow their emotional lead"
+        # Home/kitchen questions
+        if any(word in labels for word in ["home", "kitchen", "cooking"]):
+            simple_starters.append({
+                "type": "home",
+                "starter": "What room is this?",
+                "follow_up": "Do you like to cook?",
+                "caregiver_guidance": "Ask about their favorite foods or cooking memories"
             })
         
+        # Clothing/fashion questions
+        if any(word in objects for word in ["dress", "clothes"]) or "formal wear" in labels:
+            simple_starters.append({
+                "type": "clothing",
+                "starter": "What pretty clothes!",
+                "follow_up": "What did you like to wear?",
+                "caregiver_guidance": "Talk about their favorite outfits or fashion"
+            })
+        
+        # Church/religious questions
+        if "church" in objects or "ceremony" in labels:
+            simple_starters.append({
+                "type": "church",
+                "starter": "Is this a church?",
+                "follow_up": "Did you go to church?",
+                "caregiver_guidance": "Share memories about faith or community"
+            })
+        
+        # Food questions
+        if "food" in objects or "cooking" in activities:
+            simple_starters.append({
+                "type": "food",
+                "starter": "What food do you see?",
+                "follow_up": "What's your favorite meal?",
+                "caregiver_guidance": "Talk about favorite foods and family meals"
+            })
+        
+        # Generic fallback questions (always available)
+        fallback_starters = [
+            {
+                "type": "memory",
+                "starter": "What do you see here?",
+                "follow_up": "Does this remind you of anything?",
+                "caregiver_guidance": "Let them describe what they notice"
+            },
+            {
+                "type": "feeling",
+                "starter": "How does this make you feel?",
+                "follow_up": "Tell me more.",
+                "caregiver_guidance": "Focus on emotions and feelings, not specific details"
+            },
+            {
+                "type": "story",
+                "starter": "What story does this tell?",
+                "follow_up": "What happened next?",
+                "caregiver_guidance": "Encourage storytelling at their own pace"
+            }
+        ]
+        
+        # If no specific starters, use fallback
+        if not simple_starters:
+            simple_starters = fallback_starters
+        
+        # Limit to 3 starters maximum
+        selected_starters = simple_starters[:3]
+        
+        # Add cultural context for heritage if available
+        if heritage and heritage != "American":
+            heritage_simple = heritage.split("-")[0]  # "Italian" from "Italian-American"
+            for starter in selected_starters:
+                starter["cultural_context"] = heritage_simple
+        
+        logger.info(f"Generated {len(selected_starters)} simple conversation starters")
         return selected_starters
     
-    def _generate_memory_triggers(self, 
-                                vision_analysis: Dict[str, Any],
-                                cultural_profile: Dict[str, Any],
-                                cultural_integration: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate memory trigger activities based on photo content and cultural context."""
+    def _generate_simple_memory_triggers(self, vision_analysis: Dict[str, Any], heritage: str) -> List[Dict[str, Any]]:
+        """Generate simple memory triggers based on photo content."""
         
-        triggers = []
-        heritage = cultural_profile.get("cultural_elements", {}).get("heritage", "")
-        
-        # Extract photo elements
         objects = vision_analysis.get("objects", [])
         labels = vision_analysis.get("labels", [])
         activities = vision_analysis.get("activities", [])
         
-        # Cultural heritage-based triggers
-        if cultural_integration.get("heritage_connections"):
-            heritage_type = cultural_integration["heritage_connections"][0]["heritage"]
-            
-            cultural_activities = {
-                "Italian": ["cooking traditional recipes", "sharing family stories", "listening to Italian music"],
-                "Irish": ["listening to traditional music", "sharing folklore", "discussing family heritage"],
-                "Mexican": ["exploring traditional crafts", "discussing family celebrations", "sharing cultural recipes"],
-                "Jewish": ["discussing family traditions", "sharing holiday memories", "exploring cultural music"],
-                "Chinese": ["discussing family values", "exploring traditional arts", "sharing cultural stories"],
-                "German": ["discussing family history", "exploring traditional music", "sharing cultural memories"]
-            }
-            
-            if heritage_type in cultural_activities:
-                for activity in cultural_activities[heritage_type]:
-                    triggers.append({
-                        "type": "cultural_heritage_activity",
-                        "activity": activity,
-                        "cultural_context": heritage_type,
-                        "connection_to_photo": "Heritage alignment with photo content"
-                    })
+        simple_triggers = []
         
-        # Object-based memory triggers
-        if "food" in objects or "cooking" in labels:
-            triggers.append({
-                "type": "sensory_memory_trigger",
-                "activity": "cooking together or discussing favorite family recipes",
-                "sensory_focus": "taste and smell memories",
-                "connection_to_photo": "Food-related objects detected"
+        # Simple activity-based triggers
+        if "cooking" in activities or "food" in objects:
+            simple_triggers.append({
+                "type": "activity",
+                "activity": "cooking together",
+                "context": "family time",
+                "connection_to_photo": "Food and cooking in photo"
             })
         
-        if "music" in objects or "musical" in labels:
-            triggers.append({
-                "type": "auditory_memory_trigger", 
-                "activity": "listening to music from their era or cultural background",
-                "sensory_focus": "auditory memories and emotional connections",
-                "connection_to_photo": "Musical elements detected"
+        if "celebration" in labels or "wedding" in labels:
+            simple_triggers.append({
+                "type": "activity", 
+                "activity": "family celebrations",
+                "context": "happy times",
+                "connection_to_photo": "Celebration in photo"
             })
         
-        # Family and social triggers
-        if cultural_integration.get("family_context_likely"):
-            triggers.append({
-                "type": "social_memory_trigger",
-                "activity": "sharing stories about family gatherings and traditions",
-                "social_focus": "family relationships and shared experiences",
-                "connection_to_photo": "Family context detected in photo"
+        if "home" in labels or "kitchen" in objects:
+            simple_triggers.append({
+                "type": "activity",
+                "activity": "time at home",
+                "context": "family",
+                "connection_to_photo": "Home setting in photo"
             })
         
-        # Ensure at least one trigger
-        if not triggers:
-            triggers.append({
-                "type": "general_reminiscence",
-                "activity": "discussing the time period when this photo was taken",
-                "focus": "historical and personal context",
-                "connection_to_photo": "General photo memory exploration"
-            })
-        
-        return triggers[:3]  # Limit to 3 most relevant triggers
+        # Limit to 3 triggers
+        return simple_triggers[:3]
     
-    def _analyze_era_context(self, 
-                           vision_analysis: Dict[str, Any],
-                           cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze photo era context for temporal memory connections."""
+    def _analyze_cultural_alignment(self, vision_analysis: Dict[str, Any], heritage: str) -> Dict[str, Any]:
+        """Simple cultural alignment analysis."""
         
-        era_analysis = {
-            "has_era_context": False,
-            "estimated_decade": None,
-            "era_indicators": [],
-            "generation_context": None
+        labels = vision_analysis.get("labels", [])
+        objects = vision_analysis.get("objects", [])
+        
+        # Simple heritage connections
+        heritage_keywords = {
+            "Italian-American": ["family", "cooking", "celebration", "church", "food"],
+            "Irish-American": ["family", "church", "celebration", "home"],
+            "Mexican-American": ["family", "celebration", "cooking", "gathering"],
+            "American": ["family", "home", "celebration"]
         }
         
-        # Extract patient's era information
-        era_context = cultural_profile.get("era_context", {})
-        if era_context:
-            era_analysis["has_era_context"] = True
-            era_analysis["generation_context"] = era_context.get("generation_context")
-            
-            # Look for visual era indicators in photo
-            labels = vision_analysis.get("labels", [])
-            objects = vision_analysis.get("objects", [])
-            all_content = labels + objects
-            
-            era_indicators = []
-            for item in all_content:
-                if any(indicator in item.lower() for indicator in ["vintage", "old", "classic", "retro", "traditional"]):
-                    era_indicators.append(item)
-            
-            era_analysis["era_indicators"] = era_indicators
-            
-            # Estimate decade based on patient's formative years
-            formative_decades = era_context.get("formative_decades", [])
-            if formative_decades:
-                # Assume photo is from patient's young adult years
-                era_analysis["estimated_decade"] = formative_decades[1] if len(formative_decades) > 1 else formative_decades[0]
+        heritage_words = heritage_keywords.get(heritage, heritage_keywords["American"])
         
-        return era_analysis
+        # Check for matches
+        connections = []
+        for keyword in heritage_words:
+            if keyword in labels or keyword in objects:
+                connections.append({
+                    "heritage": heritage.split("-")[0],  # "Italian" from "Italian-American"
+                    "keyword": keyword,
+                    "connection_strength": "strong"
+                })
+        
+        return {
+            "cultural_alignment_detected": len(connections) > 0,
+            "heritage_connections": connections[:3],  # Limit to 3
+            "era_consistency": True,  # Simplified - assume consistent
+            "family_context_likely": "family" in labels or "people" in objects
+        }
+    
+    def _simple_era_analysis(self, birth_year: Optional[int]) -> Dict[str, Any]:
+        """Simple era analysis for context."""
+        
+        if not birth_year:
+            return {
+                "has_era_context": False,
+                "estimated_decade": 1960,
+                "era_indicators": [],
+                "generation_context": "Unknown"
+            }
+        
+        # Simple generation mapping
+        if birth_year <= 1945:
+            generation = "Greatest Generation"
+            decade = 1960
+        elif birth_year <= 1965:
+            generation = "Silent Generation" 
+            decade = 1970
+        else:
+            generation = "Baby Boomer"
+            decade = 1980
+        
+        return {
+            "has_era_context": True,
+            "estimated_decade": decade,
+            "era_indicators": [],
+            "generation_context": generation
+        }
+    
+    def _create_simple_fallback_analysis(self, photo_path: str, consolidated_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Create simple fallback analysis when processing fails."""
+        
+        heritage = consolidated_info.get("patient_profile", {}).get("cultural_heritage", "American")
+        
+        # Very simple fallback conversation starters
+        simple_fallback_starters = [
+            {
+                "type": "general",
+                "starter": "What do you see here?",
+                "follow_up": "Tell me more.",
+                "caregiver_guidance": "Let them describe what they notice"
+            },
+            {
+                "type": "feeling",
+                "starter": "How does this make you feel?",
+                "follow_up": "That's nice.",
+                "caregiver_guidance": "Focus on their emotions"
+            },
+            {
+                "type": "memory",
+                "starter": "Does this remind you of anything?",
+                "follow_up": "What do you remember?",
+                "caregiver_guidance": "Encourage sharing memories"
+            }
+        ]
+        
+        return {
+            "photo_analysis": {
+                "status": "fallback",
+                "photo_path": photo_path,
+                "analysis_source": "simple_fallback",
+                "vision_analysis": {
+                    "objects": [],
+                    "labels": [],
+                    "people": [],
+                    "activities": [],
+                    "settings": []
+                },
+                "cultural_integration": {
+                    "cultural_alignment_detected": False,
+                    "heritage_connections": [],
+                    "era_consistency": False,
+                    "family_context_likely": False
+                },
+                "conversation_starters": simple_fallback_starters,
+                "memory_triggers": [],
+                "era_analysis": {
+                    "has_era_context": False,
+                    "estimated_decade": 1960,
+                    "era_indicators": [],
+                    "generation_context": "Unknown"
+                },
+                "processing_metadata": {
+                    "agent": "photo_cultural_analyzer",
+                    "analysis_type": "simple_fallback",
+                    "cultural_alignment": False,
+                    "conversation_count": 3,
+                    "memory_trigger_count": 0,
+                    "simplified_approach": True
+                }
+            }
+        }

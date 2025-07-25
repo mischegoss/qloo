@@ -1,13 +1,13 @@
 """
-Sensory Content Generator Agent with LIMITED API Calls - FIXED DATA STRUCTURE
+Sensory Content Generator Agent - SIMPLIFIED for Dementia Care with ENHANCED LOGGING
 File: backend/multi_tool_agent/agents/sensory_content_generator_agent.py
 
 FIXES:
-- Only use FIRST/BEST result from Qloo (not all results)
-- Only make ONE YouTube call per dashboard refresh
-- Only make ONE Gemini call per dashboard refresh (with caching)
-- FIXED: Ensure gustatory content has proper 'elements' structure for Agent 6
-- Early exit strategies to prevent unnecessary API calls
+- Recipes keep original names (no "Italian-American Cinnamon Toast")
+- Only improve readability, not change content
+- Simple conversation starters for dementia patients
+- ENHANCED: Better logging to debug data handoff from Agent 3
+- ENHANCED: More robust error handling for missing data
 """
 
 import logging
@@ -22,24 +22,20 @@ logger = logging.getLogger(__name__)
 
 class SensoryContentGeneratorAgent:
     """
-    Agent 4: Sensory Content Generator with LIMITED API calls to prevent rate limiting.
+    Agent 4: Sensory Content Generator with SIMPLIFIED approach for dementia care.
     
-    RATE LIMITING FIXES:
-    - Uses ONLY the first/best Qloo result (not multiple)
-    - Makes maximum 1 YouTube call per dashboard refresh
-    - Makes maximum 1 Gemini call per dashboard refresh
-    - Leverages daily caching in both APIs
-    
-    DATA STRUCTURE FIXES:
-    - Ensures gustatory content has proper 'elements' array for Agent 6
-    - Maintains consistent structure across all sensory content
+    FIXES:
+    - Keeps original recipe names without cultural prefixes
+    - Only improves readability, doesn't change recipes significantly
+    - Simple, short conversation starters
+    - ENHANCED: Better logging and error handling for data handoff issues
     """
     
     def __init__(self, gemini_tool, youtube_tool):
         self.gemini_tool = gemini_tool
         self.youtube_tool = youtube_tool
         self.recipes_data = self._load_recipes_json()
-        logger.info("Sensory Content Generator initialized with LIMITED API calls and FIXED data structure")
+        logger.info("Sensory Content Generator initialized with SIMPLIFIED approach")
     
     def _load_recipes_json(self) -> List[Dict[str, Any]]:
         """Load simple recipes from JSON file."""
@@ -81,20 +77,23 @@ class SensoryContentGeneratorAgent:
                   cultural_profile: Dict[str, Any], 
                   qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate sensory content with LIMITED API calls and FIXED data structure.
-        
-        RATE LIMITING STRATEGY:
-        - Extract ONLY first/best results from Qloo
-        - Make maximum 1 YouTube API call
-        - Make maximum 1 Gemini API call  
-        - Use caching for daily consistency
-        
-        DATA STRUCTURE FIX:
-        - Ensure gustatory content returns proper 'elements' array
+        Generate sensory content with SIMPLIFIED approach for dementia care.
         """
         
         try:
-            logger.info("🎵 Agent 4: Starting LIMITED sensory content generation with FIXED structure")
+            logger.info("🎵 Agent 4: Starting SIMPLIFIED sensory content generation")
+            
+            # ENHANCED: Debug the qloo_intelligence structure
+            logger.info(f"🔍 DEBUG: qloo_intelligence keys: {list(qloo_intelligence.keys())}")
+            if "cultural_recommendations" in qloo_intelligence:
+                qloo_recs = qloo_intelligence["cultural_recommendations"]
+                logger.info(f"🔍 DEBUG: cultural_recommendations keys: {list(qloo_recs.keys())}")
+                for category in ["artists", "tv_shows", "places"]:
+                    if category in qloo_recs:
+                        cat_data = qloo_recs[category]
+                        available = cat_data.get("available", False)
+                        entity_count = cat_data.get("entity_count", 0)
+                        logger.info(f"🔍 DEBUG: {category} - available: {available}, count: {entity_count}")
             
             # Extract key information
             patient_profile = consolidated_info.get("patient_profile", {})
@@ -106,7 +105,7 @@ class SensoryContentGeneratorAgent:
             
             qloo_recommendations = qloo_intelligence.get("cultural_recommendations", {})
             
-            # RATE LIMITING: Extract ONLY first/best results from Qloo
+            # Extract ONLY first/best results from Qloo
             first_artist = self._get_first_qloo_result(qloo_recommendations, "artists")
             first_tv_show = self._get_first_qloo_result(qloo_recommendations, "tv_shows")
             first_place = self._get_first_qloo_result(qloo_recommendations, "places")
@@ -115,11 +114,11 @@ class SensoryContentGeneratorAgent:
             logger.info(f"LIMITED extraction - TV: {first_tv_show.get('name') if first_tv_show else 'None'}")
             logger.info(f"LIMITED extraction - Place: {first_place.get('name') if first_place else 'None'}")
             
-            # Generate content for each sense with LIMITED API calls
+            # Generate content for each sense
             sensory_content = {}
             
-            # TASTE: ONE Gemini call maximum with caching - FIXED STRUCTURE
-            sensory_content["gustatory"] = await self._generate_limited_recipe_FIXED(heritage, age)
+            # TASTE: SIMPLIFIED recipe approach
+            sensory_content["gustatory"] = await self._generate_simplified_recipe(heritage, age)
             
             # SOUND: ONE YouTube call maximum with caching
             sensory_content["auditory"] = await self._generate_limited_music_content(heritage, first_artist)
@@ -139,14 +138,16 @@ class SensoryContentGeneratorAgent:
                         "heritage_used": heritage,
                         "age_optimized_for": age,
                         "rate_limiting_applied": True,
-                        "data_structure_fixed": True,
+                        "simplified_approach": True,
+                        "qloo_data_received": bool(qloo_recommendations),
+                        "qloo_categories_available": [k for k, v in qloo_recommendations.items() if isinstance(v, dict) and v.get("available")],
                         "max_api_calls": {
                             "youtube": 1,
                             "gemini": 1,
                             "qloo": 0  # Already called by Agent 3
                         },
                         "generation_timestamp": datetime.now().isoformat(),
-                        "agent_version": "limited_api_calls_fixed_structure"
+                        "agent_version": "simplified_dementia_friendly_enhanced_logging"
                     }
                 }
             }
@@ -160,98 +161,155 @@ class SensoryContentGeneratorAgent:
         
         category_data = qloo_recommendations.get(category, {})
         
+        # ENHANCED: Log what we're looking at
+        logger.info(f"🔍 DEBUG: Looking for {category} in qloo_recommendations")
+        if category_data:
+            logger.info(f"🔍 DEBUG: {category} data keys: {list(category_data.keys())}")
+            logger.info(f"🔍 DEBUG: {category} available: {category_data.get('available')}")
+            logger.info(f"🔍 DEBUG: {category} entity_count: {category_data.get('entity_count')}")
+        
         if category_data.get("available") and category_data.get("entities"):
             entities = category_data["entities"]
             if entities:
                 first_result = entities[0]  # Take ONLY the first result
-                logger.info(f"Using first {category} result: {first_result.get('name', 'Unknown')}")
+                logger.info(f"✅ Using first {category} result: {first_result.get('name', 'Unknown')}")
                 return first_result
         
-        logger.info(f"No {category} results available from Qloo")
+        logger.info(f"❌ No {category} results available from Qloo")
         return None
     
-    async def _generate_limited_recipe_FIXED(self, heritage: str, age: int) -> Dict[str, Any]:
+    async def _generate_simplified_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
         """
-        Generate recipe with LIMITED Gemini calls (maximum 1 per day via caching).
-        FIXED: Returns proper 'elements' structure for Agent 6.
+        Generate recipe with SIMPLIFIED approach - keep original name, only improve readability.
         """
         
         try:
-            logger.info(f"LIMITED recipe generation for {heritage} heritage with FIXED structure")
+            logger.info(f"SIMPLIFIED recipe generation for {heritage} heritage")
             
             # Step 1: Select appropriate base recipe (no API call)
             base_recipe = self._select_base_recipe(heritage, age)
             
-            # Step 2: ONE Gemini call maximum (cached daily)
-            customized_recipe = await self._apply_limited_customization(base_recipe, heritage, age)
+            # Step 2: ONE Gemini call for readability improvement only
+            improved_recipe = await self._improve_recipe_readability_only(base_recipe)
             
-            # Step 3: Format response with FIXED structure (elements array)
-            if customized_recipe:
+            # Step 3: Format response with ORIGINAL NAME
+            if improved_recipe:
                 recipe_element = {
-                    "content_type": "customized_recipe",
-                    "name": customized_recipe.get("name", base_recipe["name"]),
-                    "description": customized_recipe.get("description", f"Simple {heritage} comfort recipe"),
-                    "total_time": customized_recipe.get("total_time", "20 minutes"),
+                    "content_type": "improved_recipe",
+                    "name": base_recipe["name"],  # KEEP ORIGINAL NAME
+                    "description": improved_recipe.get("description", f"Simple, comforting {base_recipe['name'].lower()}"),
+                    "total_time": improved_recipe.get("total_time", "10 minutes"),
                     "difficulty": "very_easy",
-                    "ingredients": customized_recipe.get("ingredients", base_recipe["ingredients"]),
-                    "instructions": customized_recipe.get("instructions", base_recipe["instructions"]),
-                    "cultural_context": customized_recipe.get("cultural_context", f"Traditional {heritage} comfort food"),
-                    "heritage_connection": customized_recipe.get("heritage_connection", base_recipe.get("notes", "")),
-                    "nostalgic_description": customized_recipe.get("description", base_recipe.get("notes", "")),
-                    "source": "recipes_json_limited_customization",
+                    "ingredients": improved_recipe.get("ingredients", base_recipe["ingredients"]),
+                    "instructions": improved_recipe.get("instructions", base_recipe["instructions"]),
+                    "cultural_context": f"Comfort food",
+                    "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
+                    "nostalgic_description": improved_recipe.get("description", base_recipe.get("notes", "")),
+                    "source": "recipes_json_readability_improved",
                     "base_recipe": base_recipe["name"],
-                    "youtube_url": customized_recipe.get("youtube_url", "")
+                    "youtube_url": "",
+                    "theme_connection": "Selected for Dancing theme"  # Add theme connection
                 }
                 
-                # FIXED: Return with proper 'elements' array structure
                 return {
                     "sense_type": "gustatory", 
                     "available": True,
-                    "elements": [recipe_element],  # FIXED: Array with single recipe element
+                    "elements": [recipe_element],
                     "api_calls_made": 1,
-                    "customization_applied": True,
-                    "caching_used": True
+                    "readability_improved": True,
+                    "original_name_kept": True
                 }
             else:
-                # Use base recipe without customization - FIXED STRUCTURE
-                logger.info("Using base recipe without Gemini customization")
-                return self._format_base_recipe_FIXED(base_recipe, heritage)
+                # Use base recipe without improvement
+                logger.info("Using base recipe without Gemini improvement")
+                return self._format_base_recipe_simple(base_recipe, heritage)
                 
         except Exception as e:
-            logger.error(f"LIMITED recipe generation failed: {e}")
-            return self._format_base_recipe_FIXED(random.choice(self.recipes_data), heritage)
+            logger.error(f"SIMPLIFIED recipe generation failed: {e}")
+            return self._format_base_recipe_simple(random.choice(self.recipes_data), heritage)
     
-    def _format_base_recipe_FIXED(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
-        """Format base recipe without customization (no API calls) - FIXED STRUCTURE."""
+    async def _improve_recipe_readability_only(self, base_recipe: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Improve recipe readability ONLY - no cultural changes, keep original name."""
+        
+        try:
+            readability_prompt = f"""
+            Take this recipe and make it easier to read and follow for dementia care patients. 
+            
+            IMPORTANT RULES:
+            1. KEEP THE EXACT SAME NAME: "{base_recipe['name']}"
+            2. Do NOT add cultural prefixes like "Italian-American" or "Jewish"
+            3. Only improve clarity, safety, and readability
+            4. Use simple, clear language
+            5. Add safety notes for dementia care
+            6. Keep ingredients and method the same
+            
+            Original Recipe: {base_recipe['name']}
+            Ingredients: {base_recipe['ingredients']}
+            Instructions: {base_recipe['instructions']}
+            Notes: {base_recipe.get('notes', '')}
+            
+            Return as JSON with same structure but improved readability:
+            {{
+                "name": "{base_recipe['name']}",
+                "description": "One simple sentence about why this is comforting",
+                "total_time": "Estimated time",
+                "ingredients": ["Clearer ingredient descriptions with safety notes"],
+                "instructions": ["Step-by-step with safety guidance"],
+                "notes": "Simple memory connection"
+            }}
+            """
+            
+            # ONE Gemini call for readability improvement only
+            improved = await self.gemini_tool.generate_recipe(
+                readability_prompt, 
+                heritage="readability", 
+                base_recipe_name=base_recipe["name"]
+            )
+            
+            if improved and isinstance(improved, dict):
+                # Ensure name wasn't changed
+                improved["name"] = base_recipe["name"]  # Force original name
+                logger.info(f"SIMPLIFIED readability improvement successful: {improved.get('name')}")
+                return improved
+            else:
+                logger.info("SIMPLIFIED readability improvement failed - using base recipe")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"SIMPLIFIED readability improvement failed: {e}")
+            return None
+    
+    def _format_base_recipe_simple(self, base_recipe: Dict[str, Any], heritage: str) -> Dict[str, Any]:
+        """Format base recipe with original name (no API calls)."""
         
         recipe_element = {
             "content_type": "base_recipe",
-            "name": f"Simple {heritage} {base_recipe['name']}",
-            "description": f"Comforting {heritage} style {base_recipe['name'].lower()}",
-            "total_time": "20 minutes",
+            "name": base_recipe["name"],  # KEEP ORIGINAL NAME
+            "description": f"Simple, comforting {base_recipe['name'].lower()}",
+            "total_time": "10 minutes",
             "difficulty": "very_easy",
             "ingredients": base_recipe["ingredients"],
             "instructions": base_recipe["instructions"],
-            "cultural_context": f"Traditional {heritage} comfort food",
+            "cultural_context": "Comfort food",
             "heritage_connection": base_recipe.get("notes", "Simple, familiar comfort food"),
             "nostalgic_description": base_recipe.get("notes", "Simple, familiar comfort food"),
-            "source": "recipes_json_base_no_customization",
-            "youtube_url": ""
+            "source": "recipes_json_original_name",
+            "youtube_url": "",
+            "theme_connection": "Selected for Dancing theme"  # Add theme connection
         }
         
-        # FIXED: Return with proper 'elements' array structure
         return {
             "sense_type": "gustatory",
             "available": True,
-            "elements": [recipe_element],  # FIXED: Array with single recipe element
+            "elements": [recipe_element],
             "api_calls_made": 0,
-            "customization_applied": False
+            "original_name_kept": True
         }
     
     def _select_base_recipe(self, heritage: str, age: int) -> Dict[str, Any]:
         """Select culturally appropriate base recipe without API calls."""
         
-        # Heritage-based preferences
+        # Heritage-based preferences (for selection only, not naming)
         heritage_preferences = {
             "Italian-American": ["apple", "oatmeal", "bread", "cocoa"],
             "Mexican-American": ["cinnamon", "cocoa", "banana"],
@@ -277,55 +335,6 @@ class SensoryContentGeneratorAgent:
         selected = random.choice(matching_recipes)
         logger.info(f"Selected base recipe: {selected['name']} for {heritage}")
         return selected
-    
-    async def _apply_limited_customization(self, base_recipe: Dict[str, Any], heritage: str, age: int) -> Optional[Dict[str, Any]]:
-        """Apply customization with LIMITED Gemini calls (cached daily)."""
-        
-        try:
-            customization_prompt = f"""
-            Take this simple recipe and make small cultural customizations for a {age}-year-old {heritage} person:
-            
-            Base Recipe: {base_recipe['name']}
-            Ingredients: {base_recipe['ingredients']}
-            Instructions: {base_recipe['instructions']}
-            Original Notes: {base_recipe.get('notes', '')}
-            
-            Make ONLY these small changes:
-            1. Add 1-2 small ingredients/spices that fit {heritage} heritage (optional additions only)
-            2. Modify ONE instruction to be more culturally relevant
-            3. Add a brief cultural memory connection
-            4. Keep it exactly as simple and safe as the original
-            5. Do not change cooking method (keep microwave-based)
-            
-            Return as JSON with same structure:
-            {{
-                "name": "Modified recipe name (can add heritage reference)",
-                "description": "One sentence about cultural comfort and memory",
-                "total_time": "Same as original",
-                "ingredients": ["Original ingredients with 1-2 optional cultural additions"],
-                "instructions": ["Slightly modified instructions"],
-                "cultural_context": "Why this connects to {heritage} heritage",
-                "heritage_connection": "How this might trigger positive food memories"
-            }}
-            """
-            
-            # ONE Gemini call maximum (with daily caching built into the tool)
-            customized = await self.gemini_tool.generate_recipe(
-                customization_prompt, 
-                heritage=heritage, 
-                base_recipe_name=base_recipe["name"]
-            )
-            
-            if customized and isinstance(customized, dict):
-                logger.info(f"LIMITED Gemini customization successful: {customized.get('name')}")
-                return customized
-            else:
-                logger.info("LIMITED Gemini customization returned invalid format - using base recipe")
-                return None
-                
-        except Exception as e:
-            logger.warning(f"LIMITED Gemini customization failed: {e}")
-            return None
     
     async def _generate_limited_music_content(self, heritage: str, first_artist: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Generate music content with LIMITED YouTube calls (maximum 1)."""
@@ -390,14 +399,16 @@ class SensoryContentGeneratorAgent:
         if first_artist:
             title = f"Music by {first_artist['name']}"
             description = f"Classic songs by {first_artist['name']}"
+            artist_name = first_artist["name"]
         else:
             title = f"{heritage} Traditional Music"
             description = f"Classic {heritage} music and songs"
+            artist_name = "Classic Artist"
         
         fallback_element = {
             "content_type": "music_fallback",
             "title": title,
-            "artist": first_artist["name"] if first_artist else "Classic Artist",
+            "artist": artist_name,
             "description": description,
             "youtube_url": "",
             "cultural_context": f"Traditional {heritage} music",
@@ -422,7 +433,7 @@ class SensoryContentGeneratorAgent:
                 "content_type": "tv_show_qloo",
                 "title": first_tv_show.get("name", "Classic TV Show"),
                 "description": first_tv_show.get("description", "Entertainment from the era"),
-                "cultural_context": f"Popular show in {heritage} heritage",
+                "cultural_context": f"Popular show from the era",
                 "era": first_tv_show.get("era", "Classic Era"),
                 "source": "qloo_intelligence_only"
             })
@@ -438,9 +449,9 @@ class SensoryContentGeneratorAgent:
             
             visual_elements.append({
                 "content_type": "visual_fallback",
-                "title": f"{heritage} Traditional Entertainment",
+                "title": f"Classic Entertainment",
                 "description": heritage_shows.get(heritage, "Classic television programming"),
-                "cultural_context": f"Entertainment popular in {heritage} culture",
+                "cultural_context": f"Entertainment from the era",
                 "source": "heritage_fallback_no_api"
             })
         
@@ -467,10 +478,10 @@ class SensoryContentGeneratorAgent:
         
         olfactory_elements = [{
             "content_type": "cultural_scents",
-            "title": f"{heritage} Comfort Scents",
+            "title": f"Comfort Scents",
             "scents": scents[:3],  # Top 3 scents
-            "description": f"Familiar scents from {heritage} heritage",
-            "cultural_context": f"Scents that evoke {heritage} memories",
+            "description": f"Familiar scents from home",
+            "cultural_context": f"Scents that evoke memories",
             "source": "cultural_knowledge_static"
         }]
         
@@ -496,10 +507,10 @@ class SensoryContentGeneratorAgent:
         
         tactile_elements = [{
             "content_type": "cultural_textures",
-            "title": f"{heritage} Comfort Textures",
+            "title": f"Comfort Textures",
             "textures": textures[:3],  # Top 3 textures
-            "description": f"Familiar textures from {heritage} heritage",
-            "cultural_context": f"Textures that evoke {heritage} memories",
+            "description": f"Familiar textures from home",
+            "cultural_context": f"Textures that evoke memories",
             "source": "cultural_knowledge_static"
         }]
         
@@ -523,13 +534,13 @@ class SensoryContentGeneratorAgent:
             "total_content_elements": total_elements,
             "total_api_calls_made": total_api_calls,
             "rate_limiting_applied": True,
-            "data_structure_fixed": True,
+            "simplified_approach": True,
             "cross_sensory_potential": len(available_senses) >= 3,
             "generation_success": len(available_senses) >= 2
         }
     
     def _create_fallback_sensory_content(self, consolidated_info: Dict[str, Any], cultural_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback sensory content when generation fails (no API calls) - FIXED STRUCTURE."""
+        """Create fallback sensory content when generation fails (no API calls)."""
         
         heritage = consolidated_info.get("patient_profile", {}).get("cultural_heritage", "American")
         
@@ -543,7 +554,7 @@ class SensoryContentGeneratorAgent:
         return {
             "sensory_content": {
                 "content_by_sense": {
-                    "gustatory": self._format_base_recipe_FIXED(base_recipe, heritage),
+                    "gustatory": self._format_base_recipe_simple(base_recipe, heritage),
                     "auditory": self._generate_music_fallback(heritage, None)
                 },
                 "sensory_summary": {
@@ -552,11 +563,11 @@ class SensoryContentGeneratorAgent:
                     "total_api_calls_made": 0,
                     "generation_success": True,
                     "rate_limiting_applied": True,
-                    "data_structure_fixed": True
+                    "simplified_approach": True
                 },
                 "generation_metadata": {
                     "heritage_used": heritage,
-                    "status": "fallback_no_api_calls_fixed_structure",
+                    "status": "fallback_simplified_approach",
                     "generation_timestamp": datetime.now().isoformat()
                 }
             }
