@@ -1,8 +1,12 @@
 """
-Theme Configuration Manager for Dementia-Friendly Daily Themes
+Theme Configuration Manager for Dementia-Friendly Daily Themes - ENHANCED WITH IMAGE SUPPORT
 File: backend/config/theme_config.py
 
-Manages daily theme selection and theme-aware content filtering
+CHANGES:
+- Added theme image support with get_theme_image() method  
+- Enhanced theme manager to handle backend/data/images directory
+- Theme image selection for frontend integration
+- Maintains existing simplified recipe filtering
 """
 
 import json
@@ -11,16 +15,21 @@ import random
 from datetime import date
 from typing import Dict, Any, Optional, List
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 class ThemeManager:
-    """Manages daily theme selection and theme-aware content filtering"""
+    """Manages daily theme selection, theme-aware content filtering, and theme images"""
     
     def __init__(self):
         self.themes_data = self._load_themes_config()
         self.themes_list = self.themes_data.get("themes", [])
+        
+        # NEW: Set up theme images directory
+        self.theme_images_dir = Path(__file__).parent.parent / "data" / "images"
         logger.info(f"🎯 Theme Manager initialized with {len(self.themes_list)} themes")
+        logger.info(f"🖼️ Theme images directory: {self.theme_images_dir}")
         
         # Debug: Log theme names if available
         if self.themes_list:
@@ -28,14 +37,16 @@ class ThemeManager:
             logger.info(f"🔍 DEBUG: Available themes (first 5): {', '.join(theme_names)}")
         else:
             logger.error("❌ DEBUG: No themes loaded during initialization!")
-    
+
     def debug_theme_status(self) -> Dict[str, Any]:
         """Debug method to check theme loading status"""
         return {
             "themes_loaded": len(self.themes_list),
             "theme_names": [theme.get("name", "Unknown") for theme in self.themes_list],
             "config_file_path": os.path.join(os.path.dirname(__file__), "themes.json"),
-            "file_exists": os.path.exists(os.path.join(os.path.dirname(__file__), "themes.json"))
+            "file_exists": os.path.exists(os.path.join(os.path.dirname(__file__), "themes.json")),
+            "theme_images_dir": str(self.theme_images_dir),
+            "theme_images_dir_exists": self.theme_images_dir.exists()
         }
     
     def _load_themes_config(self) -> Dict[str, Any]:
@@ -100,7 +111,7 @@ class ThemeManager:
             session_id: Optional session identifier for additional randomization
             
         Returns:
-            Selected theme with full configuration
+            Selected theme with full configuration including image info
         """
         
         # Debug: Check if themes are loaded
@@ -125,11 +136,16 @@ class ThemeManager:
         random.seed(daily_seed)
         selected_theme = random.choice(self.themes_list)
         
+        # NEW: Get theme image information
+        theme_image_info = self.get_theme_image(selected_theme)
+        
         logger.info(f"🎯 Daily theme selected: {selected_theme['name']} (ID: {selected_theme['id']})")
         logger.info(f"🔍 DEBUG: Theme description: {selected_theme.get('description', 'No description')}")
+        logger.info(f"🖼️ Theme image: {theme_image_info.get('filename', 'None found')}")
         
         return {
             "theme_of_the_day": selected_theme,
+            "theme_image": theme_image_info,  # NEW: Theme image information
             "selection_metadata": {
                 "date": today.isoformat(),
                 "daily_seed": daily_seed,
@@ -137,9 +153,70 @@ class ThemeManager:
                 "selection_method": "daily_consistent",
                 "debug_info": {
                     "themes_loaded": len(self.themes_list) > 0,
-                    "themes_source": "themes.json" if len(self.themes_list) > 2 else "fallback"
+                    "themes_source": "themes.json" if len(self.themes_list) > 2 else "fallback",
+                    "theme_image_found": theme_image_info.get("exists", False)
                 }
             }
+        }
+    
+    def get_theme_image(self, theme: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        NEW: Get theme-specific image information
+        
+        Args:
+            theme: Theme configuration
+            
+        Returns:
+            Theme image information including paths for backend and frontend
+        """
+        
+        if not theme:
+            logger.warning("⚠️ No theme provided for image lookup")
+            return self._get_fallback_theme_image()
+        
+        theme_id = theme.get("id", "")
+        theme_name = theme.get("name", "Unknown")
+        
+        if not theme_id:
+            logger.warning(f"⚠️ Theme '{theme_name}' has no ID for image lookup")
+            return self._get_fallback_theme_image()
+        
+        # Try multiple possible image extensions
+        possible_extensions = [".png", ".jpg", ".jpeg"]
+        found_image = None
+        
+        for ext in possible_extensions:
+            image_filename = f"{theme_id}{ext}"
+            image_path = self.theme_images_dir / image_filename
+            
+            if image_path.exists():
+                found_image = {
+                    "filename": image_filename,
+                    "backend_path": str(image_path),
+                    "frontend_path": f"images/{image_filename}",  # For src/demo/data/images
+                    "theme_id": theme_id,
+                    "theme_name": theme_name,
+                    "exists": True
+                }
+                logger.info(f"✅ Found theme image: {image_filename} for theme '{theme_name}'")
+                break
+        
+        if not found_image:
+            logger.warning(f"⚠️ No theme image found for '{theme_name}' (ID: {theme_id})")
+            return self._get_fallback_theme_image(theme_id, theme_name)
+        
+        return found_image
+    
+    def _get_fallback_theme_image(self, theme_id: str = "general", theme_name: str = "General") -> Dict[str, Any]:
+        """Get fallback theme image information when specific theme image not found"""
+        return {
+            "filename": "fallback.png",
+            "backend_path": str(self.theme_images_dir / "fallback.png"),
+            "frontend_path": "images/fallback.png",
+            "theme_id": theme_id,
+            "theme_name": theme_name,
+            "exists": False,
+            "is_fallback": True
         }
     
     def get_theme_by_id(self, theme_id: str) -> Optional[Dict[str, Any]]:
@@ -196,7 +273,7 @@ class ThemeManager:
     def filter_recipes_by_theme(self, recipes: List[Dict[str, Any]], 
                                theme: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Filter and prioritize recipes based on theme keywords
+        Filter and prioritize recipes based on direct theme matching first
         
         Args:
             recipes: List of available recipes
@@ -206,18 +283,57 @@ class ThemeManager:
             Filtered and prioritized recipe list
         """
         if not recipes or not theme:
+            logger.warning("No recipes or theme provided for filtering")
             return recipes
+        
+        theme_id = theme.get("id")
+        if not theme_id:
+            logger.warning("Theme has no ID, cannot filter by theme")
+            return recipes
+        
+        # STEP 1: Look for exact theme matches first (EXACT MATCHING APPROACH)
+        exact_matches = []
+        other_recipes = []
+        
+        for recipe in recipes:
+            # Check if recipe has explicit theme field that matches current theme
+            recipe_theme = None
+            if isinstance(recipe.get("notes"), dict):
+                recipe_theme = recipe["notes"].get("theme")
+            elif isinstance(recipe.get("notes"), str):
+                # Handle case where notes might be a string - not expected but defensive
+                recipe_theme = None
+            
+            if recipe_theme == theme_id:
+                exact_matches.append(recipe)
+                logger.debug(f"✅ Exact theme match: {recipe.get('name', 'Unknown')} matches theme '{theme_id}'")
+            else:
+                other_recipes.append(recipe)
+        
+        # STEP 2: If we have exact matches, prioritize them and log success
+        if exact_matches:
+            logger.info(f"🎯 Found {len(exact_matches)} exact theme matches for '{theme['name']}' (ID: {theme_id})")
+            logger.info(f"✅ Using exact matches, top recipe: {exact_matches[0]['name']}")
+            
+            # Shuffle exact matches for variety, then add other recipes as backup
+            random.shuffle(exact_matches)
+            filtered_recipes = exact_matches + other_recipes
+            return filtered_recipes
+        
+        # STEP 3: FALLBACK - Use keyword-based matching if no exact matches (LEGACY APPROACH)
+        logger.info(f"⚠️  No exact theme matches found for '{theme['name']}' (ID: {theme_id}), falling back to keyword matching")
         
         theme_keywords = theme.get("recipe_keywords", [])
         if not theme_keywords:
+            logger.warning(f"No recipe keywords defined for theme '{theme['name']}', returning all recipes")
             return recipes
         
-        # Score recipes based on theme keyword matches
+        # Score recipes based on theme keyword matches (EXISTING LOGIC)
         scored_recipes = []
         for recipe in recipes:
             score = 0
             recipe_text = (recipe.get("name", "") + " " + 
-                          recipe.get("notes", "") + " " +
+                          str(recipe.get("notes", "")) + " " +
                           " ".join(recipe.get("ingredients", []))).lower()
             
             # Check for theme keyword matches
@@ -231,7 +347,7 @@ class ThemeManager:
         scored_recipes.sort(key=lambda x: x[1], reverse=True)
         filtered_recipes = [recipe for recipe, score in scored_recipes]
         
-        logger.info(f"Filtered {len(recipes)} recipes by theme '{theme['name']}', "
+        logger.info(f"📊 Fallback keyword filtering complete for theme '{theme['name']}', "
                    f"top recipe: {filtered_recipes[0]['name'] if filtered_recipes else 'none'}")
         
         return filtered_recipes
