@@ -1,12 +1,11 @@
 """
-Qloo Tools - FIXED MUSIC FILTERING: Jazz Genre Support Added
+Qloo Tools - ADDED LOCATION-ONLY FILTERING for Community Buildings
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
-CRITICAL MUSIC FIX:
-- Added jazz genre detection to _is_appropriate_music method
-- Now properly allows jazz artists through the local Python filter for Maria (born 1945)  
-- Minimal change to fix music data flow from Agent 3 to Agent 6
-- Qloo API calls remain simple (no age filtering), age filtering done in Python afterwards
+ADDED: location_only_insights method for getting community buildings by location
+- Uses signal.location.query parameter from Qloo docs
+- No cuisine/restaurant tags - gets all place types in location
+- Maintains same error handling and filtering patterns
 """
 
 import httpx
@@ -25,6 +24,7 @@ class QlooInsightsAPI:
     - Local filtering handles content rating, age appropriateness, etc.
     - Eliminated complex progressive fallback that was failing
     - FIXED: Music filtering now includes jazz genre support
+    - ADDED: Location-only filtering for community buildings
     """
     
     def __init__(self, api_key: str, base_url: str = "https://hackathon.api.qloo.com"):
@@ -34,7 +34,153 @@ class QlooInsightsAPI:
             "x-api-key": api_key,
             "Content-Type": "application/json"
         }
-        logger.info("✅ Qloo API initialized - NO API age filtering, NO curated arrays, LOCAL post-processing only")
+        logger.info("✅ Qloo API initialized - NO API age filtering, NO curated arrays, LOCAL post-processing only + LOCATION FILTERING")
+    
+    async def location_only_insights(self, 
+                                   entity_type: str,
+                                   location_query: str,
+                                   age_demographic: str,
+                                   take: int = 10) -> Dict[str, Any]:
+        """
+        NEW: Get places by location only - no cuisine/restaurant tags.
+        Returns community buildings, landmarks, museums, etc. in the specified location.
+        
+        Args:
+            entity_type: Qloo entity type (e.g., "urn:entity:place")
+            location_query: Location string (e.g., "Brooklyn, New York")
+            age_demographic: Used for LOCAL filtering only
+            take: Number of final results to return
+            
+        Returns:
+            Dict with success=True (guaranteed), filtered entities
+        """
+        
+        try:
+            params = {
+                "filter.type": entity_type,
+                "signal.location.query": location_query,  # From Qloo docs
+                "take": 25  # Get extra results for local filtering
+            }
+            
+            logger.info(f"🌐 Qloo LOCATION-ONLY call: {entity_type} in '{location_query}'")
+            
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    f"{self.base_url}/v2/insights",
+                    headers=self.headers,
+                    params=params
+                )
+                
+                api_entities = []
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success"):
+                        api_entities = data.get("results", {}).get("entities", [])
+                        logger.info(f"✅ Qloo LOCATION-ONLY success: {len(api_entities)} raw results for '{location_query}'")
+                    else:
+                        logger.warning(f"❌ Qloo API returned success=false for location '{location_query}'")
+                else:
+                    logger.error(f"❌ Qloo API error: {response.status_code}")
+                
+                # Apply local age-appropriate filtering (no cuisine filtering needed)
+                if api_entities:
+                    filtered_entities = self._filter_places_for_community_buildings(
+                        api_entities, age_demographic
+                    )
+                    
+                    logger.info(f"🎯 Local filtering: {len(api_entities)} → {len(filtered_entities)} community places")
+                    
+                    return {
+                        "success": True,
+                        "entities": filtered_entities[:take],
+                        "results_count": len(filtered_entities[:take]),
+                        "location_query": location_query,
+                        "entity_type": entity_type,
+                        "filtering_applied": "local_community_buildings",
+                        "original_count": len(api_entities)
+                    }
+                else:
+                    # Return empty but successful response for fallback logic
+                    logger.warning(f"❌ No results for location '{location_query}'")
+                    return {
+                        "success": True,
+                        "entities": [],
+                        "results_count": 0,
+                        "location_query": location_query,
+                        "entity_type": entity_type,
+                        "filtering_applied": "no_results_found"
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ Qloo LOCATION-ONLY exception: {e}")
+            # Return empty but successful response for fallback logic
+            return {
+                "success": True,
+                "entities": [],
+                "results_count": 0,
+                "location_query": location_query,
+                "entity_type": entity_type,
+                "filtering_applied": "api_error",
+                "error": str(e)
+            }
+    
+    def _filter_places_for_community_buildings(self, entities: List[Dict], age_demographic: str) -> List[Dict]:
+        """
+        Filter places to prioritize community buildings, landmarks, cultural sites.
+        Deprioritize pure restaurants to focus on memory-triggering locations.
+        """
+        
+        community_places = []
+        other_places = []
+        
+        for entity in entities:
+            try:
+                name = entity.get("name", "").lower()
+                properties = entity.get("properties", {})
+                description = properties.get("description", "").lower()
+                
+                # Community building keywords (prioritize these)
+                community_keywords = [
+                    "museum", "library", "church", "cathedral", "temple", "synagogue",
+                    "school", "university", "college", "hospital", "park", "garden",
+                    "theater", "cinema", "hall", "center", "building", "landmark",
+                    "monument", "historic", "cultural", "gallery", "plaza", "square",
+                    "station", "bridge", "tower", "observatory", "zoo", "aquarium"
+                ]
+                
+                # Restaurant keywords (deprioritize these)
+                restaurant_keywords = [
+                    "restaurant", "cafe", "diner", "bistro", "eatery", "kitchen",
+                    "grill", "pizzeria", "bakery", "bar", "pub", "tavern"
+                ]
+                
+                # Check if it's a community building
+                is_community = any(keyword in name or keyword in description 
+                                 for keyword in community_keywords)
+                
+                # Check if it's primarily a restaurant
+                is_restaurant = any(keyword in name or keyword in description 
+                                  for keyword in restaurant_keywords)
+                
+                # Prioritize community buildings, include restaurants as secondary
+                if is_community:
+                    community_places.append(entity)
+                elif not is_restaurant:  # Include non-restaurant, non-community places
+                    other_places.append(entity)
+                else:  # Include restaurants but with lower priority
+                    other_places.append(entity)
+                    
+            except Exception as e:
+                logger.warning(f"Error filtering place entity {entity.get('name', 'Unknown')}: {e}")
+                # Include in other_places if there's an error
+                other_places.append(entity)
+        
+        # Return community buildings first, then other places
+        filtered = community_places + other_places
+        
+        logger.info(f"Community filtering: {len(community_places)} community buildings, {len(other_places)} other places")
+        
+        return filtered
     
     async def simple_tag_insights(self, 
                                  entity_type: str, 
