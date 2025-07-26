@@ -1,36 +1,80 @@
 """
-Tools Initialization - Session Storage Removed
+Fixed Tools Initialization - Resolves Import Issues
 File: backend/multi_tool_agent/tools/__init__.py
 
-Initializes all tools required for the 6-agent pipeline (no session storage)
+FIXES:
+- Handles both old gemini_tools.py and new simple_gemini_tools.py
+- Provides proper fallbacks for missing tools
+- Avoids circular import issues
+- Supports both GeminiRecipeGenerator and SimpleGeminiTool
+- Graceful degradation when tools are unavailable
 """
 
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
-# Configure logger FIRST before any other imports that might use it
+# Configure logger FIRST before any other imports
 logger = logging.getLogger(__name__)
 
-# Import tools with proper error handling
-from .qloo_tools import QlooInsightsAPI
-from .youtube_tools import YouTubeAPI
+# Initialize variables to avoid NameError issues
+QlooInsightsAPI = None
+YouTubeAPI = None
+VisionAIAnalyzer = None
+VisionAITool = None
+GeminiRecipeGenerator = None
+SimpleGeminiTool = None
+
+# Import core tools with proper error handling
+try:
+    from .qloo_tools import QlooInsightsAPI
+    logger.debug("✅ QlooInsightsAPI imported")
+except ImportError as e:
+    logger.warning(f"⚠️ QlooInsightsAPI not available: {e}")
+    QlooInsightsAPI = None
+
+try:
+    from .youtube_tools import YouTubeAPI
+    logger.debug("✅ YouTubeAPI imported")
+except ImportError as e:
+    logger.warning(f"⚠️ YouTubeAPI not available: {e}")
+    YouTubeAPI = None
 
 # Handle VisionAI imports with proper fallback
 try:
     from .vision_ai_tools import VisionAIAnalyzer
     VisionAITool = VisionAIAnalyzer  # Alias for backward compatibility
+    logger.debug("✅ VisionAIAnalyzer imported")
 except ImportError as e:
-    logger.warning(f"VisionAIAnalyzer not available: {e}")
+    logger.warning(f"⚠️ VisionAIAnalyzer not available: {e}")
     VisionAIAnalyzer = None
     VisionAITool = None
 
-# Handle Gemini imports with proper fallback
+# Handle Gemini imports - support both old and new versions
+# Try new SimpleGeminiTool first, then fall back to old GeminiRecipeGenerator
 try:
-    from .gemini_tools import GeminiRecipeGenerator
-except ImportError as e:
-    logger.warning(f"GeminiRecipeGenerator not available: {e}")
-    GeminiRecipeGenerator = None
+    from .simple_gemini_tools import SimpleGeminiTool
+    # Also try to import GeminiRecipeGenerator from the same file for compatibility
+    try:
+        from .simple_gemini_tools import GeminiRecipeGenerator
+        logger.debug("✅ Both SimpleGeminiTool and GeminiRecipeGenerator imported from simple_gemini_tools")
+    except ImportError:
+        # If GeminiRecipeGenerator not in simple_gemini_tools, create alias
+        GeminiRecipeGenerator = SimpleGeminiTool
+        logger.debug("✅ SimpleGeminiTool imported, GeminiRecipeGenerator aliased")
+except ImportError as e1:
+    logger.warning(f"⚠️ SimpleGeminiTool not available: {e1}")
+    SimpleGeminiTool = None
+    
+    # Fall back to original gemini_tools.py
+    try:
+        from .gemini_tools import GeminiRecipeGenerator
+        # Create alias for SimpleGeminiTool
+        SimpleGeminiTool = GeminiRecipeGenerator
+        logger.debug("✅ GeminiRecipeGenerator imported from gemini_tools, SimpleGeminiTool aliased")
+    except ImportError as e2:
+        logger.warning(f"⚠️ GeminiRecipeGenerator not available: {e2}")
+        GeminiRecipeGenerator = None
 
 def initialize_all_tools() -> Dict[str, Any]:
     """
@@ -39,7 +83,9 @@ def initialize_all_tools() -> Dict[str, Any]:
     Returns:
         Dictionary containing all successfully initialized tools
     """
-    logger.info("🚀 Initializing tools (session storage removed)...")
+    logger.info("🚀 Initializing tools with fixed import handling...")
+    
+    tools = {}
     
     try:
         # Get API keys from environment
@@ -48,50 +94,29 @@ def initialize_all_tools() -> Dict[str, Any]:
         google_cloud_api_key = os.getenv("GOOGLE_CLOUD_API_KEY")
         gemini_api_key = os.getenv("GEMINI_API_KEY", google_cloud_api_key)
         
-        # Initialize tools in proper order (some tools may depend on others)
-        tools = {}
-        
-        # Initialize Gemini tool first (may be required by other tools)
-        if gemini_api_key and GeminiRecipeGenerator:
+        # Initialize Qloo tool
+        if qloo_api_key and QlooInsightsAPI:
             try:
-                tools["gemini_tool"] = GeminiRecipeGenerator(gemini_api_key)
-                logger.info("✅ Gemini tool initialized")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Gemini tool: {e}")
-        else:
-            if not gemini_api_key:
-                logger.error("❌ GEMINI_API_KEY not found")
-            if not GeminiRecipeGenerator:
-                logger.error("❌ GeminiRecipeGenerator class not available")
-        
-        # Initialize Qloo tool - handle different constructor signatures
-        if qloo_api_key:
-            try:
-                # Try standard constructor first
                 tools["qloo_tool"] = QlooInsightsAPI(qloo_api_key)
                 logger.info("✅ Qloo API tool initialized")
-            except TypeError as e:
-                logger.error(f"❌ Qloo tool constructor error: {e}")
-                try:
-                    # Try alternative constructor if needed
-                    tools["qloo_tool"] = QlooInsightsAPI(api_key=qloo_api_key)
-                    logger.info("✅ Qloo API tool initialized (alternative constructor)")
-                except Exception as e2:
-                    logger.error(f"❌ Failed to initialize Qloo tool: {e2}")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Qloo tool: {e}")
-        else:
-            logger.error("❌ QLOO_API_KEY not found")
+        elif not qloo_api_key:
+            logger.warning("⚠️ QLOO_API_KEY not found")
+        elif not QlooInsightsAPI:
+            logger.warning("⚠️ QlooInsightsAPI class not available")
         
         # Initialize YouTube tool
-        if youtube_api_key:
+        if youtube_api_key and YouTubeAPI:
             try:
                 tools["youtube_tool"] = YouTubeAPI(youtube_api_key)
                 logger.info("✅ YouTube API tool initialized")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize YouTube tool: {e}")
-        else:
-            logger.error("❌ YOUTUBE_API_KEY not found")
+        elif not youtube_api_key:
+            logger.warning("⚠️ YOUTUBE_API_KEY not found")
+        elif not YouTubeAPI:
+            logger.warning("⚠️ YouTubeAPI class not available")
         
         # Initialize Vision AI tool
         if google_cloud_api_key and VisionAIAnalyzer:
@@ -100,28 +125,51 @@ def initialize_all_tools() -> Dict[str, Any]:
                 logger.info("✅ Vision AI tool initialized")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Vision AI tool: {e}")
-        else:
-            if not google_cloud_api_key:
-                logger.warning("⚠️  GOOGLE_CLOUD_API_KEY not found")
-            if not VisionAIAnalyzer:
-                logger.warning("⚠️  VisionAIAnalyzer class not available")
+        elif not google_cloud_api_key:
+            logger.warning("⚠️ GOOGLE_CLOUD_API_KEY not found")
+        elif not VisionAIAnalyzer:
+            logger.warning("⚠️ VisionAIAnalyzer class not available")
         
+        # Initialize Gemini tool - try both SimpleGeminiTool and GeminiRecipeGenerator
+        gemini_tool_class = SimpleGeminiTool or GeminiRecipeGenerator
+        
+        if gemini_api_key and gemini_tool_class:
+            try:
+                tools["gemini_tool"] = gemini_tool_class(gemini_api_key)
+                tool_name = gemini_tool_class.__name__
+                logger.info(f"✅ Gemini tool initialized ({tool_name})")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize Gemini tool: {e}")
+        elif not gemini_api_key:
+            logger.warning("⚠️ GEMINI_API_KEY not found")
+        elif not gemini_tool_class:
+            logger.warning("⚠️ No Gemini tool class available (tried SimpleGeminiTool and GeminiRecipeGenerator)")
+        
+        # Summary
         working_tools = len(tools)
-        total_expected = 4  # Updated: no session storage
+        total_expected = 4
         logger.info(f"🎯 Tool initialization complete: {working_tools}/{total_expected} tools working")
         
-        if working_tools < 2:
-            logger.error("❌ Insufficient tools for operation")
+        if working_tools == 0:
+            logger.error("❌ No tools initialized - check API keys and imports")
+        elif working_tools < 2:
+            logger.warning("⚠️ Only minimal tools available")
         elif working_tools < total_expected:
-            logger.warning(f"⚠️  Some tools unavailable: {total_expected - working_tools} missing")
+            logger.info(f"⚠️ Some tools unavailable: {total_expected - working_tools} missing")
         else:
             logger.info("🎉 All tools initialized successfully!")
-            
+        
+        # Show which tools are available
+        if tools:
+            available_tools = list(tools.keys())
+            logger.info(f"📋 Available tools: {', '.join(available_tools)}")
+        
         return tools
         
     except Exception as e:
-        logger.error(f"Error initializing tools: {str(e)}")
-        # Return whatever tools we managed to initialize
+        logger.error(f"❌ Error during tool initialization: {e}")
+        import traceback
+        logger.debug(traceback.format_exc())
         return tools if 'tools' in locals() else {}
 
 def initialize_tools() -> Dict[str, Any]:
@@ -149,68 +197,42 @@ async def test_all_tools(tools: Dict[str, Any]) -> Dict[str, bool]:
     """
     test_results = {}
     
-    # Test Qloo API
-    if "qloo_tool" in tools:
-        try:
-            # Qloo tools may not have test_connection method
-            test_results["qloo_tool"] = True
-            logger.info("Qloo tool test: PASSED (basic initialization)")
-        except Exception as e:
-            logger.error(f"Qloo tool test error: {str(e)}")
-            test_results["qloo_tool"] = False
-    else:
-        test_results["qloo_tool"] = False
+    # Test each tool if available
+    tool_tests = [
+        ("qloo_tool", "Qloo API"),
+        ("youtube_tool", "YouTube API"),
+        ("vision_ai_tool", "Vision AI"),
+        ("gemini_tool", "Gemini AI")
+    ]
     
-    # Test YouTube API
-    if "youtube_tool" in tools:
-        try:
-            if hasattr(tools["youtube_tool"], 'test_connection'):
-                youtube_result = await tools["youtube_tool"].test_connection()
-                test_results["youtube_tool"] = youtube_result
-            else:
-                test_results["youtube_tool"] = True
-            logger.info(f"YouTube tool test: {'PASSED' if test_results['youtube_tool'] else 'FAILED'}")
-        except Exception as e:
-            logger.error(f"YouTube tool test error: {str(e)}")
-            test_results["youtube_tool"] = False
-    else:
-        test_results["youtube_tool"] = False
-    
-    # Test Vision AI
-    if "vision_ai_tool" in tools:
-        try:
-            if hasattr(tools["vision_ai_tool"], 'test_connection'):
-                vision_result = await tools["vision_ai_tool"].test_connection()
-                test_results["vision_ai_tool"] = vision_result
-            else:
-                test_results["vision_ai_tool"] = True
-            logger.info(f"Vision AI tool test: {'PASSED' if test_results['vision_ai_tool'] else 'FAILED'}")
-        except Exception as e:
-            logger.error(f"Vision AI tool test error: {str(e)}")
-            test_results["vision_ai_tool"] = False
-    else:
-        test_results["vision_ai_tool"] = False
-    
-    # Test Gemini
-    if "gemini_tool" in tools:
-        try:
-            if hasattr(tools["gemini_tool"], 'test_connection'):
-                gemini_result = await tools["gemini_tool"].test_connection()
-                test_results["gemini_tool"] = gemini_result
-            else:
-                test_results["gemini_tool"] = True
-            logger.info(f"Gemini tool test: {'PASSED' if test_results['gemini_tool'] else 'FAILED'}")
-        except Exception as e:
-            logger.error(f"Gemini tool test error: {str(e)}")
-            test_results["gemini_tool"] = False
-    else:
-        test_results["gemini_tool"] = False
+    for tool_key, tool_name in tool_tests:
+        if tool_key in tools:
+            try:
+                tool = tools[tool_key]
+                
+                # Try test_connection method if available
+                if hasattr(tool, 'test_connection'):
+                    result = await tool.test_connection()
+                    test_results[tool_key] = result
+                else:
+                    # If no test method, assume it's working if initialized
+                    test_results[tool_key] = True
+                
+                status = "✅ PASSED" if test_results[tool_key] else "❌ FAILED"
+                logger.info(f"{tool_name} test: {status}")
+                
+            except Exception as e:
+                logger.error(f"❌ {tool_name} test error: {e}")
+                test_results[tool_key] = False
+        else:
+            test_results[tool_key] = False
+            logger.warning(f"⚠️ {tool_name} not available for testing")
     
     # Summary
     passed_tests = sum(1 for result in test_results.values() if result)
     total_tests = len(test_results)
     
-    logger.info(f"Tool tests completed: {passed_tests}/{total_tests} passed")
+    logger.info(f"📊 Tool tests completed: {passed_tests}/{total_tests} passed")
     
     return test_results
 
@@ -238,20 +260,55 @@ def get_tool_status() -> Dict[str, str]:
         else:
             status[tool_name] = f"API key missing: {env_var}"
     
+    # Check class availability
+    class_status = {
+        "QlooInsightsAPI": QlooInsightsAPI is not None,
+        "YouTubeAPI": YouTubeAPI is not None,
+        "VisionAIAnalyzer": VisionAIAnalyzer is not None,
+        "SimpleGeminiTool": SimpleGeminiTool is not None,
+        "GeminiRecipeGenerator": GeminiRecipeGenerator is not None
+    }
+    
+    status["class_imports"] = {name: "✅ Available" if available else "❌ Missing" 
+                              for name, available in class_status.items()}
+    
     return status
 
-# Export all tools and utilities (session storage removed)
+def get_available_tools() -> Dict[str, bool]:
+    """
+    Get information about which tool classes are available for import.
+    
+    Returns:
+        Dictionary showing which tools can be imported
+    """
+    return {
+        "QlooInsightsAPI": QlooInsightsAPI is not None,
+        "YouTubeAPI": YouTubeAPI is not None,
+        "VisionAIAnalyzer": VisionAIAnalyzer is not None,
+        "SimpleGeminiTool": SimpleGeminiTool is not None,
+        "GeminiRecipeGenerator": GeminiRecipeGenerator is not None
+    }
+
+# Export all tools and utilities
 __all__ = [
+    # Tool classes (if available)
     "QlooInsightsAPI",
     "YouTubeAPI", 
     "VisionAIAnalyzer",
+    "SimpleGeminiTool",
+    "GeminiRecipeGenerator",
+    # Utility functions
     "initialize_tools",
     "initialize_all_tools",
     "get_tool_manager",
     "test_all_tools",
-    "get_tool_status"
+    "get_tool_status",
+    "get_available_tools"
 ]
 
-# Add optional tools to exports if available
-if GeminiRecipeGenerator:
-    __all__.append("GeminiRecipeGenerator")
+# Clean up __all__ to only include available tools
+__all__ = [name for name in __all__ if globals().get(name) is not None or name.startswith(('initialize_', 'get_', 'test_'))]
+
+# Log the final import status
+logger.debug(f"📋 Tools __init__.py loaded - available exports: {', '.join(__all__)}")
+
