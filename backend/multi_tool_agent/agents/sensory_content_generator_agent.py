@@ -1,11 +1,11 @@
 """
-Agent 4: Sensory Content Generator - WITH DISLIKE FILTERING (ADDITIVE ONLY)
+Agent 4: Sensory Content Generator - FIXED DATA UNWRAPPING FOR YOUTUBE URLs
 File: backend/multi_tool_agent/agents/sensory_content_generator_agent.py
 
-ADDITIVE ENHANCEMENT: Added simple dislike checking before content generation
-- Keeps ALL original structure, methods, and data formats exactly as-is
-- Only adds dislike filtering to avoid generating disliked content
-- No other changes to preserve data flow compatibility
+CRITICAL FIX: Added data unwrapping for qloo_intelligence and correct key names
+- Agent 3 wraps output: {"qloo_intelligence": {"cultural_recommendations": {...}}}
+- Agent 3 stores music under "artists" key, not "music"
+- Agent 4 must unwrap and use correct keys to get data for YouTube API calls
 """
 
 import logging
@@ -30,39 +30,46 @@ except ImportError as e:
 
 class SensoryContentGeneratorAgent:
     """
-    Agent 4: Sensory Content Generator with ENHANCED theme-aware recipe selection + Dislike Filtering
+    Agent 4: Sensory Content Generator with FIXED data unwrapping for YouTube URLs
     
-    ORIGINAL ENHANCEMENTS:
-    - Enhanced theme-aware recipe selection
-    - Theme manager integration
-    - Multi-sensory content generation
-    
-    ADDITIVE ENHANCEMENT: Now checks patient dislikes before generating content
+    CRITICAL FIX:
+    - Unwraps double-wrapped qloo_intelligence structure  
+    - Uses correct key names: "artists" instead of "music"
+    - Now properly gets data for YouTube API calls
     """
     
     def __init__(self, gemini_tool, youtube_tool):
         self.gemini_tool = gemini_tool
         self.youtube_tool = youtube_tool
         self.recipes_data = self._load_recipes_json()
-        logger.info("Sensory Content Generator initialized with ENHANCED theme matching + dislike filtering")
+        logger.info("Sensory Content Generator initialized with FIXED data unwrapping for YouTube URLs")
+    
+    def _unwrap_qloo_intelligence(self, qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        CRITICAL FIX: Unwrap the qloo_intelligence data structure if it's double-wrapped.
+        Same logic as Agent 6.
+        """
+        
+        # Check if we have the double-wrapped structure
+        if "qloo_intelligence" in qloo_intelligence and len(qloo_intelligence.keys()) == 1:
+            logger.info("🔧 CRITICAL FIX: Agent 4 unwrapping double-wrapped qloo_intelligence structure")
+            unwrapped = qloo_intelligence["qloo_intelligence"]
+            logger.info(f"🔧 Agent 4 unwrapped keys: {list(unwrapped.keys())}")
+            return unwrapped
+        
+        # Return as-is if already properly structured
+        logger.info("🔧 Agent 4 data structure already properly formatted")
+        return qloo_intelligence
     
     async def run(self, 
                   consolidated_info: Dict[str, Any],
                   cultural_profile: Dict[str, Any],
                   qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Main run method for pipeline compatibility + dislike filtering.
-        
-        Args:
-            consolidated_info: Consolidated information including daily theme
-            cultural_profile: Cultural profile data
-            qloo_intelligence: Qloo API results
-            
-        Returns:
-            Sensory content organized by sense with theme-matched recipes (dislike-filtered)
+        Main run method with FIXED data unwrapping for YouTube URLs.
         """
         
-        logger.info("🎨 Agent 4: Starting enhanced sensory content generation + dislike filtering")
+        logger.info("🎨 Agent 4: Starting enhanced sensory content generation + dislike filtering + YouTube URLs")
         
         try:
             # Extract patient profile for dislike checking (ADDITIVE)
@@ -77,12 +84,18 @@ class SensoryContentGeneratorAgent:
             # Extract daily theme from consolidated info (ORIGINAL)
             daily_theme = consolidated_info.get("daily_theme", {})
             
-            # Extract other content (ORIGINAL)
-            vision_data = qloo_intelligence.get("tv_shows", {})
-            audio_data = qloo_intelligence.get("music", {})
+            # CRITICAL FIX: Unwrap qloo_intelligence and use correct keys
+            unwrapped_qloo = self._unwrap_qloo_intelligence(qloo_intelligence)
+            cultural_recommendations = unwrapped_qloo.get("cultural_recommendations", {})
             
-            # Generate enhanced sensory content with dislike filtering (ENHANCED)
-            sensory_result = self.generate_sensory_content(vision_data, audio_data, daily_theme, demo_dislikes)
+            # FIXED: Use correct key names from Agent 3
+            vision_data = cultural_recommendations.get("tv_shows", {})
+            audio_data = cultural_recommendations.get("artists", {})  # FIXED: "artists" not "music"
+            
+            logger.info(f"🔧 FIXED: Agent 4 extracted data - TV shows: {vision_data.get('entity_count', 0)}, Artists: {audio_data.get('entity_count', 0)}")
+            
+            # Generate enhanced sensory content with dislike filtering + YouTube URLs (ENHANCED)
+            sensory_result = await self.generate_sensory_content(vision_data, audio_data, daily_theme, demo_dislikes)
             
             return {
                 "sensory_content": sensory_result
@@ -92,20 +105,20 @@ class SensoryContentGeneratorAgent:
             logger.error(f"❌ Agent 4 run method failed: {e}")
             return self._create_fallback_sensory_content(consolidated_info, cultural_profile)
     
-    def generate_sensory_content(self, vision_data: Dict[str, Any], 
+    async def generate_sensory_content(self, vision_data: Dict[str, Any], 
                                audio_data: Dict[str, Any], 
                                daily_theme: Dict[str, Any],
                                demo_dislikes: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        ENHANCED: Generate sensory content with enhanced theme-aware recipe selection + dislike filtering
+        ENHANCED: Generate sensory content with enhanced theme-aware recipe selection + dislike filtering + YouTube URLs
         """
         
         if demo_dislikes is None:
             demo_dislikes = []
         
-        logger.info(f"🎨 Generating sensory content for theme: {daily_theme.get('theme_of_the_day', {}).get('name', 'Unknown')}")
+        logger.info(f"🎨 Generating sensory content for theme: {daily_theme.get('theme', {}).get('name', 'Unknown')}")
         
-        current_theme = daily_theme.get("theme_of_the_day", {})
+        current_theme = daily_theme.get("theme", {})
         
         # ENHANCED: Use theme manager for better recipe filtering (ORIGINAL)
         filtered_recipes = self._get_theme_filtered_recipes(current_theme)
@@ -116,9 +129,9 @@ class SensoryContentGeneratorAgent:
         # Generate enhanced gustatory content with theme awareness + dislike filtering (ENHANCED)
         gustatory_content = self._generate_gustatory_content(selected_recipe, current_theme, demo_dislikes)
         
-        # Process other sensory content (visual, auditory, etc.) + dislike filtering (ENHANCED)
-        visual_content = self._process_visual_content(vision_data, current_theme, demo_dislikes)
-        auditory_content = self._process_auditory_content(audio_data, current_theme, demo_dislikes)
+        # Process other sensory content (visual, auditory, etc.) + dislike filtering + YouTube URLs (ENHANCED)
+        visual_content = await self._process_visual_content(vision_data, current_theme, demo_dislikes)
+        auditory_content = await self._process_auditory_content(audio_data, current_theme, demo_dislikes)
         
         sensory_result = {
             "content_by_sense": {
@@ -136,8 +149,10 @@ class SensoryContentGeneratorAgent:
             "generation_metadata": {
                 "timestamp": datetime.now().isoformat(),
                 "agent": "SensoryContentGenerator",
-                "version": "enhanced_theme_matching_with_dislike_filtering",
-                "dislike_filtering_active": len(demo_dislikes) > 0  # ADDITIVE
+                "version": "fixed_data_unwrapping_for_youtube_urls",
+                "dislike_filtering_active": len(demo_dislikes) > 0,
+                "youtube_urls_enabled": self.youtube_tool is not None,
+                "data_unwrapping_fixed": True  # NEW: Indicates fix is applied
             }
         }
         
@@ -247,66 +262,110 @@ class SensoryContentGeneratorAgent:
             }
         }
     
-    def _process_visual_content(self, vision_data: Dict[str, Any], current_theme: Dict[str, Any], demo_dislikes: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process visual content + dislike filtering (ENHANCED)."""
+    async def _process_visual_content(self, vision_data: Dict[str, Any], current_theme: Dict[str, Any], demo_dislikes: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process visual content + dislike filtering + YouTube URLs (ENHANCED with FIXED data access)."""
         
         # Check if TV shows are generally disliked (ADDITIVE)
         if self._is_content_type_disliked("tv_show", demo_dislikes):
             logger.info("🚫 Skipping TV show content - user dislikes TV shows")
             return {"elements": [], "status": "skipped", "reason": "user_dislike"}
         
-        # Process visual content (ORIGINAL)
+        # Process visual content (FIXED data access + YOUTUBE URLS)
         visual_elements = []
         
         try:
-            if isinstance(vision_data, dict) and "entities" in vision_data:
-                for item in vision_data["entities"]:
+            # FIXED: Access entities from the correct structure
+            entities = vision_data.get("entities", [])
+            logger.info(f"🔧 FIXED: Agent 4 processing {len(entities)} TV show entities")
+            
+            if entities and len(entities) > 0:
+                for item in entities:
                     # Filter by dislikes (ADDITIVE)
                     if not self._is_specific_item_disliked(item.get("name", ""), demo_dislikes):
+                        show_name = item.get("name", "Classic Show")
+                        
+                        # NEW: Make YouTube call to get embeddable URL
+                        youtube_url = ""
+                        try:
+                            if self.youtube_tool:
+                                youtube_results = await self.youtube_tool.search_videos(f"{show_name} classic TV", max_results=1)
+                                if youtube_results and youtube_results.get("items"):
+                                    first_result = youtube_results["items"][0]
+                                    youtube_url = first_result.get("embeddable_url", "")
+                                    logger.info(f"📺 Retrieved YouTube URL for {show_name}: {bool(youtube_url)}")
+                        except Exception as e:
+                            logger.warning(f"Failed to get YouTube URL for {show_name}: {e}")
+                        
                         visual_elements.append({
                             "type": "tv_show",
-                            "name": item.get("name", "Classic Show"),
+                            "name": show_name,
                             "description": item.get("description", "A classic television program"),
-                            "theme_relevance": current_theme.get("name", "general")
+                            "theme_relevance": current_theme.get("name", "general"),
+                            "youtube_url": youtube_url  # NEW: Include embeddable URL
                         })
+                        
+            logger.info(f"✅ FIXED: Agent 4 generated {len(visual_elements)} TV show elements with YouTube URLs")
+                        
         except Exception as e:
             logger.error(f"Error processing visual content: {e}")
         
         return {
             "elements": visual_elements,
             "theme_context": current_theme,
-            "processing_method": "qloo_enhanced"
+            "processing_method": "qloo_enhanced_with_youtube_fixed_data_access"
         }
     
-    def _process_auditory_content(self, audio_data: Dict[str, Any], current_theme: Dict[str, Any], demo_dislikes: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process auditory content + dislike filtering (ENHANCED)."""
+    async def _process_auditory_content(self, audio_data: Dict[str, Any], current_theme: Dict[str, Any], demo_dislikes: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process auditory content + dislike filtering + YouTube URLs (ENHANCED with FIXED data access)."""
         
         # Check if music is generally disliked (ADDITIVE)
         if self._is_content_type_disliked("music", demo_dislikes):
             logger.info("🚫 Skipping music content - user dislikes music")
             return {"elements": [], "status": "skipped", "reason": "user_dislike"}
         
-        # Process auditory content (ORIGINAL)
+        # Process auditory content (FIXED data access + YOUTUBE URLS)
         auditory_elements = []
         
         try:
-            if isinstance(audio_data, dict) and "entities" in audio_data:
-                for item in audio_data["entities"]:
+            # FIXED: Access entities from the correct structure
+            entities = audio_data.get("entities", [])
+            logger.info(f"🔧 FIXED: Agent 4 processing {len(entities)} artist entities")
+            
+            if entities and len(entities) > 0:
+                for item in entities:
                     # Filter by dislikes (ADDITIVE)
                     if not self._is_specific_item_disliked(item.get("name", ""), demo_dislikes):
+                        artist_name = item.get("name", "Classic Music")
+                        
+                        # NEW: Make YouTube call to get embeddable URL
+                        youtube_url = ""
+                        try:
+                            if self.youtube_tool:
+                                youtube_results = await self.youtube_tool.search_music(f"{artist_name} greatest hits", max_results=1)
+                                if youtube_results and youtube_results.get("items"):
+                                    first_result = youtube_results["items"][0]
+                                    youtube_url = first_result.get("embeddable_url", "")
+                                    logger.info(f"🎵 Retrieved YouTube URL for {artist_name}: {bool(youtube_url)}")
+                        except Exception as e:
+                            logger.warning(f"Failed to get YouTube URL for {artist_name}: {e}")
+                        
                         auditory_elements.append({
                             "type": "music",
-                            "name": item.get("name", "Classic Music"),
-                            "artist": item.get("artist", "Traditional Artist"),
-                            "theme_relevance": current_theme.get("name", "general")
+                            "name": artist_name,
+                            "artist": artist_name,
+                            "theme_relevance": current_theme.get("name", "general"),
+                            "youtube_url": youtube_url  # NEW: Include embeddable URL
                         })
+                        
+            logger.info(f"✅ FIXED: Agent 4 generated {len(auditory_elements)} music elements with YouTube URLs")
+                        
         except Exception as e:
             logger.error(f"Error processing auditory content: {e}")
         
         return {
             "elements": auditory_elements,
             "theme_context": current_theme,
-            "processing_method": "qloo_enhanced"
+            "processing_method": "qloo_enhanced_with_youtube_fixed_data_access"
         }
     
     def _generate_tactile_content(self, current_theme: Dict[str, Any]) -> Dict[str, Any]:
@@ -393,3 +452,6 @@ class SensoryContentGeneratorAgent:
                 }
             }
         }
+
+# Export the main class
+__all__ = ["SensoryContentGeneratorAgent"]

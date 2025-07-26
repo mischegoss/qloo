@@ -1,5 +1,5 @@
 """
-Enhanced Mobile Synthesizer Agent - FIXED DATA UNWRAPPING
+Enhanced Mobile Synthesizer Agent - FIXED DATA UNWRAPPING + YOUTUBE URLs FROM AGENT 4
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
 CRITICAL FIX:
@@ -7,6 +7,11 @@ CRITICAL FIX:
 - Agent 3 output was being wrapped in extra layer: {"qloo_intelligence": {...}}
 - Now correctly unwraps to access cultural_recommendations data
 - Maintains all existing functionality and debugging
+
+YOUTUBE URL FIX:
+- Now receives YouTube URLs from Agent 4's sensory content structure
+- Prioritizes sensory content (with YouTube URLs) over qloo_intelligence
+- Maintains fallback to qloo_intelligence if sensory content unavailable
 """
 
 import logging
@@ -21,19 +26,23 @@ logger = logging.getLogger(__name__)
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Enhanced Mobile Synthesizer with CRITICAL DATA UNWRAPPING FIX
+    Agent 6: Enhanced Mobile Synthesizer with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4
     
     CRITICAL FIX:
     - Unwraps double-wrapped qloo_intelligence data structure
     - Now correctly accesses 19 artists and 5 TV shows from Agent 3
     - Maintains comprehensive debugging and error handling
     - Full 4-card dashboard functionality restored
+    
+    YOUTUBE URL FIX:
+    - Now receives YouTube URLs from Agent 4's sensory content
+    - Prioritizes sensory content over qloo_intelligence for URLs
     """
     
     def __init__(self):
         # Load fallback data for robust operation
         self.fallback_data = self._load_fallback_data()
-        logger.info("✅ Mobile Synthesizer initialized with LOCAL MEMORY card support")
+        logger.info("✅ Mobile Synthesizer initialized with LOCAL MEMORY card support + YouTube URLs from Agent 4")
     
     def _load_fallback_data(self) -> Dict[str, Any]:
         """Load fallback data for when API calls fail."""
@@ -111,15 +120,16 @@ class MobileSynthesizerAgent:
                   sensory_content: Dict[str, Any],
                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Enhanced synthesis with CRITICAL DATA UNWRAPPING FIX
+        Enhanced synthesis with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4
         """
         
-        logger.info("📱 Agent 6: Starting enhanced mobile synthesis with Local Memory card")
+        logger.info("📱 Agent 6: Starting enhanced mobile synthesis with Local Memory card + YouTube URLs")
         
         # COMPREHENSIVE INPUT DEBUGGING
         logger.info("🔍 DEBUGGING AGENT 6 INPUTS:")
         logger.info(f"🔍 qloo_intelligence keys: {list(qloo_intelligence.keys())}")
         logger.info(f"🔍 qloo_intelligence type: {type(qloo_intelligence)}")
+        logger.info(f"🔍 sensory_content keys: {list(sensory_content.keys())}")
         
         # Test the unwrapping
         unwrapped_data = self._unwrap_qloo_intelligence(qloo_intelligence)
@@ -168,18 +178,18 @@ class MobileSynthesizerAgent:
                                             current_theme: Dict[str, Any],
                                             location_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize complete dashboard with FIXED data unwrapping
+        Synthesize complete dashboard with FIXED data unwrapping + YouTube URLs from Agent 4
         """
         
-        logger.info("🎨 Synthesizing complete 4-card dashboard")
+        logger.info("🎨 Synthesizing complete 4-card dashboard with YouTube URLs from Agent 4")
         
         try:
-            # Process all content types with FIXED data unwrapping
-            logger.info("🔍 Starting content selection with FIXED unwrapping...")
+            # Process all content types with FIXED data unwrapping + YouTube URLs
+            logger.info("🔍 Starting content selection with FIXED unwrapping + YouTube URLs...")
             
             selected_content = {
-                "music": self._select_music_content(qloo_intelligence, current_theme),
-                "tv_show": self._select_tv_content(qloo_intelligence, current_theme),
+                "music": self._select_music_content(sensory_content, qloo_intelligence, current_theme),
+                "tv_show": self._select_tv_content(sensory_content, qloo_intelligence, current_theme),
                 "recipe": self._select_recipe_content(sensory_content, current_theme),
                 "local_memory": await self._select_places_content(photo_analysis, current_theme, location_info)
             }
@@ -189,9 +199,9 @@ class MobileSynthesizerAgent:
             theme_description = current_theme.get("description", "A special theme for today")
             
             # Log selected content for verification
-            logger.info("🔍 FINAL SELECTED CONTENT (AFTER FIX):")
-            logger.info(f"🎵 Music: {selected_content['music']['artist']} - {selected_content['music']['song']} (source: {selected_content['music']['source']})")
-            logger.info(f"📺 TV Show: {selected_content['tv_show']['name']} (source: {selected_content['tv_show']['source']})")
+            logger.info("🔍 FINAL SELECTED CONTENT (WITH YouTube URLs):")
+            logger.info(f"🎵 Music: {selected_content['music']['artist']} - {selected_content['music']['song']} (source: {selected_content['music']['source']}) (YouTube: {bool(selected_content['music'].get('youtube_url'))})")
+            logger.info(f"📺 TV Show: {selected_content['tv_show']['name']} (source: {selected_content['tv_show']['source']}) (YouTube: {bool(selected_content['tv_show'].get('youtube_url'))})")
             logger.info(f"🍽️ Recipe: {selected_content['recipe']['name']} (source: {selected_content['recipe']['source']})")
             logger.info(f"📍 Local Memory: {selected_content['local_memory']['title']} (source: {selected_content['local_memory']['source']})")
             
@@ -221,18 +231,23 @@ class MobileSynthesizerAgent:
                     "local_memory": selected_content["local_memory"]["source"]
                 },
                 "content_quality": self._assess_content_quality(selected_content),
-                "fallbacks_used": [k for k, v in selected_content.items() if v.get("source") == "fallback"]
+                "fallbacks_used": [k for k, v in selected_content.items() if v.get("source") == "fallback"],
+                "youtube_urls_included": {
+                    "music": bool(selected_content["music"].get("youtube_url")),
+                    "tv_show": bool(selected_content["tv_show"].get("youtube_url"))
+                }
             }
             
             logger.info("✅ Enhanced dashboard synthesized successfully for theme: {}".format(theme_name))
             logger.info(f"🔍 Content quality assessment: {dashboard_metadata['content_quality']}")
             logger.info(f"🔍 Fallbacks used: {dashboard_metadata['fallbacks_used']}")
+            logger.info(f"🔍 YouTube URLs included: {dashboard_metadata['youtube_urls_included']}")
             
             return {
                 "success": True,
                 "dashboard_content": dashboard_content,
                 "dashboard_metadata": dashboard_metadata,
-                "synthesis_approach": "enhanced_local_memory_with_critical_data_unwrapping_fix"
+                "synthesis_approach": "enhanced_local_memory_with_critical_data_unwrapping_fix_and_youtube_urls"
             }
             
         except Exception as e:
@@ -240,34 +255,55 @@ class MobileSynthesizerAgent:
             logger.error(f"❌ Exception details: {str(e)}")
             return self._generate_fallback_dashboard(current_theme, location_info)
     
-    def _select_music_content(self, qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select music content from Qloo intelligence (FIXED with unwrapping)"""
-        logger.info("🎵 Extracting music content from Qloo results")
+    def _select_music_content(self, sensory_content: Dict[str, Any], qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """Select music content from sensory content (with YouTube URLs) first, fallback to Qloo intelligence"""
+        logger.info("🎵 Extracting music content - prioritizing sensory content (with YouTube URLs)")
+        
+        # PRIORITY 1: Try to get music from sensory content (Agent 4) with YouTube URLs
+        try:
+            content_by_sense = sensory_content.get("sensory_content", {}).get("content_by_sense", {})
+            auditory_content = content_by_sense.get("auditory", {})
+            auditory_elements = auditory_content.get("elements", [])
+            
+            logger.info(f"🔍 Found {len(auditory_elements)} auditory elements in sensory content")
+            
+            if auditory_elements and len(auditory_elements) > 0:
+                selected_music = auditory_elements[0]
+                artist_name = selected_music.get("name", selected_music.get("artist", "Unknown Artist"))
+                youtube_url = selected_music.get("youtube_url", "")
+                
+                logger.info(f"✅ PRIORITY 1: Selected music from Agent 4 sensory content: {artist_name}")
+                logger.info(f"🎬 YouTube URL available: {bool(youtube_url)}")
+                
+                return {
+                    "artist": artist_name,
+                    "song": "Greatest Hits",
+                    "youtube_url": youtube_url,
+                    "genre": selected_music.get("genre"),
+                    "theme_relevance": selected_music.get("theme_relevance"),
+                    "source": "sensory_content_with_youtube"
+                }
+                
+        except Exception as e:
+            logger.warning(f"Error extracting music from sensory content: {e}")
+        
+        # PRIORITY 2: Fallback to qloo_intelligence (without YouTube URLs)
+        logger.info("🔄 Falling back to Qloo intelligence for music")
         
         # CRITICAL FIX: Unwrap the data structure
         unwrapped_data = self._unwrap_qloo_intelligence(qloo_intelligence)
         
-        # COMPREHENSIVE DEBUGGING
-        logger.info("🔍 MUSIC SELECTION DEBUGGING (AFTER UNWRAPPING):")
-        logger.info(f"🔍 Unwrapped data keys: {list(unwrapped_data.keys())}")
-        logger.info(f"🔍 Unwrapped data success: {unwrapped_data.get('success', 'NOT_FOUND')}")
-        
-        cultural_recommendations = unwrapped_data.get("cultural_recommendations", {})
-        logger.info(f"🔍 cultural_recommendations keys: {list(cultural_recommendations.keys())}")
-        
         try:
+            cultural_recommendations = unwrapped_data.get("cultural_recommendations", {})
             artists_data = cultural_recommendations.get("artists", {})
-            logger.info(f"🔍 artists_data type: {type(artists_data)}")
-            logger.info(f"🔍 artists_data available: {artists_data.get('available', 'NOT_FOUND')}")
-            logger.info(f"🔍 artists_data entity_count: {artists_data.get('entity_count', 'NOT_FOUND')}")
-            
             entities = artists_data.get("entities", [])
+            
             logger.info(f"🔍 Found {len(entities)} artists in Qloo results")
             
             if entities and len(entities) > 0:
                 selected_artist = entities[0]
                 artist_name = selected_artist.get("name", "Unknown Artist")
-                logger.info(f"✅ FIXED - Selected artist from Qloo: {artist_name}")
+                logger.info(f"✅ PRIORITY 2: Selected artist from Qloo: {artist_name}")
                 
                 # Create a representative song title
                 song_title = "Greatest Hits"
@@ -279,18 +315,16 @@ class MobileSynthesizerAgent:
                 return {
                     "artist": artist_name,
                     "song": song_title,
-                    "youtube_url": "",
+                    "youtube_url": "",  # No YouTube URL from Qloo
                     "year": selected_artist.get("properties", {}).get("year"),
                     "genre": selected_artist.get("music_genre", selected_artist.get("properties", {}).get("genre")),
                     "source": "qloo_intelligence"
                 }
-            else:
-                logger.warning(f"⚠️ No artists found in entities list (length: {len(entities)})")
                     
         except Exception as e:
-            logger.error(f"❌ Error selecting music content: {e}")
+            logger.error(f"❌ Error selecting music content from Qloo: {e}")
         
-        # Fallback
+        # PRIORITY 3: Final fallback
         logger.info("🔄 Using fallback music content")
         fallback_music = self.fallback_data.get("music", [{}])[0]
         return {
@@ -302,46 +336,68 @@ class MobileSynthesizerAgent:
             "source": "fallback"
         }
     
-    def _select_tv_content(self, qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select TV content from Qloo intelligence (FIXED with unwrapping)"""
-        logger.info("📺 Extracting TV content from Qloo results")
+    def _select_tv_content(self, sensory_content: Dict[str, Any], qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
+        """Select TV content from sensory content (with YouTube URLs) first, fallback to Qloo intelligence"""
+        logger.info("📺 Extracting TV content - prioritizing sensory content (with YouTube URLs)")
+        
+        # PRIORITY 1: Try to get TV content from sensory content (Agent 4) with YouTube URLs
+        try:
+            content_by_sense = sensory_content.get("sensory_content", {}).get("content_by_sense", {})
+            visual_content = content_by_sense.get("visual", {})
+            visual_elements = visual_content.get("elements", [])
+            
+            logger.info(f"🔍 Found {len(visual_elements)} visual elements in sensory content")
+            
+            if visual_elements and len(visual_elements) > 0:
+                selected_tv = visual_elements[0]
+                show_name = selected_tv.get("name", "Classic Television")
+                youtube_url = selected_tv.get("youtube_url", "")
+                
+                logger.info(f"✅ PRIORITY 1: Selected TV show from Agent 4 sensory content: {show_name}")
+                logger.info(f"🎬 YouTube URL available: {bool(youtube_url)}")
+                
+                return {
+                    "name": show_name,
+                    "youtube_url": youtube_url,
+                    "description": selected_tv.get("description", "A classic television program"),
+                    "theme_relevance": selected_tv.get("theme_relevance"),
+                    "source": "sensory_content_with_youtube"
+                }
+                
+        except Exception as e:
+            logger.warning(f"Error extracting TV content from sensory content: {e}")
+        
+        # PRIORITY 2: Fallback to qloo_intelligence (without YouTube URLs)
+        logger.info("🔄 Falling back to Qloo intelligence for TV content")
         
         # CRITICAL FIX: Unwrap the data structure
         unwrapped_data = self._unwrap_qloo_intelligence(qloo_intelligence)
         
-        logger.info("🔍 TV SELECTION DEBUGGING (AFTER UNWRAPPING):")
-        
         try:
             cultural_recommendations = unwrapped_data.get("cultural_recommendations", {})
-            logger.info(f"🔍 Cultural recommendations keys: {list(cultural_recommendations.keys())}")
-            
             tv_shows_data = cultural_recommendations.get("tv_shows", {})
-            logger.info(f"🔍 TV shows data available: {tv_shows_data.get('available', 'NOT_FOUND')}")
-            logger.info(f"🔍 TV shows entity_count: {tv_shows_data.get('entity_count', 'NOT_FOUND')}")
-            
             tv_shows = tv_shows_data.get("entities", [])
-            logger.info(f"🔍 Found {len(tv_shows)} TV shows")
+            
+            logger.info(f"🔍 Found {len(tv_shows)} TV shows in Qloo results")
             
             if tv_shows and len(tv_shows) > 0:
                 selected_show = tv_shows[0]
                 show_name = selected_show.get("name", "Classic Television")
-                logger.info(f"✅ FIXED - Selected TV show from Qloo: {show_name}")
+                logger.info(f"✅ PRIORITY 2: Selected TV show from Qloo: {show_name}")
                 
                 return {
                     "name": show_name,
-                    "youtube_url": selected_show.get("embeddable_url", ""),
+                    "youtube_url": "",  # No YouTube URL from Qloo
                     "genre": selected_show.get("properties", {}).get("genre"),
                     "year": selected_show.get("properties", {}).get("year"),
                     "description": selected_show.get("properties", {}).get("description"),
                     "source": "qloo_intelligence"
                 }
-            else:
-                logger.warning(f"⚠️ No TV shows found in entities list (length: {len(tv_shows)})")
                 
         except Exception as e:
-            logger.error(f"❌ Error selecting TV content: {e}")
+            logger.error(f"❌ Error selecting TV content from Qloo: {e}")
         
-        # Fallback
+        # PRIORITY 3: Final fallback
         logger.info("🔄 Using fallback TV content")
         fallback_tv = self.fallback_data.get("tv_shows", [{}])[0]
         return {
@@ -407,26 +463,59 @@ class MobileSynthesizerAgent:
         }
     
     async def _select_places_content(self, photo_analysis: Dict[str, Any], current_theme: Dict[str, Any], location_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Select place content for Local Memory card (unchanged)"""
-        logger.info("📍 Selecting place content for Local Memory card")
+        """Select place content for Local Memory card - FIXED to work with Agent 5 data structure"""
+        logger.info("📍 Selecting place content for Local Memory card (FIXED DATA STRUCTURE)")
         
         try:
-            # Try to use photo analysis first
-            if photo_analysis.get("success") and photo_analysis.get("places_analysis"):
-                places_data = photo_analysis["places_analysis"]
-                if places_data.get("local_spots") and len(places_data["local_spots"]) > 0:
-                    selected_place = places_data["local_spots"][0]
-                    logger.info(f"✅ Selected place from photo analysis: {selected_place.get('name', 'Local spot')}")
-                    
-                    return {
-                        "title": f"Remember: {selected_place.get('name', 'This special place')}",
-                        "description": selected_place.get("description", "A meaningful place with memories"),
-                        "conversation_starters": selected_place.get("conversation_starters", [
-                            "Tell me about times you visited places like this",
-                            "What does this place remind you of?"
-                        ]),
-                        "source": "photo_analysis"
-                    }
+            # FIXED: Try to use photo analysis first with correct data structure from Agent 5
+            place_analysis_data = photo_analysis.get("place_photo_analysis", {})
+            if place_analysis_data.get("available"):
+                place_data = place_analysis_data.get("place_data", {})
+                vision_analysis = place_analysis_data.get("vision_analysis", {})
+                theme_relevance = place_analysis_data.get("theme_relevance", {})
+                
+                place_name = place_data.get("name", "This special place")
+                place_description = place_data.get("description", "A meaningful place with memories")
+                
+                logger.info(f"✅ FIXED: Selected place from photo analysis: {place_name}")
+                
+                # Create conversation starters based on vision analysis and theme
+                conversation_starters = []
+                
+                # Add theme-based conversation starter
+                relevance_explanation = theme_relevance.get("relevance_explanation", "")
+                if relevance_explanation:
+                    conversation_starters.append(f"Looking at this place, {relevance_explanation.lower()}")
+                
+                # Add vision-based conversation starters
+                architectural_details = vision_analysis.get("architectural_details", "")
+                if architectural_details:
+                    conversation_starters.append(f"I can see interesting details here. {architectural_details}")
+                
+                atmosphere_description = vision_analysis.get("atmosphere_description", "")
+                if atmosphere_description:
+                    conversation_starters.append(f"This place has character. {atmosphere_description}")
+                
+                # Add fallback conversation starters
+                if not conversation_starters:
+                    conversation_starters = [
+                        f"Tell me about times you visited places like {place_name}",
+                        "What does this place remind you of?",
+                        "Have you been to similar places before?"
+                    ]
+                
+                return {
+                    "title": f"Remember: {place_name}",
+                    "description": place_description,
+                    "conversation_starters": conversation_starters[:3],  # Limit to 3
+                    "photo_url": place_analysis_data.get("photo_url", ""),
+                    "vision_details": {
+                        "architectural_features": architectural_details,
+                        "atmosphere": atmosphere_description,
+                        "labels": vision_analysis.get("labels", [])[:5]  # Top 5 labels
+                    },
+                    "source": "photo_analysis_fixed"
+                }
             
             # Fallback to hometown memory
             primary_location = location_info.get("primary_location", "your hometown")
