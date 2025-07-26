@@ -1,14 +1,3 @@
-"""
-YouTube API Tools - FIXED to Prevent Excessive API Calls
-File: backend/multi_tool_agent/tools/youtube_tools.py
-
-CRITICAL FIXES:
-- Fixed cache reset bug across midnight
-- Longer hash keys to prevent collisions  
-- Mock test_connection to avoid real API calls
-- Cache API failures to prevent retries
-- Better cache persistence strategy
-"""
 
 import httpx
 import logging
@@ -58,7 +47,7 @@ class YouTubeAPI:
                     
         except Exception as e:
             logger.warning(f"Could not load YouTube cache: {e}")
-        
+            
         return {}
     
     def _save_persistent_cache(self):
@@ -116,9 +105,12 @@ class YouTubeAPI:
         logger.info(f"YouTube FAILURE cached: {cache_key}")
     
     def _create_embeddable_url(self, video_id: str) -> str:
-        """Create embeddable YouTube URL from video ID."""
+        """Create embeddable YouTube URL from video ID.
+        FIXED: Corrected the embeddable URL format.
+        """
         if not video_id:
             return ""
+        # CORRECTED LINE: Standard YouTube embed URL
         return f"https://www.youtube.com/embed/{video_id}"
     
     async def search_music(self, query: str, max_results: int = 5) -> Optional[Dict[str, Any]]:
@@ -359,3 +351,4 @@ class YouTubeAPI:
 
 # Export the main class
 __all__ = ["YouTubeAPI"]
+

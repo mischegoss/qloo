@@ -1,5 +1,5 @@
 """
-Enhanced Mobile Synthesizer Agent - FIXED DATA UNWRAPPING + YOUTUBE URLs FROM AGENT 4
+Enhanced Mobile Synthesizer Agent - FIXED DATA UNWRAPPING + YOUTUBE URLs + RANDOM SELECTION
 File: backend/multi_tool_agent/agents/mobile_synthesizer_agent.py
 
 CRITICAL FIX:
@@ -12,6 +12,11 @@ YOUTUBE URL FIX:
 - Now receives YouTube URLs from Agent 4's sensory content structure
 - Prioritizes sensory content (with YouTube URLs) over qloo_intelligence
 - Maintains fallback to qloo_intelligence if sensory content unavailable
+
+RANDOM SELECTION FIX:
+- Uses random.choice() instead of always selecting [0]
+- Shows variety in music and TV content on each refresh
+- Perfect for demo purposes
 """
 
 import logging
@@ -26,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class MobileSynthesizerAgent:
     """
-    Agent 6: Enhanced Mobile Synthesizer with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4
+    Agent 6: Enhanced Mobile Synthesizer with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4 + RANDOM SELECTION
     
     CRITICAL FIX:
     - Unwraps double-wrapped qloo_intelligence data structure
@@ -37,20 +42,24 @@ class MobileSynthesizerAgent:
     YOUTUBE URL FIX:
     - Now receives YouTube URLs from Agent 4's sensory content
     - Prioritizes sensory content over qloo_intelligence for URLs
+    
+    RANDOM SELECTION FIX:
+    - Uses random.choice() instead of [0] for music and TV selection
+    - Shows variety on each dashboard refresh
     """
     
     def __init__(self):
         # Load fallback data for robust operation
         self.fallback_data = self._load_fallback_data()
-        logger.info("✅ Mobile Synthesizer initialized with LOCAL MEMORY card support + YouTube URLs from Agent 4")
+        logger.info("✅ Mobile Synthesizer initialized with LOCAL MEMORY card support + YouTube URLs from Agent 4 + RANDOM SELECTION")
     
     def _load_fallback_data(self) -> Dict[str, Any]:
         """Load fallback data for when API calls fail."""
         try:
             fallback_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "data", "fallback_content.json"
-)
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "data", "fallback_content.json"
+            )
             
             if os.path.exists(fallback_path):
                 with open(fallback_path, 'r', encoding='utf-8') as f:
@@ -120,10 +129,10 @@ class MobileSynthesizerAgent:
                   sensory_content: Dict[str, Any],
                   photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Enhanced synthesis with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4
+        Enhanced synthesis with CRITICAL DATA UNWRAPPING FIX + YouTube URLs from Agent 4 + RANDOM SELECTION
         """
         
-        logger.info("📱 Agent 6: Starting enhanced mobile synthesis with Local Memory card + YouTube URLs")
+        logger.info("📱 Agent 6: Starting enhanced mobile synthesis with Local Memory card + YouTube URLs + RANDOM SELECTION")
         
         # COMPREHENSIVE INPUT DEBUGGING
         logger.info("🔍 DEBUGGING AGENT 6 INPUTS:")
@@ -178,14 +187,14 @@ class MobileSynthesizerAgent:
                                             current_theme: Dict[str, Any],
                                             location_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize complete dashboard with FIXED data unwrapping + YouTube URLs from Agent 4
+        Synthesize complete dashboard with FIXED data unwrapping + YouTube URLs from Agent 4 + RANDOM SELECTION
         """
         
-        logger.info("🎨 Synthesizing complete 4-card dashboard with YouTube URLs from Agent 4")
+        logger.info("🎨 Synthesizing complete 4-card dashboard with YouTube URLs from Agent 4 + RANDOM SELECTION")
         
         try:
-            # Process all content types with FIXED data unwrapping + YouTube URLs
-            logger.info("🔍 Starting content selection with FIXED unwrapping + YouTube URLs...")
+            # Process all content types with FIXED data unwrapping + YouTube URLs + RANDOM SELECTION
+            logger.info("🔍 Starting content selection with FIXED unwrapping + YouTube URLs + RANDOM SELECTION...")
             
             selected_content = {
                 "music": self._select_music_content(sensory_content, qloo_intelligence, current_theme),
@@ -199,7 +208,7 @@ class MobileSynthesizerAgent:
             theme_description = current_theme.get("description", "A special theme for today")
             
             # Log selected content for verification
-            logger.info("🔍 FINAL SELECTED CONTENT (WITH YouTube URLs):")
+            logger.info("🔍 FINAL SELECTED CONTENT (WITH YouTube URLs + RANDOM SELECTION):")
             logger.info(f"🎵 Music: {selected_content['music']['artist']} - {selected_content['music']['song']} (source: {selected_content['music']['source']}) (YouTube: {bool(selected_content['music'].get('youtube_url'))})")
             logger.info(f"📺 TV Show: {selected_content['tv_show']['name']} (source: {selected_content['tv_show']['source']}) (YouTube: {bool(selected_content['tv_show'].get('youtube_url'))})")
             logger.info(f"🍽️ Recipe: {selected_content['recipe']['name']} (source: {selected_content['recipe']['source']})")
@@ -247,7 +256,7 @@ class MobileSynthesizerAgent:
                 "success": True,
                 "dashboard_content": dashboard_content,
                 "dashboard_metadata": dashboard_metadata,
-                "synthesis_approach": "enhanced_local_memory_with_critical_data_unwrapping_fix_and_youtube_urls"
+                "synthesis_approach": "enhanced_local_memory_with_critical_data_unwrapping_fix_and_youtube_urls_and_random_selection"
             }
             
         except Exception as e:
@@ -256,8 +265,8 @@ class MobileSynthesizerAgent:
             return self._generate_fallback_dashboard(current_theme, location_info)
     
     def _select_music_content(self, sensory_content: Dict[str, Any], qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select music content from sensory content (with YouTube URLs) first, fallback to Qloo intelligence"""
-        logger.info("🎵 Extracting music content - prioritizing sensory content (with YouTube URLs)")
+        """Select music content with RANDOM SELECTION instead of always first"""
+        logger.info("🎵 Extracting music content - with RANDOM SELECTION")
         
         # PRIORITY 1: Try to get music from sensory content (Agent 4) with YouTube URLs
         try:
@@ -268,12 +277,13 @@ class MobileSynthesizerAgent:
             logger.info(f"🔍 Found {len(auditory_elements)} auditory elements in sensory content")
             
             if auditory_elements and len(auditory_elements) > 0:
-                selected_music = auditory_elements[0]
+                # RANDOM SELECTION FIX: Use random.choice() instead of [0]
+                selected_music = random.choice(auditory_elements)
+                
                 artist_name = selected_music.get("name", selected_music.get("artist", "Unknown Artist"))
                 youtube_url = selected_music.get("youtube_url", "")
                 
-                logger.info(f"✅ PRIORITY 1: Selected music from Agent 4 sensory content: {artist_name}")
-                logger.info(f"🎬 YouTube URL available: {bool(youtube_url)}")
+                logger.info(f"✅ RANDOM: Selected music: {artist_name} (from {len(auditory_elements)} options)")
                 
                 return {
                     "artist": artist_name,
@@ -301,9 +311,11 @@ class MobileSynthesizerAgent:
             logger.info(f"🔍 Found {len(entities)} artists in Qloo results")
             
             if entities and len(entities) > 0:
-                selected_artist = entities[0]
+                # RANDOM SELECTION FIX: Use random.choice() instead of [0]
+                selected_artist = random.choice(entities)
+                
                 artist_name = selected_artist.get("name", "Unknown Artist")
-                logger.info(f"✅ PRIORITY 2: Selected artist from Qloo: {artist_name}")
+                logger.info(f"✅ RANDOM: Selected Qloo artist: {artist_name} (from {len(entities)} options)")
                 
                 # Create a representative song title
                 song_title = "Greatest Hits"
@@ -324,9 +336,14 @@ class MobileSynthesizerAgent:
         except Exception as e:
             logger.error(f"❌ Error selecting music content from Qloo: {e}")
         
-        # PRIORITY 3: Final fallback
+        # PRIORITY 3: Final fallback (random from fallback too!)
         logger.info("🔄 Using fallback music content")
-        fallback_music = self.fallback_data.get("music", [{}])[0]
+        fallback_music_list = self.fallback_data.get("music", [])
+        if fallback_music_list:
+            fallback_music = random.choice(fallback_music_list)
+        else:
+            fallback_music = {}
+            
         return {
             "artist": fallback_music.get("artist", "Classic Artist"), 
             "song": fallback_music.get("song", "Timeless Song"),
@@ -337,8 +354,8 @@ class MobileSynthesizerAgent:
         }
     
     def _select_tv_content(self, sensory_content: Dict[str, Any], qloo_intelligence: Dict[str, Any], current_theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Select TV content from sensory content (with YouTube URLs) first, fallback to Qloo intelligence"""
-        logger.info("📺 Extracting TV content - prioritizing sensory content (with YouTube URLs)")
+        """Select TV content with RANDOM SELECTION instead of always first"""
+        logger.info("📺 Extracting TV content - with RANDOM SELECTION")
         
         # PRIORITY 1: Try to get TV content from sensory content (Agent 4) with YouTube URLs
         try:
@@ -349,12 +366,13 @@ class MobileSynthesizerAgent:
             logger.info(f"🔍 Found {len(visual_elements)} visual elements in sensory content")
             
             if visual_elements and len(visual_elements) > 0:
-                selected_tv = visual_elements[0]
+                # RANDOM SELECTION FIX: Use random.choice() instead of [0]
+                selected_tv = random.choice(visual_elements)
+                
                 show_name = selected_tv.get("name", "Classic Television")
                 youtube_url = selected_tv.get("youtube_url", "")
                 
-                logger.info(f"✅ PRIORITY 1: Selected TV show from Agent 4 sensory content: {show_name}")
-                logger.info(f"🎬 YouTube URL available: {bool(youtube_url)}")
+                logger.info(f"✅ RANDOM: Selected TV show: {show_name} (from {len(visual_elements)} options)")
                 
                 return {
                     "name": show_name,
@@ -381,9 +399,11 @@ class MobileSynthesizerAgent:
             logger.info(f"🔍 Found {len(tv_shows)} TV shows in Qloo results")
             
             if tv_shows and len(tv_shows) > 0:
-                selected_show = tv_shows[0]
+                # RANDOM SELECTION FIX: Use random.choice() instead of [0]
+                selected_show = random.choice(tv_shows)
+                
                 show_name = selected_show.get("name", "Classic Television")
-                logger.info(f"✅ PRIORITY 2: Selected TV show from Qloo: {show_name}")
+                logger.info(f"✅ RANDOM: Selected TV show: {show_name} (from {len(tv_shows)} options)")
                 
                 return {
                     "name": show_name,
@@ -397,9 +417,14 @@ class MobileSynthesizerAgent:
         except Exception as e:
             logger.error(f"❌ Error selecting TV content from Qloo: {e}")
         
-        # PRIORITY 3: Final fallback
+        # PRIORITY 3: Final fallback (random from fallback too!)
         logger.info("🔄 Using fallback TV content")
-        fallback_tv = self.fallback_data.get("tv_shows", [{}])[0]
+        fallback_tv_list = self.fallback_data.get("tv_shows", [])
+        if fallback_tv_list:
+            fallback_tv = random.choice(fallback_tv_list)
+        else:
+            fallback_tv = {}
+            
         return {
             "name": fallback_tv.get("name", "Classic Television"),
             "youtube_url": fallback_tv.get("youtube_url", ""),
@@ -501,35 +526,33 @@ class MobileSynthesizerAgent:
                     conversation_starters = [
                         f"Tell me about times you visited places like {place_name}",
                         "What does this place remind you of?",
-                        "Have you been to similar places before?"
+                        "What stories does this place hold?"
                     ]
                 
                 return {
-                    "title": f"Remember: {place_name}",
+                    "title": place_name,
                     "description": place_description,
-                    "conversation_starters": conversation_starters[:3],  # Limit to 3
-                    "photo_url": place_analysis_data.get("photo_url", ""),
-                    "vision_details": {
-                        "architectural_features": architectural_details,
-                        "atmosphere": atmosphere_description,
-                        "labels": vision_analysis.get("labels", [])[:5]  # Top 5 labels
-                    },
-                    "source": "photo_analysis_fixed"
+                    "conversation_starters": conversation_starters,
+                    "source": "photo_analysis_place"
                 }
-            
-            # Fallback to hometown memory
+                
+        except Exception as e:
+            logger.warning(f"Error extracting place content from photo analysis: {e}")
+        
+        # Fallback: Try to use location info
+        try:
+            location_type = location_info.get("type", "hometown")
             primary_location = location_info.get("primary_location", "your hometown")
-            location_type = location_info.get("location_type", "legacy_location")
             
-            logger.info(f"🏡 Creating hometown memory card for: {primary_location}")
+            logger.info(f"🔄 Using location info fallback: {primary_location}")
             
-            # Create themed conversation starters based on current theme
+            # Create theme-appropriate conversation starters
             theme_name = current_theme.get("name", "").lower()
             if "family" in theme_name:
                 conversation_starters = [
-                    f"Tell me about your family life in {primary_location}",
-                    "What family traditions did you have growing up?",
-                    "Who were your neighbors when you lived there?"
+                    f"Tell me about family gatherings in {primary_location}",
+                    "What family memories do you have from there?",
+                    "Who were your neighbors and friends?"
                 ]
             elif "memory" in theme_name or "lane" in theme_name:
                 conversation_starters = [
