@@ -1,12 +1,11 @@
 """
-Enhanced Google Gemini AI Tools with Daily Caching - RATE LIMITING SOLUTION
+Enhanced Google Gemini AI Tools - Caching Removed for Hackathon Demo
 File: backend/multi_tool_agent/tools/gemini_tools.py
 
-FIXES:
-- Daily caching using in-memory dictionary
-- Cache keys based on daily seed + heritage + recipe
-- Immediate cache returns to avoid API calls
-- Graceful fallback to base recipes if rate limited
+CHANGES:
+- Removed all daily caching logic
+- Direct API calls every time
+- Removed cache management methods
 """
 
 import httpx
@@ -21,335 +20,321 @@ logger = logging.getLogger(__name__)
 
 class GeminiRecipeGenerator:
     """
-    Google Gemini AI tool with daily caching to prevent rate limiting.
+    Google Gemini AI tool without caching.
     """
     
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
         
-        # DAILY CACHE - Reset each day automatically
-        self._daily_cache = {}
-        self._cache_date = None
-        
-        logger.info("Gemini AI tool initialized with daily caching")
-    
-    def _get_daily_seed(self) -> str:
-        """Get daily seed for cache consistency."""
-        today = date.today()
-        return f"{today.year}-{today.month}-{today.day}"
-    
-    def _get_cache_key(self, heritage: str, recipe_name: str) -> str:
-        """Generate cache key for daily consistency."""
-        daily_seed = self._get_daily_seed()
-        # Create short hash to avoid key length issues
-        content_hash = hashlib.md5(f"{heritage}_{recipe_name}".lower().encode()).hexdigest()[:8]
-        return f"{daily_seed}_recipe_{content_hash}"
-    
-    def _check_and_update_daily_cache(self):
-        """Reset cache if new day."""
-        today = date.today()
-        if self._cache_date != today:
-            logger.info("New day detected - clearing Gemini cache")
-            self._daily_cache = {}
-            self._cache_date = today
-    
-    def _get_from_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
-        """Get result from daily cache."""
-        self._check_and_update_daily_cache()
-        result = self._daily_cache.get(cache_key)
-        if result:
-            logger.info(f"Gemini cache HIT: {cache_key}")
-            return result
-        return None
-    
-    def _store_in_cache(self, cache_key: str, result: Dict[str, Any]):
-        """Store result in daily cache."""
-        self._check_and_update_daily_cache()
-        self._daily_cache[cache_key] = result
-        logger.info(f"Gemini cache STORED: {cache_key}")
+        logger.info("Gemini AI tool initialized without caching")
     
     def _get_dementia_recipe_schema(self) -> Dict[str, Any]:
         """
         Define the JSON schema for dementia-optimized recipes.
         This ensures Gemini returns exactly the structure we need.
         """
-        
         return {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Recipe name starting with 'Simple [Heritage] [Dish Name]'"
-                },
-                "description": {
-                    "type": "string", 
-                    "description": "One sentence about comfort, familiarity, and memory connection"
+                    "description": "Recipe name that's culturally relevant and appealing"
                 },
                 "total_time": {
-                    "type": "string",
-                    "description": "Maximum 25 minutes including rest breaks"
-                },
-                "difficulty": {
-                    "type": "string",
-                    "enum": ["very_easy"],
-                    "description": "Always 'very_easy' for dementia care"
+                    "type": "string", 
+                    "description": "Total cooking time (e.g., '15 minutes', '1 hour')"
                 },
                 "ingredients": {
                     "type": "array",
-                    "maxItems": 5,
                     "items": {
                         "type": "object",
                         "properties": {
-                            "item": {
-                                "type": "string",
-                                "description": "Exact ingredient name"
-                            },
-                            "amount": {
-                                "type": "string", 
-                                "description": "Precise measurement (1 cup, 2 tablespoons)"
-                            },
+                            "amount": {"type": "string"},
+                            "item": {"type": "string"},
                             "location": {
                                 "type": "string",
-                                "description": "Where to find it (pantry, refrigerator)"
+                                "enum": ["pantry", "refrigerator", "freezer", "spice_rack", "fresh"]
                             },
                             "safety_note": {
                                 "type": "string",
-                                "description": "Safety tip for this ingredient"
+                                "description": "Safety guidance for dementia patients if needed"
                             }
                         },
-                        "required": ["item", "amount", "location", "safety_note"]
+                        "required": ["amount", "item", "location"]
                     }
                 },
                 "instructions": {
                     "type": "array",
-                    "maxItems": 6,
                     "items": {
-                        "type": "object",
+                        "type": "object", 
                         "properties": {
-                            "step": {
-                                "type": "integer",
-                                "description": "Step number"
-                            },
-                            "instruction": {
+                            "step": {"type": "integer"},
+                            "instruction": {"type": "string"},
+                            "safety_note": {"type": "string"},
+                            "difficulty": {
                                 "type": "string",
-                                "description": "Clear, simple instruction"
-                            },
-                            "time": {
-                                "type": "string",
-                                "description": "Time for this step"
-                            },
-                            "what_to_look_for": {
-                                "type": "string",
-                                "description": "Visual or sensory cues"
-                            },
-                            "safety_note": {
-                                "type": "string",
-                                "description": "Safety reminder for this step"
+                                "enum": ["easy", "moderate"] 
                             }
                         },
-                        "required": ["step", "instruction", "time", "what_to_look_for", "safety_note"]
+                        "required": ["step", "instruction", "difficulty"]
                     }
                 },
-                "caregiver_notes": {
+                "conversation_starters": {
                     "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Tips for caregivers"
+                    "items": {"type": "string"},
+                    "description": "3-5 conversation prompts related to the recipe"
                 },
-                "dementia_optimized": {
-                    "type": "boolean",
-                    "description": "Always true for dementia care recipes"
+                "cultural_significance": {
+                    "type": "string",
+                    "description": "Why this recipe connects to the person's heritage"
+                },
+                "dementia_adaptations": {
+                    "type": "array", 
+                    "items": {"type": "string"},
+                    "description": "Specific adaptations for dementia patients"
                 }
             },
-            "required": ["name", "description", "total_time", "difficulty", "ingredients", "instructions", "caregiver_notes", "dementia_optimized"]
+            "required": ["name", "total_time", "ingredients", "instructions", "conversation_starters", "cultural_significance"]
         }
     
-    async def generate_recipe(self, prompt: str, heritage: str = "American", base_recipe_name: str = "comfort_food") -> Optional[Dict[str, Any]]:
+    def _create_recipe_prompt(self, cultural_heritage: str, recipe_name: str, theme_context: str = "") -> str:
         """
-        Generate a dementia-optimized recipe with daily caching to prevent rate limiting.
-        
-        Args:
-            prompt: Recipe generation prompt with dementia-specific requirements
-            heritage: Heritage for cache key generation
-            base_recipe_name: Base recipe name for cache key generation
-            
-        Returns:
-            Structured recipe data or None if failed
+        Create a comprehensive prompt for Gemini recipe generation.
         """
         
-        # Check cache first
-        cache_key = self._get_cache_key(heritage, base_recipe_name)
-        cached_result = self._get_from_cache(cache_key)
-        if cached_result:
-            return cached_result
+        base_prompt = f"""
+Create a culturally authentic {cultural_heritage} recipe for "{recipe_name}" that's specifically adapted for someone with dementia.
+
+CRITICAL REQUIREMENTS:
+- Must be from {cultural_heritage} culinary tradition
+- Steps must be simple and clear for dementia patients
+- Include safety considerations for cognitive impairment
+- 5 ingredients maximum for simplicity
+- Cooking time under 30 minutes preferred
+- Include conversation starters about cultural memories
+
+THEME CONTEXT: {theme_context}
+
+DEMENTIA-SPECIFIC ADAPTATIONS REQUIRED:
+- Clear, numbered steps
+- Safety warnings where needed
+- Simple ingredient list with locations (pantry, refrigerator, etc.)
+- Conversation prompts to trigger positive memories
+- Cultural significance explanation
+
+Return ONLY valid JSON matching this exact schema:
+{json.dumps(self._get_dementia_recipe_schema(), indent=2)}
+
+EXAMPLE INGREDIENT FORMAT:
+"ingredients": [
+  {
+    "amount": "2 cups",
+    "item": "all-purpose flour",
+    "location": "pantry",
+    "safety_note": "Check expiration date"
+  }
+]
+
+EXAMPLE INSTRUCTION FORMAT:
+"instructions": [
+  {
+    "step": 1,
+    "instruction": "Preheat oven to 350°F",
+    "difficulty": "easy",
+    "safety_note": "Ask for help with oven if needed"
+  }
+]
+
+Generate the recipe now:
+"""
+        return base_prompt.strip()
+    
+    async def generate_cultural_recipe(self, 
+                                       cultural_heritage: str, 
+                                       recipe_name: str,
+                                       theme_context: str = "") -> Optional[Dict[str, Any]]:
+        """
+        Generate a culturally relevant, dementia-optimized recipe using Gemini AI.
+        """
         
         try:
-            logger.info(f"Generating recipe with Gemini 2.5 Flash (LIVE API): {heritage} {base_recipe_name}")
+            logger.info(f"Gemini recipe generation (LIVE API): {cultural_heritage} - {recipe_name}")
             
-            # Use gemini-2.5-flash model with structured output
-            url = f"{self.base_url}/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+            prompt = self._create_recipe_prompt(cultural_heritage, recipe_name, theme_context)
             
             payload = {
-                "contents": [{
-                    "parts": [{
-                        "text": prompt
-                    }]
-                }],
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
                 "generationConfig": {
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 4096,
-                    "response_mime_type": "application/json",
-                    "response_schema": self._get_dementia_recipe_schema()
-                },
-                "safetySettings": [
-                    {
-                        "category": "HARM_CATEGORY_HARASSMENT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_HATE_SPEECH", 
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                    }
-                ]
+                    "maxOutputTokens": 2048,
+                    "response_mime_type": "application/json"
+                }
             }
             
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            url = f"{self.base_url}/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+            
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(url, json=payload)
+                response = await client.post(url, json=payload, headers=headers)
                 
-                if response.status_code == 429:
-                    logger.error("Gemini API rate limit exceeded - returning None")
-                    return None
+                if response.status_code == 200:
+                    result = response.json()
                     
-                response.raise_for_status()
-                
-                result = response.json()
-                logger.info("Gemini API response received successfully")
-                
-                # Check if we have candidates
-                if not result.get("candidates"):
-                    logger.error("No candidates in Gemini response")
-                    return None
-                
-                candidate = result["candidates"][0]
-                
-                # Check for safety blocks or rate limits
-                if candidate.get("finishReason") == "SAFETY":
-                    logger.warning("Recipe generation blocked by Gemini safety filters")
-                    return None
-                
-                # Check for max tokens reached
-                if candidate.get("finishReason") == "MAX_TOKENS":
-                    logger.warning("Recipe generation hit token limit - response may be truncated")
-                
-                # Check for parts
-                if not candidate["content"].get("parts"):
-                    logger.error("No content parts in Gemini response")
-                    return None
-                
-                # Extract JSON content directly
-                json_content = candidate["content"]["parts"][0].get("text", "")
-                
-                if not json_content:
-                    logger.error("No text content in Gemini response")
-                    return None
-                
-                # Enhanced JSON parsing with better error handling
-                try:
-                    # Clean up any potential formatting issues
-                    json_content = json_content.strip()
-                    
-                    # Check if JSON is complete
-                    if not json_content.endswith('}'):
-                        logger.warning("JSON response appears to be truncated")
+                    # Extract the generated content
+                    if "candidates" in result and len(result["candidates"]) > 0:
+                        content = result["candidates"][0]["content"]["parts"][0]["text"]
                         
-                        # Try to fix common truncation issues
-                        if json_content.endswith('",'):
-                            json_content = json_content[:-1] + '"'
-                        elif json_content.endswith(','):
-                            json_content = json_content[:-1]
-                        
-                        # Try to close the JSON properly
-                        if not json_content.endswith('}'):
-                            open_braces = json_content.count('{')
-                            close_braces = json_content.count('}')
+                        try:
+                            # Parse the JSON response
+                            recipe_data = json.loads(content)
+                            logger.info(f"✅ Gemini recipe generated successfully: {recipe_data.get('name', 'Unknown')}")
                             
-                            for _ in range(open_braces - close_braces):
-                                json_content += '}'
-                    
-                    recipe_data = json.loads(json_content)
-                    logger.info("✅ Successfully parsed structured JSON recipe")
-                    
-                    # Validate required fields
-                    required_fields = ["name", "ingredients", "instructions"]
-                    if all(field in recipe_data for field in required_fields):
-                        logger.info(f"✅ Recipe validation passed: {recipe_data.get('name')}")
-                        
-                        # Store in cache before returning
-                        self._store_in_cache(cache_key, recipe_data)
-                        return recipe_data
+                            return recipe_data
+                            
+                        except json.JSONDecodeError as e:
+                            logger.error(f"❌ Failed to parse Gemini JSON response: {e}")
+                            logger.error(f"Raw content: {content[:200]}...")
+                            return None
                     else:
-                        missing_fields = [f for f in required_fields if f not in recipe_data]
-                        logger.warning(f"Recipe missing required fields: {missing_fields}")
+                        logger.error("❌ No content in Gemini response")
                         return None
-                        
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response: {e}")
+                else:
+                    logger.error(f"❌ Gemini API error: {response.status_code}")
+                    logger.error(f"Response: {response.text}")
                     return None
-                
+                    
         except httpx.TimeoutException:
-            logger.error("Gemini API request timed out")
+            logger.error("❌ Gemini API timeout")
             return None
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 429:
-                logger.error("Gemini API rate limit exceeded")
-            else:
-                logger.error(f"Gemini API HTTP error: {e.response.status_code}")
-            return None  
         except Exception as e:
-            logger.error(f"Gemini recipe generation exception: {e}")
+            logger.error(f"❌ Gemini recipe generation failed: {e}")
             return None
     
-    async def test_connection(self) -> bool:
-        """Test the Gemini API connection with a simple cached request."""
-        
-        try:
-            simple_prompt = """Create a very simple 2-ingredient comfort food recipe suitable for dementia care. 
-            Focus on safety and simplicity with exact measurements and clear visual cues."""
-            
-            result = await self.generate_recipe(simple_prompt, "test", "connection_test")
-            
-            if result and isinstance(result, dict) and result.get("name"):
-                logger.info("Gemini connection test successful")
-                return True
-            else:
-                logger.error("Gemini test failed - no valid recipe returned")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Gemini connection test failed: {e}")
-            return False
-    
-    def get_cache_stats(self) -> Dict[str, Any]:
-        """Get cache statistics for debugging."""
-        self._check_and_update_daily_cache()
+    def _get_fallback_recipes(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Fallback recipes for when Gemini API fails.
+        """
         return {
-            "cache_size": len(self._daily_cache),
-            "cache_date": str(self._cache_date),
-            "daily_seed": self._get_daily_seed(),
-            "cached_keys": list(self._daily_cache.keys())
+            "italian-american": {
+                "name": "Simple Italian-American Mozzarella Toast",
+                "total_time": "5 minutes",
+                "ingredients": [
+                    {
+                        "amount": "2 slices",
+                        "item": "Italian bread",
+                        "location": "pantry",
+                        "safety_note": "Check for mold before using"
+                    },
+                    {
+                        "amount": "4 slices",
+                        "item": "fresh mozzarella",
+                        "location": "refrigerator"
+                    }
+                ],
+                "instructions": [
+                    {
+                        "step": 1,
+                        "instruction": "Toast bread lightly",
+                        "difficulty": "easy",
+                        "safety_note": "Watch toaster carefully"
+                    },
+                    {
+                        "step": 2,
+                        "instruction": "Place mozzarella on warm toast",
+                        "difficulty": "easy"
+                    }
+                ],
+                "conversation_starters": [
+                    "Did you ever make this with your family?",
+                    "What's your favorite Italian bread?",
+                    "Do you remember the smell of fresh mozzarella?"
+                ],
+                "cultural_significance": "A simple comfort food from Italian-American tradition",
+                "dementia_adaptations": ["Very simple preparation", "Familiar ingredients", "Quick to make"]
+            },
+            "general": {
+                "name": "Warm Comfort Toast",
+                "total_time": "3 minutes", 
+                "ingredients": [
+                    {
+                        "amount": "1 slice",
+                        "item": "bread",
+                        "location": "pantry"
+                    },
+                    {
+                        "amount": "1 tbsp",
+                        "item": "butter",
+                        "location": "refrigerator"
+                    }
+                ],
+                "instructions": [
+                    {
+                        "step": 1,
+                        "instruction": "Toast bread until golden",
+                        "difficulty": "easy"
+                    },
+                    {
+                        "step": 2,
+                        "instruction": "Spread butter while warm",
+                        "difficulty": "easy"
+                    }
+                ],
+                "conversation_starters": [
+                    "What kind of bread did you eat growing up?",
+                    "Do you like your toast light or dark?",
+                    "Did you ever make breakfast for your family?"
+                ],
+                "cultural_significance": "A universal comfort food that brings warmth and familiarity",
+                "dementia_adaptations": ["Extremely simple", "Familiar process", "Comforting smell and taste"]
+            }
         }
+    
+    async def get_recipe_suggestion(self, cultural_heritage: str, theme_context: str = "") -> Dict[str, Any]:
+        """
+        Get a recipe suggestion, with fallback to predefined recipes.
+        """
+        
+        # Common recipe names by heritage
+        recipe_suggestions = {
+            "italian-american": ["Pasta with Garlic", "Mozzarella Toast", "Simple Marinara", "Herb Bread"],
+            "irish": ["Soda Bread", "Irish Stew", "Colcannon", "Tea Cake"],
+            "german": ["Apple Strudel", "Sauerbraten", "Potato Salad", "Pretzel Bread"],
+            "mexican": ["Quesadilla", "Rice and Beans", "Tortilla Soup", "Guacamole"],
+            "jewish": ["Matzo Ball Soup", "Challah Bread", "Brisket", "Latkes"],
+            "chinese": ["Fried Rice", "Dumpling Soup", "Tea Eggs", "Steamed Buns"],
+            "general": ["Chicken Soup", "Grilled Cheese", "Apple Pie", "Meatloaf"]
+        }
+        
+        heritage_key = cultural_heritage.lower().replace(" ", "-") if cultural_heritage else "general"
+        recipe_names = recipe_suggestions.get(heritage_key, recipe_suggestions["general"])
+        
+        # Try first recipe name
+        recipe_name = recipe_names[0]
+        
+        # Try Gemini generation
+        gemini_result = await self.generate_cultural_recipe(cultural_heritage, recipe_name, theme_context)
+        
+        if gemini_result:
+            return gemini_result
+        
+        # Fallback to predefined recipes
+        logger.warning(f"⚠️ Gemini failed, using fallback recipe for {heritage_key}")
+        fallback_recipes = self._get_fallback_recipes()
+        return fallback_recipes.get(heritage_key, fallback_recipes["general"])
 
 # Export the main class
 __all__ = ["GeminiRecipeGenerator"]
