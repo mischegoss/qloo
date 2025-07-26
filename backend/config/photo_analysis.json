@@ -1,0 +1,271 @@
+{
+  "photo_analysis_data": {
+    "birthday.png": {
+      "visual_elements": [
+        "birthday_cake",
+        "candles",
+        "celebration",
+        "people",
+        "party_decorations"
+      ],
+      "atmosphere": "joyful, festive, celebratory",
+      "colors": ["warm", "bright", "cheerful"],
+      "objects_detected": ["cake", "candles", "gifts", "decorations", "people"],
+      "emotional_tone": "happiness, celebration, joy",
+      "conversation_starters": [
+        "This looks like a wonderful birthday celebration!",
+        "Tell me about birthday parties you remember",
+        "What kind of birthday cake was your favorite?",
+        "Who made your birthday celebrations special?"
+      ],
+      "cultural_context": "birthday celebrations and milestone moments",
+      "memory_triggers": [
+        "birthday_parties",
+        "celebrations",
+        "cake",
+        "candles",
+        "gifts"
+      ],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "family.png": {
+      "visual_elements": [
+        "family_gathering",
+        "people",
+        "home_setting",
+        "togetherness",
+        "warmth"
+      ],
+      "atmosphere": "warm, loving, connected",
+      "colors": ["warm", "comforting", "homey"],
+      "objects_detected": [
+        "people",
+        "furniture",
+        "home_items",
+        "family_photos"
+      ],
+      "emotional_tone": "love, warmth, belonging",
+      "conversation_starters": [
+        "This reminds me of family gatherings",
+        "Tell me about your family",
+        "What did your family do together?",
+        "Who was the heart of your family?"
+      ],
+      "cultural_context": "family bonds and togetherness",
+      "memory_triggers": ["family_time", "home", "relatives", "gatherings"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "music.png": {
+      "visual_elements": [
+        "musical_instruments",
+        "music_notes",
+        "performance",
+        "dancing",
+        "joy"
+      ],
+      "atmosphere": "rhythmic, melodic, uplifting",
+      "colors": ["vibrant", "energetic", "flowing"],
+      "objects_detected": ["piano", "instruments", "music_sheets", "stage"],
+      "emotional_tone": "joy, rhythm, expression",
+      "conversation_starters": [
+        "Music has such a wonderful way of bringing back memories",
+        "What was your favorite song when you were young?",
+        "Did you ever play an instrument or sing?",
+        "What music did you dance to?"
+      ],
+      "cultural_context": "musical memories and artistic expression",
+      "memory_triggers": ["songs", "dancing", "concerts", "instruments"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "food.png": {
+      "visual_elements": [
+        "cooking",
+        "kitchen",
+        "meals",
+        "ingredients",
+        "sharing"
+      ],
+      "atmosphere": "nourishing, comforting, homey",
+      "colors": ["warm", "appetizing", "rich"],
+      "objects_detected": ["food", "kitchen_utensils", "table", "ingredients"],
+      "emotional_tone": "comfort, nourishment, care",
+      "conversation_starters": [
+        "Food has such a way of bringing back memories",
+        "What was your favorite meal growing up?",
+        "Did you enjoy cooking or baking?",
+        "What foods remind you of home?"
+      ],
+      "cultural_context": "food traditions and cooking memories",
+      "memory_triggers": ["cooking", "recipes", "meals", "kitchen"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "travel.png": {
+      "visual_elements": [
+        "landscapes",
+        "destinations",
+        "adventure",
+        "exploration",
+        "journey"
+      ],
+      "atmosphere": "adventurous, exploring, discovery",
+      "colors": ["diverse", "scenic", "expansive"],
+      "objects_detected": ["scenery", "landmarks", "transportation", "maps"],
+      "emotional_tone": "adventure, wonder, exploration",
+      "conversation_starters": [
+        "This reminds me of wonderful places to visit",
+        "Where did you like to travel?",
+        "Tell me about a memorable trip you took",
+        "What was the most beautiful place you ever saw?"
+      ],
+      "cultural_context": "travel adventures and exploration",
+      "memory_triggers": ["trips", "places", "adventures", "exploration"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "seasons.png": {
+      "visual_elements": [
+        "nature",
+        "seasonal_changes",
+        "weather",
+        "outdoor_scenes",
+        "natural_beauty"
+      ],
+      "atmosphere": "natural, peaceful, changing",
+      "colors": ["seasonal", "natural", "varied"],
+      "objects_detected": ["trees", "weather", "seasons", "nature"],
+      "emotional_tone": "peace, natural_rhythm, beauty",
+      "conversation_starters": [
+        "The changing seasons bring such beautiful memories",
+        "What's your favorite season and why?",
+        "What did you enjoy doing in different seasons?",
+        "Tell me about a perfect weather day you remember"
+      ],
+      "cultural_context": "seasonal memories and nature connection",
+      "memory_triggers": ["seasons", "weather", "nature", "outdoor_activities"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "holidays.png": {
+      "visual_elements": [
+        "holiday_decorations",
+        "celebrations",
+        "traditions",
+        "gathering",
+        "festive"
+      ],
+      "atmosphere": "festive, traditional, joyous",
+      "colors": ["festive", "traditional", "bright"],
+      "objects_detected": [
+        "decorations",
+        "holiday_items",
+        "celebration",
+        "traditions"
+      ],
+      "emotional_tone": "joy, tradition, celebration",
+      "conversation_starters": [
+        "Holiday celebrations create such wonderful memories",
+        "What holidays were special in your family?",
+        "Tell me about your favorite holiday traditions",
+        "How did your family celebrate special occasions?"
+      ],
+      "cultural_context": "holiday traditions and celebrations",
+      "memory_triggers": [
+        "holidays",
+        "traditions",
+        "celebrations",
+        "family_gatherings"
+      ],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "school.png": {
+      "visual_elements": [
+        "classroom",
+        "learning",
+        "books",
+        "education",
+        "youth"
+      ],
+      "atmosphere": "educational, youthful, growing",
+      "colors": ["bright", "learning", "youthful"],
+      "objects_detected": [
+        "books",
+        "classroom",
+        "school_items",
+        "learning_materials"
+      ],
+      "emotional_tone": "learning, growth, youth",
+      "conversation_starters": [
+        "School days hold so many special memories",
+        "Tell me about your school days",
+        "What was your favorite subject in school?",
+        "Did you have a teacher who was special to you?"
+      ],
+      "cultural_context": "educational memories and learning experiences",
+      "memory_triggers": ["school", "learning", "teachers", "classmates"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    },
+    "pets.png": {
+      "visual_elements": [
+        "animals",
+        "pets",
+        "companionship",
+        "care",
+        "affection"
+      ],
+      "atmosphere": "loving, caring, gentle",
+      "colors": ["soft", "gentle", "warm"],
+      "objects_detected": ["pets", "animals", "care_items", "outdoor_scenes"],
+      "emotional_tone": "love, care, companionship",
+      "conversation_starters": [
+        "Animals bring such joy and companionship",
+        "Tell me about pets you've had",
+        "What was your favorite animal growing up?",
+        "Do you have a special pet story to share?"
+      ],
+      "cultural_context": "animal companionship and caring relationships",
+      "memory_triggers": ["pets", "animals", "care", "companionship"],
+      "analysis_confidence": "pre_analyzed",
+      "dementia_friendly": true,
+      "safety_level": "positive_memories"
+    }
+  },
+  "fallback_analysis": {
+    "visual_elements": ["meaningful_scene", "positive_imagery"],
+    "atmosphere": "warm, comforting",
+    "colors": ["soft", "welcoming"],
+    "objects_detected": ["general_scene"],
+    "emotional_tone": "calm, positive",
+    "conversation_starters": [
+      "This image brings back warm memories",
+      "Tell me what this reminds you of",
+      "Share a story this brings to mind"
+    ],
+    "cultural_context": "general positive imagery",
+    "memory_triggers": ["memories", "stories", "experiences"],
+    "analysis_confidence": "fallback",
+    "dementia_friendly": true,
+    "safety_level": "positive_memories"
+  },
+  "metadata": {
+    "total_themes": 9,
+    "analysis_method": "pre_analyzed_dementia_optimized",
+    "safety_level": "dementia_friendly",
+    "all_positive_memories": true,
+    "conversation_focused": true,
+    "cultural_sensitivity": "high"
+  }
+}
