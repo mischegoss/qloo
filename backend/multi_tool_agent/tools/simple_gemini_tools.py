@@ -1,17 +1,18 @@
 """
-Simple General-Purpose Gemini Tool - Fixed File Name
+Enhanced Simple Gemini Tools - Added Cultural Photo Enhancement
 File: backend/multi_tool_agent/tools/simple_gemini_tools.py
 
-PURPOSE:
-- General-purpose Gemini API interface for all agents (4A, 4B, 4C)
-- Simple text generation with bias-prevention rules
-- Designed for music curation, recipe selection, and photo descriptions
-- Backward compatibility with existing GeminiRecipeGenerator expectations
+NEW ADDITION:
+- Added enhance_photo_culturally() method specifically for Agent 4C
+- Integrates Qloo cultural profile with photo descriptions
+- Creates culturally-relevant conversation starters
+- Maintains all existing functionality
 """
 
 import httpx
 import json
 import logging
+import os
 from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger(__name__)
@@ -188,6 +189,84 @@ IMPORTANT:
             logger.error(f"❌ Gemini structured generation failed: {e}")
             return None
     
+    # NEW METHOD: Cultural Photo Enhancement for Agent 4C
+    async def enhance_photo_culturally(self, photo_description: str, heritage: str, 
+                                     birth_year: int, theme: str, patient_name: str = "Friend",
+                                     original_starters: List[str] = None,
+                                     qloo_artists: List[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        NEW METHOD: Enhance photo interactions with cultural context for Agent 4C.
+        
+        Args:
+            photo_description: Google Vision description of the photo
+            heritage: Patient's cultural heritage (e.g., "Italian-American")
+            birth_year: Year patient was born (e.g., 1945)
+            theme: Today's theme (e.g., "Birthday", "Family")
+            patient_name: Patient's first name
+            original_starters: Original conversation starters from JSON
+            qloo_artists: Artists from Qloo for cultural context
+            
+        Returns:
+            Enhanced conversation starters with cultural context
+        """
+        
+        current_age = 2024 - birth_year
+        cultural_context = f"interested in {', '.join(qloo_artists[:2]) if qloo_artists else 'classical music'}"
+        original_text = '\n'.join(f"- {starter}" for starter in (original_starters or []))
+        
+        prompt = f"""
+PHOTO CONTEXT:
+{photo_description}
+
+PATIENT CONTEXT:
+- Name: {patient_name}
+- Cultural Heritage: {heritage}
+- Born: {birth_year} (age {current_age})
+- Cultural interests: {cultural_context}
+- Today's theme: {theme}
+
+ORIGINAL CONVERSATION STARTERS:
+{original_text}
+
+TASK:
+Create 3 culturally-enhanced conversation starters that:
+
+1. Connect this photo to their {heritage} heritage and cultural background
+2. Reference experiences someone born in {birth_year} might have had
+3. Stay gentle, positive, and appropriate for dementia care
+4. Feel personally relevant and culturally meaningful
+5. Build on what's shown in the photo
+
+Make each question specific to their cultural background while staying connected to the photo content.
+Avoid stereotypes - focus on genuine cultural experiences and memories.
+
+Example approach:
+- If Italian + birthday photo → "Did your Italian family sing 'Buon Compleanno' at birthday parties?"
+- If Irish + music photo → "Do you remember Irish folk songs or fiddle music from your childhood?"
+- If Jewish + family photo → "Did your family have special traditions for gatherings?"
+
+IMPORTANT: Keep language simple, warm, and respectful. This is for someone with dementia.
+"""
+        
+        schema = {
+            "enhanced_conversation_starters": [
+                "Cultural question 1 connecting photo to heritage",
+                "Cultural question 2 referencing their generation", 
+                "Cultural question 3 about personal cultural experiences"
+            ],
+            "cultural_connection_summary": "Brief explanation of how this connects to their background",
+            "generation_context": "How this relates to their life experiences from their era"
+        }
+        
+        result = await self.generate_structured_json(prompt, schema)
+        
+        if result:
+            logger.info(f"🤖 ✅ Cultural photo enhancement completed for {heritage} heritage")
+        else:
+            logger.warning(f"🤖 ⚠️ Cultural photo enhancement failed, using fallback")
+        
+        return result
+    
     async def curate_music_selection(self, heritage: str, available_artists: List[str], 
                                    theme: str) -> Optional[Dict[str, Any]]:
         """
@@ -234,7 +313,7 @@ Remember: Choose very familiar classical pieces that bring comfort and happy mem
     
     async def describe_photo(self, theme: str, photo_filename: str) -> Optional[Dict[str, Any]]:
         """
-        Specialized method for photo descriptions (Agent 4C).
+        Specialized method for photo descriptions (Agent 4C fallback).
         
         Args:
             theme: Theme name (e.g., "Birthday", "Memory Lane")
@@ -399,6 +478,19 @@ async def test_simple_gemini():
     )
     
     print(f"Music curation: {music_result}")
+    
+    # NEW: Test cultural photo enhancement
+    photo_result = await gemini.enhance_photo_culturally(
+        photo_description="Children celebrating a birthday party with cake and candles",
+        heritage="Italian-American",
+        birth_year=1945,
+        theme="Birthday",
+        patient_name="Maria",
+        original_starters=["How did you celebrate birthdays?"],
+        qloo_artists=["Vivaldi", "Puccini"]
+    )
+    
+    print(f"Cultural photo enhancement: {photo_result}")
     
     return result is not None
 

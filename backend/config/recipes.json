@@ -1,174 +1,938 @@
 [
   {
-    "name": "Warm Apple Slices",
+    "name": "Microwave Risotto with Parmesan",
     "ingredients": [
-      "1/2 cup canned apple slices (or 1 small apple, peeled, cored, and sliced very thinly)",
-      "Pinch of cinnamon (optional)"
+      "1/2 cup instant rice",
+      "1 cup chicken broth (from carton)",
+      "2 tablespoons grated Parmesan cheese",
+      "1 teaspoon butter"
     ],
     "instructions": [
-      "Place apple slices in a microwave-safe bowl.",
-      "Sprinkle with cinnamon if desired.",
-      "Microwave for 30-45 seconds until warm and slightly softened.",
-      "Let cool slightly before serving."
+      "Combine rice and broth in microwave-safe bowl",
+      "Microwave for 3-4 minutes until rice is tender",
+      "Stir in Parmesan cheese and butter",
+      "Let sit for 2 minutes before serving"
     ],
-    "notes": {
-      "text": "The warm, sweet scent of apples and cinnamon can evoke memories of autumn, holidays, or homemade pies, connecting to seasonal changes and cozy feelings.",
-      "theme": "seasons"
-    },
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Risotto is a beloved Italian comfort food, often made for family gatherings in Northern Italy",
     "conversation_starters": [
-      "What's your favorite season, and why?",
-      "Do you remember picking apples or making apple pie?",
-      "What smells remind you of different seasons?"
-    ]
+      "Did your family make risotto on special occasions?",
+      "Do you remember Italian dishes from your childhood?",
+      "What was your favorite Italian restaurant?"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Microwave Steamed Carrots with Butter",
+    "name": "Irish Soda Bread Mug Cake",
     "ingredients": [
-      "1/2 cup baby carrots (or sliced carrots)",
-      "1/2 teaspoon butter (optional)",
-      "Pinch of salt (optional)"
+      "1/4 cup flour",
+      "1 tablespoon sugar",
+      "1/4 teaspoon baking powder",
+      "2 tablespoons milk",
+      "1 tablespoon raisins"
     ],
     "instructions": [
-      "Place carrots in a microwave-safe bowl with 1-2 tablespoons of water.",
-      "Cover with a microwave-safe plate or plastic wrap (vented).",
-      "Microwave for 2-3 minutes, or until tender.",
-      "Drain excess water. Add butter and salt if desired, and stir gently.",
-      "Let cool slightly before serving."
+      "Mix dry ingredients in a microwave-safe mug",
+      "Add milk and stir until just combined",
+      "Sprinkle raisins on top",
+      "Microwave for 60-90 seconds until risen"
     ],
-    "notes": {
-      "text": "The simple, wholesome nature of cooked carrots can bring to mind basic comforts and perhaps even the treats given to beloved pets.",
-      "theme": "pets"
-    },
+    "heritage_tags": ["irish", "irish-american"],
+    "theme_tags": ["family", "holidays"],
+    "cultural_context": "Soda bread is a traditional Irish staple, often served with tea in Irish households",
     "conversation_starters": [
-      "Tell me about a pet you had. What did they like to eat?",
-      "What was your favorite animal growing up?",
-      "Do you remember any special stories about your pets?"
-    ]
+      "Did you ever have fresh soda bread with tea?",
+      "Tell me about Irish traditions in your family",
+      "Do you remember St. Patrick's Day celebrations?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Warm Berry Compote",
+    "name": "German-Style Warm Potato Salad",
     "ingredients": [
-      "1/2 cup frozen mixed berries",
-      "1 teaspoon sugar (optional)"
+      "1 cup pre-cooked diced potatoes",
+      "1 tablespoon apple cider vinegar",
+      "1 teaspoon mustard",
+      "1 slice pre-cooked bacon, crumbled"
     ],
     "instructions": [
-      "Place frozen berries in a microwave-safe bowl.",
-      "Microwave for 60-90 seconds, stirring halfway through, until berries are warm and saucy.",
-      "Stir in sugar if desired.",
-      "Let cool slightly before serving."
+      "Place potatoes in microwave-safe bowl",
+      "Heat for 1-2 minutes until warm",
+      "Mix in vinegar and mustard",
+      "Top with bacon crumbles"
     ],
-    "notes": {
-      "text": "The bright colors and sweet-tart flavor of berries can evoke festive holiday meals and celebrations.",
-      "theme": "holidays"
-    },
+    "heritage_tags": ["german", "german-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Warm potato salad is a German tradition, especially popular at family gatherings and festivals",
     "conversation_starters": [
-      "What holidays were special in your family?",
-      "Do you remember any special holiday foods or desserts?",
-      "What traditions did you have for holidays?"
-    ]
+      "Did your family make potato salad for picnics?",
+      "Do you remember German foods from your childhood?",
+      "Tell me about family gatherings you enjoyed"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Cream of Wheat (Instant)",
+    "name": "Jewish-Style Matzo Ball Soup (Quick)",
     "ingredients": [
-      "1 packet instant Cream of Wheat (or similar hot cereal)",
-      "1 cup water or milk"
+      "1 cup chicken broth",
+      "2 pre-made mini matzo balls (frozen)",
+      "1 tablespoon chopped carrots (pre-cut)",
+      "Pinch of dill"
     ],
     "instructions": [
-      "Empty contents of packet into a microwave-safe bowl.",
-      "Add water or milk.",
-      "Microwave on high for 60-90 seconds, or until thickened, stirring halfway through.",
-      "Let cool slightly before serving."
+      "Heat broth in microwave-safe bowl for 2 minutes",
+      "Add frozen matzo balls and carrots",
+      "Microwave for another 2-3 minutes",
+      "Sprinkle with dill before serving"
     ],
-    "notes": {
-      "text": "A warm, comforting bowl of cereal is often associated with cozying up indoors during cold weather or enjoying a warm start to a chilly day.",
-      "theme": "weather"
-    },
+    "heritage_tags": ["jewish", "jewish-american", "eastern-european"],
+    "theme_tags": ["family", "holidays"],
+    "cultural_context": "Matzo ball soup is cherished Jewish comfort food, often called 'Jewish penicillin' for its healing properties",
     "conversation_starters": [
-      "What kind of weather do you enjoy the most?",
-      "What did you do on a rainy or snowy day?",
-      "Do you remember a particularly memorable weather event?"
-    ]
+      "Did someone special make matzo ball soup for you?",
+      "Do you remember Jewish holiday meals?",
+      "What comfort foods did your family make when you were sick?"
+    ],
+    "prep_time": "6 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Hard-Boiled Egg (pre-cooked, microwaved to warm)",
-    "ingredients": ["1 pre-cooked, peeled hard-boiled egg"],
-    "instructions": [
-      "Place the hard-boiled egg in a microwave-safe bowl with a small amount of water (just enough to cover the bottom).",
-      "Cover the bowl with a microwave-safe plate or plastic wrap (vented).",
-      "Microwave for 15-20 seconds to warm through. **Do not microwave for too long as eggs can explode.**",
-      "Carefully remove and let cool slightly before serving, perhaps sliced or mashed."
-    ],
-    "notes": {
-      "text": "A simple, nourishing item often found in packed lunches or served in school cafeterias, evoking memories of school days.",
-      "theme": "school"
-    },
-    "conversation_starters": [
-      "What did you eat for lunch at school?",
-      "What was your favorite subject in school?",
-      "Do you remember any of your teachers?"
-    ]
-  },
-  {
-    "name": "Ice Cream Sundae (softened)",
+    "name": "Mexican-Style Rice Bowl",
     "ingredients": [
-      "1/2 cup vanilla ice cream",
-      "1 tablespoon chocolate syrup or fruit topping"
+      "1/2 cup instant rice",
+      "1/2 cup chicken broth",
+      "2 tablespoons salsa (mild)",
+      "1 tablespoon shredded cheese"
     ],
     "instructions": [
-      "Scoop ice cream into a small bowl.",
-      "Microwave for 10-15 seconds to slightly soften (do not melt completely).",
-      "Drizzle with chocolate syrup or fruit topping.",
-      "Serve immediately."
+      "Mix rice and broth in microwave-safe bowl",
+      "Microwave for 3 minutes until rice is tender",
+      "Stir in salsa",
+      "Top with cheese and let melt"
     ],
-    "notes": {
-      "text": "An iconic birthday treat, the sweetness and visual appeal of a sundae can instantly bring to mind birthday celebrations and joyful memories.",
-      "theme": "birthday"
-    },
+    "heritage_tags": ["mexican", "mexican-american", "hispanic"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Rice is a staple in Mexican cuisine, often served as a comforting side dish at family meals",
     "conversation_starters": [
-      "How did you celebrate birthdays when you were young?",
-      "What was your favorite kind of birthday cake?",
-      "Do you remember a special birthday gift?"
-    ]
+      "Did you enjoy Mexican food?",
+      "Do you remember family meals with rice and beans?",
+      "What was your favorite Mexican restaurant?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Plain Oatmeal (Instant)",
-    "ingredients": ["1 packet plain instant oatmeal", "1 cup water or milk"],
+    "name": "Southern-Style Sweet Cornbread Muffin",
+    "ingredients": [
+      "1/4 cup cornmeal",
+      "2 tablespoons flour",
+      "1 tablespoon sugar",
+      "3 tablespoons milk",
+      "1 teaspoon butter"
+    ],
     "instructions": [
-      "Empty contents of packet into a microwave-safe bowl.",
-      "Add water or milk.",
-      "Microwave on high for 60-90 seconds, or until thickened, stirring halfway through.",
-      "Let cool slightly before serving."
+      "Mix dry ingredients in microwave-safe mug",
+      "Add milk and melted butter",
+      "Stir until just combined",
+      "Microwave for 90 seconds until set"
     ],
-    "notes": {
-      "text": "A fundamental comfort food, often a staple in many households, bringing to mind memories of home cooking and familiar flavors.",
-      "theme": "food"
-    },
+    "heritage_tags": ["african-american", "southern", "american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Cornbread is a cornerstone of Southern and African-American cuisine, traditionally served with every meal",
     "conversation_starters": [
-      "What was your favorite food growing up?",
-      "Did you enjoy cooking, or did someone special cook for you?",
-      "What foods remind you most of home?"
-    ]
+      "Did you grow up eating cornbread?",
+      "Do you remember Sunday dinners with cornbread?",
+      "What Southern foods were special in your family?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
   },
   {
-    "name": "Warm Applesauce",
+    "name": "Polish-Style Pierogi Filling Bowl",
+    "ingredients": [
+      "1/2 cup instant mashed potatoes (prepared)",
+      "2 tablespoons cottage cheese",
+      "1 teaspoon butter",
+      "Pinch of onion powder"
+    ],
+    "instructions": [
+      "Prepare instant potatoes according to package",
+      "Mix in cottage cheese and onion powder",
+      "Top with butter",
+      "Microwave for 30 seconds to warm through"
+    ],
+    "heritage_tags": ["polish", "polish-american", "eastern-european"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Pierogi are beloved Polish dumplings, often filled with potato and cheese for family celebrations",
+    "conversation_starters": [
+      "Did your family make pierogi for special occasions?",
+      "Do you remember Polish foods from your childhood?",
+      "Tell me about Polish traditions in your family"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Greek-Style Lemon Rice",
+    "ingredients": [
+      "1/2 cup instant rice",
+      "1/2 cup chicken broth",
+      "1 tablespoon lemon juice",
+      "1 teaspoon olive oil"
+    ],
+    "instructions": [
+      "Combine rice and broth in microwave-safe bowl",
+      "Microwave for 3 minutes until tender",
+      "Stir in lemon juice and olive oil",
+      "Let sit for 1 minute before serving"
+    ],
+    "heritage_tags": ["greek", "greek-american", "mediterranean"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Lemon rice is a simple Greek comfort food, reflecting the Mediterranean love of fresh lemon and olive oil",
+    "conversation_starters": [
+      "Did you enjoy Greek food?",
+      "Do you remember the taste of fresh lemon?",
+      "Have you been to Greek restaurants or festivals?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Chinese-Style Congee (Rice Porridge)",
+    "ingredients": [
+      "1/2 cup instant rice",
+      "1 cup chicken broth",
+      "1 teaspoon soy sauce",
+      "1 green onion, chopped (optional)"
+    ],
+    "instructions": [
+      "Mix rice and broth in microwave-safe bowl",
+      "Microwave for 4-5 minutes, stirring halfway",
+      "Add more broth if needed for porridge consistency",
+      "Stir in soy sauce and top with green onion"
+    ],
+    "heritage_tags": ["chinese", "chinese-american", "asian"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Congee is a traditional Chinese comfort food, often served to children and elderly for its gentle, nourishing qualities",
+    "conversation_starters": [
+      "Did you try Chinese food in your younger days?",
+      "Do you remember Chinatown or Chinese restaurants?",
+      "What new foods did you try when you were young?"
+    ],
+    "prep_time": "6 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "New England Clam Chowder (Instant)",
+    "ingredients": [
+      "1 packet instant clam chowder mix",
+      "1 cup warm milk",
+      "1 tablespoon butter",
+      "1 small oyster cracker packet"
+    ],
+    "instructions": [
+      "Mix chowder packet with warm milk in microwave-safe bowl",
+      "Microwave for 2 minutes, stirring halfway",
+      "Stir in butter until melted",
+      "Serve with oyster crackers"
+    ],
+    "heritage_tags": ["new-england", "american", "coastal"],
+    "theme_tags": ["food", "travel"],
+    "cultural_context": "Clam chowder is a New England tradition, perfect for cold days and coastal memories",
+    "conversation_starters": [
+      "Did you ever visit the ocean or coast?",
+      "Do you remember eating seafood?",
+      "What was your favorite soup on cold days?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Birthday Funfetti Mug Cake",
+    "ingredients": [
+      "1/4 cup vanilla cake mix",
+      "2 tablespoons water",
+      "1 tablespoon rainbow sprinkles",
+      "1 tablespoon vanilla frosting"
+    ],
+    "instructions": [
+      "Mix cake mix and water in microwave-safe mug",
+      "Stir in half the sprinkles",
+      "Microwave for 60-90 seconds until risen",
+      "Top with frosting and remaining sprinkles"
+    ],
+    "heritage_tags": ["american"],
+    "theme_tags": ["birthday"],
+    "cultural_context": "Funfetti cake became an American birthday tradition, bringing joy and color to celebrations",
+    "conversation_starters": [
+      "How did your family celebrate birthdays?",
+      "What was your favorite birthday cake flavor?",
+      "Do you remember blowing out birthday candles?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Warm Applesauce with Cinnamon",
     "ingredients": [
       "1/2 cup unsweetened applesauce",
-      "Pinch of cinnamon (optional)"
+      "1/4 teaspoon cinnamon",
+      "1 teaspoon honey (optional)",
+      "Pinch of nutmeg"
     ],
     "instructions": [
-      "Spoon applesauce into a microwave-safe bowl.",
-      "Microwave for 30-45 seconds until warm.",
-      "Stir in cinnamon if desired.",
-      "Let cool slightly before serving."
+      "Place applesauce in microwave-safe bowl",
+      "Stir in cinnamon and nutmeg",
+      "Microwave for 45 seconds until warm",
+      "Drizzle with honey if desired"
     ],
-    "notes": {
-      "text": "A simple, sweet, and widely available food that might have been part of meals while traveling or visiting new places.",
-      "theme": "travel"
-    },
+    "heritage_tags": ["american", "german-american"],
+    "theme_tags": ["seasons", "food"],
+    "cultural_context": "Warm spiced applesauce is an American comfort food, often made from fall apple harvests",
     "conversation_starters": [
-      "Where did you like to travel?",
-      "What places did you visit that had interesting foods?",
-      "Tell me about a special trip you took."
-    ]
+      "Did you ever pick apples in the fall?",
+      "Do you remember the smell of cinnamon and apples?",
+      "What autumn activities did you enjoy?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Wedding Soup (Quick)",
+    "ingredients": [
+      "1 cup chicken broth",
+      "4-5 frozen mini meatballs",
+      "1 tablespoon small pasta (ditalini or orzo)",
+      "1 tablespoon chopped spinach (frozen)"
+    ],
+    "instructions": [
+      "Heat broth in microwave-safe bowl for 2 minutes",
+      "Add meatballs and pasta",
+      "Microwave for 3-4 minutes until pasta is tender",
+      "Stir in spinach and heat for 30 seconds more"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Italian Wedding Soup is a beloved Italian-American tradition, served at celebrations and family gatherings",
+    "conversation_starters": [
+      "Did you attend Italian weddings or celebrations?",
+      "Do you remember Italian family meals?",
+      "What was your favorite Italian soup or pasta?"
+    ],
+    "prep_time": "7 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "French Toast in a Mug",
+    "ingredients": [
+      "1 slice bread, cubed",
+      "1 egg",
+      "2 tablespoons milk",
+      "1/2 teaspoon vanilla",
+      "Cinnamon and maple syrup"
+    ],
+    "instructions": [
+      "Place bread cubes in microwave-safe mug",
+      "Whisk egg, milk, and vanilla in small bowl",
+      "Pour over bread and let soak for 1 minute",
+      "Microwave for 90 seconds, top with cinnamon and syrup"
+    ],
+    "heritage_tags": ["french", "american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "French toast is a beloved breakfast comfort food, perfect for lazy weekend mornings with family",
+    "conversation_starters": [
+      "Did someone special make you breakfast?",
+      "Do you remember weekend morning meals?",
+      "What was your favorite breakfast as a child?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Scandinavian-Style Creamy Dill Potatoes",
+    "ingredients": [
+      "1 cup pre-cooked baby potatoes",
+      "2 tablespoons sour cream",
+      "1/2 teaspoon dried dill",
+      "Pinch of salt"
+    ],
+    "instructions": [
+      "Heat potatoes in microwave for 1 minute",
+      "Mash slightly with fork",
+      "Mix in sour cream and dill",
+      "Heat for 30 seconds more, season with salt"
+    ],
+    "heritage_tags": ["scandinavian", "norwegian", "swedish"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Dill potatoes are a Scandinavian staple, reflecting the Nordic love of fresh herbs and simple, hearty foods",
+    "conversation_starters": [
+      "Did your family have Scandinavian traditions?",
+      "Do you remember foods with dill or fresh herbs?",
+      "Tell me about your family's heritage"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Puerto Rican-Style Sweet Plantain",
+    "ingredients": [
+      "1/2 ripe banana (as substitute)",
+      "1 teaspoon brown sugar",
+      "1/4 teaspoon cinnamon",
+      "1 teaspoon butter"
+    ],
+    "instructions": [
+      "Slice banana into rounds",
+      "Place in microwave-safe dish with butter",
+      "Sprinkle with brown sugar and cinnamon",
+      "Microwave for 1-2 minutes until caramelized"
+    ],
+    "heritage_tags": ["puerto-rican", "caribbean", "hispanic"],
+    "theme_tags": ["food", "travel"],
+    "cultural_context": "Sweet plantains (plátanos maduros) are a beloved Puerto Rican comfort food, served with many meals",
+    "conversation_starters": [
+      "Did you try Caribbean or tropical foods?",
+      "Do you remember sweet, caramelized flavors?",
+      "Have you traveled to warm, tropical places?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Korean-Style Egg Bowl",
+    "ingredients": [
+      "1 egg",
+      "1/4 cup cooked rice",
+      "1 teaspoon soy sauce",
+      "1/2 teaspoon sesame oil",
+      "Pinch of garlic powder"
+    ],
+    "instructions": [
+      "Beat egg in microwave-safe bowl",
+      "Add rice, soy sauce, and garlic powder",
+      "Microwave for 1-2 minutes, stirring halfway",
+      "Drizzle with sesame oil before serving"
+    ],
+    "heritage_tags": ["korean", "asian"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Simple egg and rice dishes are Korean comfort food, often eaten when feeling under the weather",
+    "conversation_starters": [
+      "Did you try Asian foods in your lifetime?",
+      "Do you remember discovering new cuisines?",
+      "What new foods did you learn to enjoy?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "British-Style Shepherd's Pie Bowl",
+    "ingredients": [
+      "1/4 cup ground meat (pre-cooked)",
+      "2 tablespoons frozen peas",
+      "1/2 cup instant mashed potatoes (prepared)",
+      "1 tablespoon gravy"
+    ],
+    "instructions": [
+      "Heat meat and peas in microwave-safe bowl for 1 minute",
+      "Add gravy and mix",
+      "Top with prepared mashed potatoes",
+      "Microwave for 1-2 minutes until heated through"
+    ],
+    "heritage_tags": ["british", "english", "irish"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Shepherd's pie is a classic British comfort food, originally created to use leftover roast meat",
+    "conversation_starters": [
+      "Did you ever have British or English food?",
+      "Do you remember hearty, warming meals?",
+      "What was your favorite comfort food on cold days?"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Russian-Style Warm Beet Soup",
+    "ingredients": [
+      "1/2 cup canned beet juice",
+      "1/4 cup chicken broth",
+      "1 tablespoon sour cream",
+      "1 teaspoon dill"
+    ],
+    "instructions": [
+      "Mix beet juice and broth in microwave-safe bowl",
+      "Heat for 2 minutes until warm",
+      "Stir in half the sour cream",
+      "Top with remaining sour cream and dill"
+    ],
+    "heritage_tags": ["russian", "eastern-european"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Borscht is a traditional Russian and Eastern European soup, often served with sour cream",
+    "conversation_starters": [
+      "Did your family have Eastern European traditions?",
+      "Do you remember colorful, hearty soups?",
+      "Tell me about foods from your heritage"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Thanksgiving Stuffing Bowl",
+    "ingredients": [
+      "1/2 cup stuffing mix",
+      "1/3 cup warm chicken broth",
+      "1 tablespoon dried cranberries",
+      "1 teaspoon butter"
+    ],
+    "instructions": [
+      "Mix stuffing and broth in microwave-safe bowl",
+      "Let sit for 2 minutes to absorb",
+      "Stir in cranberries and butter",
+      "Microwave for 1-2 minutes until heated"
+    ],
+    "heritage_tags": ["american"],
+    "theme_tags": ["holidays"],
+    "cultural_context": "Thanksgiving stuffing brings back memories of family gatherings and traditional American holidays",
+    "conversation_starters": [
+      "How did your family celebrate Thanksgiving?",
+      "Do you remember big family holiday meals?",
+      "What was your favorite part of Thanksgiving dinner?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Ukrainian-Style Warm Kielbasa Bowl",
+    "ingredients": [
+      "2 slices pre-cooked kielbasa",
+      "1/4 cup sauerkraut",
+      "1 tablespoon mustard",
+      "1 small dinner roll (optional)"
+    ],
+    "instructions": [
+      "Heat kielbasa slices in microwave for 45 seconds",
+      "Heat sauerkraut separately for 30 seconds",
+      "Serve kielbasa with sauerkraut and mustard",
+      "Accompany with dinner roll if desired"
+    ],
+    "heritage_tags": ["ukrainian", "polish", "eastern-european"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Kielbasa and sauerkraut are staples of Ukrainian and Polish cuisine, often served at community gatherings",
+    "conversation_starters": [
+      "Did your family enjoy kielbasa or sausages?",
+      "Do you remember Eastern European foods?",
+      "Tell me about community gatherings you attended"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Pasta e Fagioli (Quick)",
+    "ingredients": [
+      "1/2 cup small pasta (ditalini or elbow)",
+      "1/2 cup canned white beans",
+      "3/4 cup chicken broth",
+      "1 tablespoon tomato sauce",
+      "1 teaspoon Italian seasoning"
+    ],
+    "instructions": [
+      "Combine pasta and broth in microwave-safe bowl",
+      "Microwave for 4-5 minutes until pasta is tender",
+      "Stir in beans, tomato sauce, and Italian seasoning",
+      "Heat for additional 2 minutes, let stand 1 minute"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Pasta e Fagioli is a classic Italian peasant dish, made with love in Italian-American households for generations",
+    "conversation_starters": [
+      "Did your nonna make pasta with beans?",
+      "Do you remember the smell of Italian cooking?",
+      "What was your favorite pasta dish growing up?"
+    ],
+    "prep_time": "7 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Bruschetta Toast Cup",
+    "ingredients": [
+      "1 slice Italian bread, cubed",
+      "2 tablespoons diced tomatoes (canned)",
+      "1 teaspoon olive oil",
+      "1 teaspoon basil",
+      "1 clove garlic powder"
+    ],
+    "instructions": [
+      "Place bread cubes in microwave-safe mug",
+      "Mix tomatoes, olive oil, basil, and garlic powder",
+      "Spoon mixture over bread",
+      "Microwave for 60-90 seconds until bread is warm"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Bruschetta represents the Italian tradition of never wasting bread, turning simple ingredients into delicious food",
+    "conversation_starters": [
+      "Did you enjoy fresh tomatoes and basil?",
+      "Do you remember Italian restaurants with good bread?",
+      "Tell me about summer gardens and fresh vegetables"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Lemon Ricotta Bowl",
+    "ingredients": [
+      "1/2 cup ricotta cheese",
+      "1 tablespoon honey",
+      "1 teaspoon lemon zest",
+      "1 tablespoon crushed amaretti cookies (optional)"
+    ],
+    "instructions": [
+      "Place ricotta in microwave-safe bowl",
+      "Heat for 30 seconds to take off chill",
+      "Stir in honey and lemon zest",
+      "Top with crushed amaretti if available"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Ricotta with honey is a traditional Italian dessert, often enjoyed on special occasions and feast days",
+    "conversation_starters": [
+      "Did your family enjoy Italian sweets?",
+      "Do you remember the taste of fresh ricotta?",
+      "What Italian desserts were special in your family?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Minestrone Cup",
+    "ingredients": [
+      "1/2 cup vegetable broth",
+      "2 tablespoons small pasta",
+      "2 tablespoons mixed vegetables (frozen)",
+      "1 tablespoon tomato sauce",
+      "1 teaspoon Parmesan cheese"
+    ],
+    "instructions": [
+      "Heat broth in microwave-safe mug for 1 minute",
+      "Add pasta and vegetables",
+      "Microwave for 3-4 minutes until pasta is tender",
+      "Stir in tomato sauce and top with Parmesan"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Minestrone is Italy's most famous vegetable soup, with every Italian family having their own special recipe",
+    "conversation_starters": [
+      "Did your family make big pots of vegetable soup?",
+      "Do you remember Italian soups on cold days?",
+      "What vegetables did your family grow or cook with?"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Mexican Street Corn Cup",
+    "ingredients": [
+      "1/2 cup frozen corn kernels",
+      "1 tablespoon mayonnaise",
+      "1 tablespoon cotija cheese (or Parmesan)",
+      "Pinch of chili powder",
+      "Lime juice"
+    ],
+    "instructions": [
+      "Heat corn in microwave for 2 minutes",
+      "Stir in mayonnaise while warm",
+      "Top with cheese and chili powder",
+      "Squeeze lime juice over top"
+    ],
+    "heritage_tags": ["mexican", "mexican-american", "hispanic"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Elote (Mexican street corn) is a beloved Mexican street food, bringing families together at festivals and gatherings",
+    "conversation_starters": [
+      "Did you enjoy corn on the cob at summer gatherings?",
+      "Do you remember street food or outdoor festivals?",
+      "What summer foods were special to your family?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Mexican Chocolate Abuelita Drink",
+    "ingredients": [
+      "1 cup milk",
+      "1 tablet Mexican hot chocolate (or 2 tbsp cocoa + 1 tbsp sugar)",
+      "1/4 teaspoon cinnamon",
+      "Pinch of vanilla"
+    ],
+    "instructions": [
+      "Heat milk in microwave-safe mug for 90 seconds",
+      "Add chocolate tablet and stir until dissolved",
+      "Add cinnamon and vanilla",
+      "Heat for additional 30 seconds if needed"
+    ],
+    "heritage_tags": ["mexican", "mexican-american", "hispanic"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Mexican hot chocolate has been a family tradition for generations, often made by grandmothers for special occasions",
+    "conversation_starters": [
+      "Did you ever try Mexican hot chocolate?",
+      "Do you remember warm drinks on cold days?",
+      "Tell me about cozy family moments with warm beverages"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Mexican Bean and Cheese Nachos",
+    "ingredients": [
+      "1 handful tortilla chips",
+      "2 tablespoons refried beans",
+      "2 tablespoons shredded cheese",
+      "1 tablespoon salsa"
+    ],
+    "instructions": [
+      "Arrange chips on microwave-safe plate",
+      "Dot with small spoonfuls of beans",
+      "Sprinkle cheese over top",
+      "Microwave for 45-60 seconds until cheese melts, serve with salsa"
+    ],
+    "heritage_tags": ["mexican", "mexican-american", "hispanic", "tex-mex"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Nachos represent the fusion of Mexican and American cuisines, perfect for family gatherings and celebrations",
+    "conversation_starters": [
+      "Did you enjoy Mexican restaurants?",
+      "Do you remember sharing food with family and friends?",
+      "What snacks did your family enjoy together?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Irish Colcannon (Mashed Potato Bowl)",
+    "ingredients": [
+      "1/2 cup instant mashed potatoes (prepared)",
+      "2 tablespoons cooked cabbage (or coleslaw mix)",
+      "1 tablespoon butter",
+      "2 tablespoons milk",
+      "Pinch of salt"
+    ],
+    "instructions": [
+      "Prepare mashed potatoes with milk and butter",
+      "Heat cabbage in microwave for 1 minute",
+      "Mix cabbage into warm potatoes",
+      "Add extra butter on top, season with salt"
+    ],
+    "heritage_tags": ["irish", "irish-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Colcannon is traditional Irish comfort food, especially popular around Halloween and family gatherings",
+    "conversation_starters": [
+      "Did your Irish family make special potato dishes?",
+      "Do you remember cabbage and potato meals?",
+      "Tell me about Irish traditions in your family"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Irish Coddle Soup Cup",
+    "ingredients": [
+      "1/2 cup chicken broth",
+      "2 pre-cooked sausage slices",
+      "2 tablespoons instant mashed potatoes",
+      "1 tablespoon onion powder"
+    ],
+    "instructions": [
+      "Heat broth and sausage in microwave for 2 minutes",
+      "Stir in onion powder",
+      "Add instant potatoes to thicken",
+      "Heat for 1 more minute, stir well"
+    ],
+    "heritage_tags": ["irish", "irish-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Dublin Coddle is a traditional Irish stew, made with whatever ingredients were available, representing Irish resourcefulness",
+    "conversation_starters": [
+      "Did your family make hearty stews?",
+      "Do you remember Irish comfort foods?",
+      "What warming foods did your family enjoy in winter?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "German Spaetzle Bowl (Quick)",
+    "ingredients": [
+      "1/2 cup small egg noodles",
+      "2 tablespoons butter",
+      "1 tablespoon breadcrumbs",
+      "Pinch of salt",
+      "1/2 cup water"
+    ],
+    "instructions": [
+      "Cook noodles with water in microwave for 3-4 minutes",
+      "Drain and add butter",
+      "Sprinkle with breadcrumbs",
+      "Heat for 30 seconds more, season with salt"
+    ],
+    "heritage_tags": ["german", "german-american"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Spaetzle is a beloved German comfort food, often served at family gatherings and Oktoberfest celebrations",
+    "conversation_starters": [
+      "Did your German family make special noodle dishes?",
+      "Do you remember German celebrations or festivals?",
+      "What German foods were special in your family?"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "German Apple Strudel Cup",
+    "ingredients": [
+      "1/2 apple, diced small",
+      "1 tablespoon brown sugar",
+      "1/4 teaspoon cinnamon",
+      "2 tablespoons crushed graham crackers"
+    ],
+    "instructions": [
+      "Place diced apple in microwave-safe mug",
+      "Sprinkle with brown sugar and cinnamon",
+      "Microwave for 2 minutes until apple is soft",
+      "Top with crushed graham crackers"
+    ],
+    "heritage_tags": ["german", "german-american", "austrian"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Apple strudel is a classic German dessert, representing the tradition of using fresh seasonal apples",
+    "conversation_starters": [
+      "Did your family enjoy German pastries or sweets?",
+      "Do you remember the smell of baked apples and cinnamon?",
+      "What German desserts were special in your family?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Chinese Egg Drop Soup",
+    "ingredients": [
+      "1 cup chicken broth",
+      "1 egg, beaten",
+      "1 teaspoon cornstarch mixed with 1 tbsp water",
+      "1 green onion, chopped",
+      "Pinch of white pepper"
+    ],
+    "instructions": [
+      "Heat broth in microwave for 2 minutes",
+      "Stir in cornstarch mixture",
+      "Slowly pour beaten egg while stirring",
+      "Heat 30 seconds more, top with green onion and pepper"
+    ],
+    "heritage_tags": ["chinese", "chinese-american", "asian"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Egg drop soup is a comforting Chinese classic, often the first course at family meals and celebrations",
+    "conversation_starters": [
+      "Did you try Chinese restaurants?",
+      "Do you remember your first taste of Chinese food?",
+      "What new cuisines did you discover in your lifetime?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Chinese Fried Rice Cup",
+    "ingredients": [
+      "1/2 cup cooked rice",
+      "1 egg, scrambled",
+      "1 tablespoon soy sauce",
+      "1 tablespoon frozen peas",
+      "1 green onion, chopped"
+    ],
+    "instructions": [
+      "Heat rice in microwave for 1 minute",
+      "Scramble egg in separate bowl for 45 seconds",
+      "Mix rice, egg, peas, and soy sauce",
+      "Heat for 1 more minute, top with green onion"
+    ],
+    "heritage_tags": ["chinese", "chinese-american", "asian"],
+    "theme_tags": ["family", "food"],
+    "cultural_context": "Fried rice is a Chinese comfort food that transforms simple ingredients into a satisfying meal",
+    "conversation_starters": [
+      "Did you learn to enjoy Asian flavors?",
+      "Do you remember trying chopsticks?",
+      "What was your favorite Chinese restaurant dish?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Warm Carrots for Pet Memory Bowl",
+    "ingredients": [
+      "1/2 cup baby carrots (pre-cooked)",
+      "1 teaspoon butter",
+      "Pinch of salt"
+    ],
+    "instructions": [
+      "Heat carrots in microwave for 1-2 minutes",
+      "Add butter and let melt",
+      "Season lightly with salt",
+      "Serve warm"
+    ],
+    "heritage_tags": ["american"],
+    "theme_tags": ["pets", "food"],
+    "cultural_context": "Simple, wholesome carrots like those you might have shared with beloved pets or garden animals",
+    "conversation_starters": [
+      "Tell me about a pet you loved",
+      "Did you ever have a dog or cat?",
+      "What animals did you enjoy being around?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "School Lunch PB&J Mug",
+    "ingredients": [
+      "1 slice bread, cubed",
+      "1 tablespoon peanut butter",
+      "1 tablespoon jelly or jam",
+      "1 tablespoon milk"
+    ],
+    "instructions": [
+      "Place bread cubes in microwave-safe mug",
+      "Warm peanut butter for 15 seconds to soften",
+      "Mix peanut butter and jelly together",
+      "Pour over bread with milk, heat for 30 seconds"
+    ],
+    "heritage_tags": ["american"],
+    "theme_tags": ["school", "food"],
+    "cultural_context": "PB&J sandwiches are an American school lunch classic, bringing back memories of childhood",
+    "conversation_starters": [
+      "What did you eat for lunch at school?",
+      "Do you remember your school cafeteria?",
+      "What was your favorite childhood snack?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Musical Memory Hot Cocoa",
+    "ingredients": [
+      "1 cup milk",
+      "2 tablespoons cocoa powder",
+      "2 tablespoons sugar",
+      "1/4 teaspoon vanilla"
+    ],
+    "instructions": [
+      "Heat milk in microwave-safe mug for 90 seconds",
+      "Whisk in cocoa powder and sugar",
+      "Add vanilla and stir well",
+      "Heat for 30 seconds more if needed"
+    ],
+    "heritage_tags": ["american"],
+    "theme_tags": ["music", "food"],
+    "cultural_context": "Hot cocoa was often enjoyed while listening to the radio or records, creating warm musical memories",
+    "conversation_starters": [
+      "What music did you listen to while having hot drinks?",
+      "Do you remember listening to the radio?",
+      "What songs remind you of cozy moments?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
   }
 ]
