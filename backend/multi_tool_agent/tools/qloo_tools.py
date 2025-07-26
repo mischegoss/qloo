@@ -1,13 +1,12 @@
 """
-Qloo Tools - SAFE CONTENT with Era Filtering for Copyright Compliance
+Qloo Tools - FIXED with missing methods for Agent 3 compatibility
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
-NEW FEATURES:
-- Era filtering for pre-1970 content (public domain safe)
-- Classical music targeting
-- Vintage TV show filtering  
-- Demographics integration (age, gender)
-- Copyright-safe content recommendations
+CRITICAL FIX:
+- Added location_only_insights() method that Agent 3 expects
+- Added simple_tag_insights() method that Agent 3 expects
+- Maintains all existing functionality
+- Ensures Agent 3 can successfully make Qloo calls
 """
 
 import httpx
@@ -19,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 class QlooInsightsAPI:
     """
-    Qloo API tool with SAFE CONTENT filtering for copyright compliance.
-    Focuses on pre-1970 content, classical music, and vintage TV shows.
+    Qloo API tool with FIXED methods for Agent 3 compatibility.
+    Now includes the missing methods that Agent 3 is trying to call.
     """
     
     def __init__(self, api_key: str, base_url: str = "https://hackathon.api.qloo.com"):
@@ -30,8 +29,118 @@ class QlooInsightsAPI:
             "x-api-key": api_key,
             "Content-Type": "application/json"
         }
-        logger.info("✅ Qloo API initialized with SAFE CONTENT filtering (pre-1970 + classical)")
+        logger.info("✅ Qloo API initialized with FIXED methods for Agent 3 compatibility")
     
+    # CRITICAL FIX: Add missing methods that Agent 3 expects
+    async def location_only_insights(self, 
+                                   entity_type: str,
+                                   location: str,
+                                   age_demographic: str,
+                                   take: int = 10) -> Dict[str, Any]:
+        """
+        CRITICAL FIX: Location-only insights method that Agent 3 expects.
+        
+        Args:
+            entity_type: e.g. "urn:entity:place"
+            location: Location string (e.g. "Brooklyn, New York")
+            age_demographic: Age demographic (e.g. "55_and_older")
+            take: Number of results
+            
+        Returns:
+            Qloo response with location-based recommendations
+        """
+        
+        logger.info(f"🏛️ FIXED: Location-only insights for {location}")
+        
+        try:
+            params = {
+                "filter.type": entity_type,
+                "signal.location.query": location,
+                "signal.demographics.age": age_demographic,
+                "take": take
+            }
+            
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    f"{self.base_url}/v2/insights",
+                    params=params,
+                    headers=self.headers
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    entities = data.get("results", [])
+                    
+                    logger.info(f"✅ FIXED: Location insights success: {len(entities)} results")
+                    return {
+                        "success": True,
+                        "entities": entities,
+                        "location": location,
+                        "entity_count": len(entities)
+                    }
+                else:
+                    logger.error(f"❌ FIXED: Location insights error: {response.status_code}")
+                    return {"success": False, "entities": [], "error": f"HTTP {response.status_code}"}
+                    
+        except Exception as e:
+            logger.error(f"❌ FIXED: Location insights exception: {e}")
+            return {"success": False, "entities": [], "error": str(e)}
+    
+    async def simple_tag_insights(self,
+                                entity_type: str,
+                                tag: str,
+                                age_demographic: str,
+                                take: int = 10) -> Dict[str, Any]:
+        """
+        CRITICAL FIX: Simple tag insights method that Agent 3 expects.
+        
+        Args:
+            entity_type: e.g. "urn:entity:artist", "urn:entity:tv_show"
+            tag: URN tag (e.g. "urn:tag:genre:music:folk")
+            age_demographic: Age demographic (e.g. "55_and_older")
+            take: Number of results
+            
+        Returns:
+            Qloo response with tag-based recommendations
+        """
+        
+        logger.info(f"🎯 FIXED: Simple tag insights for {tag}")
+        
+        try:
+            params = {
+                "filter.type": entity_type,
+                "signal.interests.tags": tag,
+                "signal.demographics.age": age_demographic,
+                "take": take
+            }
+            
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    f"{self.base_url}/v2/insights",
+                    params=params,
+                    headers=self.headers
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    entities = data.get("results", [])
+                    
+                    logger.info(f"✅ FIXED: Tag insights success: {len(entities)} results")
+                    return {
+                        "success": True,
+                        "entities": entities,
+                        "tag": tag,
+                        "entity_count": len(entities)
+                    }
+                else:
+                    logger.error(f"❌ FIXED: Tag insights error: {response.status_code}")
+                    return {"success": False, "entities": [], "error": f"HTTP {response.status_code}"}
+                    
+        except Exception as e:
+            logger.error(f"❌ FIXED: Tag insights exception: {e}")
+            return {"success": False, "entities": [], "error": str(e)}
+    
+    # Keep all existing methods for backward compatibility
     async def get_safe_classical_music(self, 
                                      cultural_heritage: str,
                                      age_group: str = "75_and_older",

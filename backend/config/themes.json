@@ -1,78 +1,51 @@
 {
   "themes": [
     {
-      "id": "travel",
-      "name": "Travel",
-      "description": "Travel memories and places visited",
-      "conversation_prompts": [
-        "Where did you like to travel?",
-        "What places did you visit?",
-        "Tell me about a special trip"
-      ],
-      "recipe_keywords": ["adventure", "discovery", "exotic"],
-      "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "visual"
-      }
-    },
-    {
       "id": "birthday",
       "name": "Birthday",
-      "description": "Birthday celebrations and special days",
+      "description": "Celebrating special occasions and joyful milestones",
       "conversation_prompts": [
-        "How did you celebrate birthdays?",
-        "What was your favorite birthday memory?",
-        "What kind of birthday cake did you like?"
+        "How did you celebrate birthdays when you were young?",
+        "What was your favorite kind of birthday cake?",
+        "Do you remember a special birthday gift?",
+        "Tell me about a birthday party you'll never forget"
       ],
-      "recipe_keywords": ["celebration", "sweet", "festive"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
+        "music_focus": "celebratory",
+        "recipe_focus": "sweet_treats",
+        "conversation_style": "joyful_memories"
       }
     },
     {
-      "id": "weather",
-      "name": "Weather",
-      "description": "Weather memories and preferences",
+      "id": "family",
+      "name": "Family",
+      "description": "Cherishing family bonds and togetherness",
       "conversation_prompts": [
-        "What kind of weather do you enjoy?",
-        "Do you remember any special weather days?",
-        "What did you do on rainy/sunny days?"
+        "Tell me about your family",
+        "What family traditions were special to you?",
+        "Who in your family made you laugh the most?",
+        "What did your family do together on weekends?"
       ],
-      "recipe_keywords": ["comfort", "warming", "soothing"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "tactile"
+        "music_focus": "family_friendly",
+        "recipe_focus": "comfort_food",
+        "conversation_style": "warm_memories"
       }
     },
     {
-      "id": "clothing",
-      "name": "Clothing",
-      "description": "Fashion and clothing memories",
+      "id": "music",
+      "name": "Music",
+      "description": "The soundtrack of life and memorable melodies",
       "conversation_prompts": [
-        "What did you like to wear?",
-        "Do you remember fashion trends?",
-        "Did you have a special outfit?"
+        "What was your favorite song when you were young?",
+        "Did you ever dance to this kind of music?",
+        "What music did your family listen to together?",
+        "Do you remember learning to play an instrument?"
       ],
-      "recipe_keywords": ["elegant", "simple", "classic"],
       "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "school",
-      "name": "School",
-      "description": "School days and learning memories",
-      "conversation_prompts": [
-        "Tell me about your school days",
-        "What was your favorite subject?",
-        "Did you have a favorite teacher?"
-      ],
-      "recipe_keywords": ["simple", "nostalgic", "childhood"],
-      "content_preferences": {
-        "qloo_priority": "tv_shows",
-        "sensory_focus": "visual"
+        "music_focus": "nostalgic",
+        "recipe_focus": "gathering_food",
+        "conversation_style": "musical_memories"
       }
     },
     {
@@ -81,13 +54,46 @@
       "description": "Favorite foods and cooking memories",
       "conversation_prompts": [
         "What was your favorite food growing up?",
-        "Did you enjoy cooking?",
-        "What foods remind you of home?"
+        "Did you enjoy cooking or baking?",
+        "What foods remind you of home?",
+        "Tell me about a special meal you remember"
       ],
-      "recipe_keywords": ["traditional", "comfort", "homemade"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
+        "music_focus": "comfort",
+        "recipe_focus": "traditional",
+        "conversation_style": "sensory_memories"
+      }
+    },
+    {
+      "id": "travel",
+      "name": "Travel",
+      "description": "Adventures and places visited",
+      "conversation_prompts": [
+        "Where did you like to travel?",
+        "What places did you visit that were special?",
+        "Tell me about a memorable trip",
+        "What was the farthest place you ever went?"
+      ],
+      "content_preferences": {
+        "music_focus": "worldly",
+        "recipe_focus": "international",
+        "conversation_style": "adventure_memories"
+      }
+    },
+    {
+      "id": "seasons",
+      "name": "Seasons",
+      "description": "Seasonal memories and nature's changes",
+      "conversation_prompts": [
+        "What's your favorite season and why?",
+        "What did you do in spring/summer/fall/winter?",
+        "What seasonal activities did you enjoy?",
+        "Tell me about a perfect weather day"
+      ],
+      "content_preferences": {
+        "music_focus": "seasonal",
+        "recipe_focus": "seasonal_ingredients",
+        "conversation_style": "nature_memories"
       }
     },
     {
@@ -97,57 +103,45 @@
       "conversation_prompts": [
         "What holidays were special in your family?",
         "Tell me about holiday traditions",
-        "What holiday foods did you enjoy?"
+        "What holiday foods did you enjoy?",
+        "How did your family celebrate Christmas/Easter/Thanksgiving?"
       ],
-      "recipe_keywords": ["celebration", "traditional", "festive"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "gustatory"
+        "music_focus": "traditional",
+        "recipe_focus": "holiday_dishes",
+        "conversation_style": "celebration_memories"
       }
     },
     {
-      "id": "seasons",
-      "name": "Seasons",
-      "description": "Seasonal memories and changes",
+      "id": "school",
+      "name": "School",
+      "description": "School days and learning memories",
       "conversation_prompts": [
-        "What's your favorite season?",
-        "What did you do in spring/summer/fall/winter?",
-        "What seasonal activities did you enjoy?"
+        "Tell me about your school days",
+        "What was your favorite subject?",
+        "Did you have a favorite teacher?",
+        "What did you do during recess or after school?"
       ],
-      "recipe_keywords": ["seasonal", "fresh", "warm"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "visual"
+        "music_focus": "youthful",
+        "recipe_focus": "simple_comfort",
+        "conversation_style": "learning_memories"
       }
     },
     {
       "id": "pets",
       "name": "Pets",
-      "description": "Beloved animal companions",
+      "description": "Beloved animal companions and nature",
       "conversation_prompts": [
         "Tell me about pets you've had",
         "What was your favorite animal growing up?",
-        "Did you have a special pet story?"
+        "Did you have a special pet story?",
+        "What animals did you see around your home?"
       ],
-      "recipe_keywords": ["simple", "comfort", "wholesome"],
       "content_preferences": {
-        "qloo_priority": "places",
-        "sensory_focus": "tactile"
-      }
-    },
-    {
-      "id": "music",
-      "name": "Music",
-      "description": "Songs and musical memories",
-      "conversation_prompts": [
-        "What was your favorite song when you were young?",
-        "Did you ever dance to this kind of music?",
-        "What music did your family listen to together?"
-      ],
-      "recipe_keywords": ["comfort", "celebration", "gathering"],
-      "content_preferences": {
-        "qloo_priority": "artists",
-        "sensory_focus": "auditory"
+        "music_focus": "gentle",
+        "recipe_focus": "simple_treats",
+        "conversation_style": "caring_memories"
       }
     }
   ]

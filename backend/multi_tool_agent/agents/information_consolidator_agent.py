@@ -1,433 +1,267 @@
 """
-Enhanced Information Consolidator Agent - THEME METHOD CALL FIXED
+Step 1: Simplified Information Consolidator Agent
 File: backend/multi_tool_agent/agents/information_consolidator_agent.py
 
-CRITICAL FIX:
-- Fixed theme_manager.get_todays_theme() → theme_manager.get_daily_theme()
-- Now correctly calls the existing method in ThemeManager
-- Maintains all existing location prioritization functionality
-- Supports rural area identification and theme image support
+SIMPLIFIED PIPELINE APPROACH:
+- Get basic profile information from UI
+- Handle simple feedback (likes/dislikes)
+- Pick theme from 10 themes in JSON
+- Create clean consolidated profile for next step
 """
 
 import logging
-import json
-import os
-from datetime import datetime, date
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Dict, Any, Optional, List
 
-# Configure logger
 logger = logging.getLogger(__name__)
-
-# Import theme manager for enhanced theme-aware functionality
-try:
-    import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-    from config.theme_config import theme_manager
-    logger.info("✅ Information Consolidator: theme_manager imported successfully")
-except ImportError as e:
-    logger.error(f"❌ Information Consolidator: Failed to import theme_manager: {e}")
-    theme_manager = None
 
 class InformationConsolidatorAgent:
     """
-    Agent 1: Enhanced Information Consolidator with FIXED Theme Method Call
+    Step 1: Simplified Information Consolidator
     
-    CRITICAL FIX:
-    - Fixed method call from get_todays_theme() to get_daily_theme()
-    - Now properly integrates with ThemeManager
-    - Maintains location prioritization and rural area support
-    - Full theme image and metadata support
+    PURPOSE:
+    - Consolidate basic profile information
+    - Handle simple feedback mechanism  
+    - Select daily theme from themes.json
+    - Create clean profile structure for pipeline
     """
     
-    def __init__(self):
-        logger.info("✅ Information Consolidator initialized with LOCATION PRIORITIZATION")
+    def __init__(self, theme_manager=None):
+        self.theme_manager = theme_manager
+        logger.info("✅ Step 1: Information Consolidator initialized (simplified pipeline)")
     
     async def run(self, 
-                  patient_profile: Dict[str, Any], 
-                  request_type: str, 
+                  patient_profile: Dict[str, Any],
+                  request_type: str = "dashboard",
                   session_id: Optional[str] = None,
                   feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Enhanced consolidation with location prioritization and FIXED theme integration
+        Step 1: Consolidate information for simplified pipeline
         
         Args:
-            patient_profile: Patient profile data
-            request_type: Type of request (dashboard, etc.)
+            patient_profile: Basic profile from UI
+            request_type: Type of request 
             session_id: Session identifier
-            feedback_data: Feedback history (optional)
+            feedback_data: Simple likes/dislikes feedback
             
         Returns:
-            Consolidated information with prioritized location data and proper theme
+            Clean consolidated profile for Step 2
         """
         
-        logger.info("📋 Agent 1: Starting enhanced information consolidation with location prioritization")
+        logger.info("📋 Step 1: Starting information consolidation")
         
         try:
-            # Core consolidation
-            demographics = self._extract_demographics(patient_profile)
-            heritage_info = self._extract_heritage_info(patient_profile)
-            preferences_info = self._extract_preferences_info(feedback_data)
+            # Extract basic profile information
+            basic_info = self._extract_basic_profile(patient_profile)
             
-            # ENHANCED: Location prioritization
-            location_info = self._extract_location_info(patient_profile)
+            # Handle simple feedback mechanism
+            feedback_summary = self._process_feedback(feedback_data)
             
-            # FIXED: Theme selection with proper method call
-            daily_theme = self._select_daily_theme()
+            # Select theme for the session
+            selected_theme = self._select_theme(session_id)
             
-            # Build consolidated information structure
-            consolidated_info = {
-                "patient_profile": patient_profile,
+            # Create consolidated profile
+            consolidated_profile = {
+                # Basic patient information
+                "patient_info": basic_info,
+                
+                # Theme for this session
+                "selected_theme": selected_theme,
+                
+                # Simple feedback tracking
+                "feedback": feedback_summary,
+                
+                # Session metadata
                 "session_metadata": {
-                    "session_id": session_id,
+                    "session_id": session_id or "default",
                     "request_type": request_type,
                     "timestamp": datetime.now().isoformat(),
-                    "processing_agent": "information_consolidator"
+                    "step": "information_consolidation"
                 },
-                "demographics": demographics,
-                "heritage_info": heritage_info,
-                "preferences_info": preferences_info,
-                "location_info": location_info,  # ENHANCED: New location prioritization
-                "daily_theme": daily_theme,  # FIXED: Now properly selected
-                "feedback_history": self._extract_feedback_history(feedback_data),
-                "processing_metadata": {
-                    "theme_manager_available": theme_manager is not None,
-                    "location_prioritization": "hometown_preferred",
-                    "rural_area_support": True,
-                    "consolidated_successfully": True,
-                    "theme_method_fixed": True  # NEW: Indicates the fix is applied
+                
+                # Pipeline state tracking
+                "pipeline_state": {
+                    "current_step": 1,
+                    "next_step": "photo_analysis",
+                    "profile_ready": True
                 }
             }
             
-            logger.info(f"✅ Agent 1: Information consolidated successfully")
-            logger.info(f"👤 Patient: {demographics.get('first_name', 'Unknown')}")
-            logger.info(f"🏠 Primary location: {location_info.get('primary_location', 'Unknown')} ({location_info.get('location_type', 'unknown')})")
-            logger.info(f"🎯 Daily theme: {daily_theme.get('theme', {}).get('name', 'Unknown')}")
+            logger.info(f"✅ Step 1: Profile consolidated successfully")
+            logger.info(f"   Patient: {basic_info.get('first_name', 'Unknown')}")
+            logger.info(f"   Theme: {selected_theme.get('name', 'Unknown')}")
+            logger.info(f"   Feedback: {len(feedback_summary.get('likes', []))} likes, {len(feedback_summary.get('dislikes', []))} dislikes")
             
-            return consolidated_info
+            return consolidated_profile
             
         except Exception as e:
-            logger.error(f"❌ Agent 1 failed: {e}")
-            return self._create_fallback_consolidated_info(patient_profile, request_type, session_id)
+            logger.error(f"❌ Step 1 failed: {e}")
+            return self._create_fallback_profile(patient_profile, request_type, session_id)
     
-    def _extract_location_info(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        ENHANCED: Extract and prioritize location information
+    def _extract_basic_profile(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract and clean basic profile information"""
         
-        Priority order:
-        1. hometown (NEW - preferred for place-based conversations)
-        2. location (current location)
-        3. city + state (legacy support)
-        """
-        
-        # Extract all location fields
-        hometown = patient_profile.get("hometown", "").strip()
-        location = patient_profile.get("location", "").strip()
-        city = patient_profile.get("city", "").strip()
-        state = patient_profile.get("state", "").strip()
-        
-        # Build legacy location from city/state if needed
-        legacy_location = f"{city}, {state}".strip(", ") if city or state else ""
-        
-        # Prioritize hometown > location > legacy_location
-        primary_location = hometown or location or legacy_location
-        
-        # Determine location type for conversation context
-        if hometown:
-            location_type = "hometown"
-        elif location:
-            location_type = "current_location"
-        elif legacy_location:
-            location_type = "legacy_location"
-        else:
-            location_type = "unknown"
-        
-        # Detect potential rural areas (simple heuristics)
-        rural_indicators = self._detect_rural_area(primary_location)
-        
-        location_info = {
-            "primary_location": primary_location,
-            "location_type": location_type,
-            "hometown": hometown,
-            "current_location": location,
-            "city": city,
-            "state": state,
-            "legacy_location": legacy_location,
-            "location_available": bool(primary_location),
-            "rural_indicators": rural_indicators,
-            "location_prioritization": {
-                "hometown_preferred": bool(hometown),
-                "priority_used": location_type,
-                "rural_area_detected": rural_indicators.get("likely_rural", False)
-            }
-        }
-        
-        logger.info(f"🏠 Location prioritization: {primary_location} ({location_type})")
-        if rural_indicators.get("likely_rural"):
-            logger.info(f"🌾 Rural area detected: {rural_indicators.get('reason', 'unknown')}")
-        
-        return location_info
-    
-    def _detect_rural_area(self, location: str) -> Dict[str, Any]:
-        """Detect if location might be a rural area using simple heuristics"""
-        
-        if not location:
-            return {"likely_rural": False, "reason": "no_location_data"}
-        
-        location_lower = location.lower()
-        
-        # Rural indicators (simple heuristics)
-        rural_keywords = [
-            "county", "township", "village", "hamlet", "farm", "ranch", 
-            "rural", "countryside", "valley", "creek", "mountain", "hill",
-            "road", "route", "highway", "mile", "acres"
-        ]
-        
-        # Urban indicators (counterbalances)
-        urban_keywords = [
-            "city", "downtown", "metro", "district", "avenue", "boulevard",
-            "plaza", "center", "square", "street", "st.", "ave.", "blvd."
-        ]
-        
-        rural_score = sum(1 for keyword in rural_keywords if keyword in location_lower)
-        urban_score = sum(1 for keyword in urban_keywords if keyword in location_lower)
-        
-        # Simple scoring logic
-        if rural_score > urban_score and rural_score >= 1:
-            return {
-                "likely_rural": True,
-                "reason": f"rural_keywords_found",
-                "rural_score": rural_score,
-                "urban_score": urban_score
-            }
-        else:
-            return {
-                "likely_rural": False,
-                "reason": "urban_or_unclear",
-                "rural_score": rural_score,
-                "urban_score": urban_score
-            }
-    
-    def _extract_demographics(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract demographic information (unchanged)"""
+        # Get essential profile fields
+        first_name = patient_profile.get("first_name", "Friend")
         birth_year = patient_profile.get("birth_year")
-        birth_month = patient_profile.get("birth_month")
+        cultural_heritage = patient_profile.get("cultural_heritage", "American")
         
-        # Calculate age range
-        current_year = datetime.now().year
-        age = current_year - birth_year if birth_year else None
+        # Calculate age if birth year provided
+        current_age = None
+        age_group = "senior"  # Default assumption for dementia care
         
-        # Determine age range for filtering
-        if age:
-            if age >= 55:
-                age_range = "55_and_older"
-            elif age >= 36:
-                age_range = "36_to_55"
+        if birth_year:
+            current_age = datetime.now().year - birth_year
+            if current_age >= 80:
+                age_group = "oldest_senior"
+            elif current_age >= 65:
+                age_group = "senior"
             else:
-                age_range = "18_to_35"
-        else:
-            age_range = "55_and_older"  # Default assumption
+                age_group = "adult"
         
-        return {
-            "first_name": patient_profile.get("first_name", "Friend"),
+        basic_info = {
+            "first_name": first_name,
             "birth_year": birth_year,
-            "birth_month": birth_month,
-            "calculated_age": age,
-            "age_range": age_range,
-            "demographics_available": bool(birth_year)
-        }
-    
-    def _extract_heritage_info(self, patient_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract heritage information (unchanged)"""
-        heritage_raw = patient_profile.get("heritage", "").strip()
-        
-        if not heritage_raw:
-            return {
-                "cultural_heritage": "American",
-                "heritage_tags": ["american"],
-                "heritage_available": False
-            }
-        
-        # Clean and split heritage information
-        heritage_parts = [part.strip() for part in heritage_raw.replace(",", " ").split()]
-        heritage_parts = [part for part in heritage_parts if len(part.strip()) > 2]
-        
-        # Extract main heritage
-        cultural_heritage = heritage_parts[0] if heritage_parts else "American"
-        additional_context = " ".join(heritage_parts[1:]) if len(heritage_parts) > 1 else ""
-        
-        # Create heritage tags for API calls
-        heritage_tags = [part.lower().replace("-", "_") for part in heritage_parts if len(part.strip()) > 2]
-        
-        return {
+            "current_age": current_age,
+            "age_group": age_group,
             "cultural_heritage": cultural_heritage,
-            "additional_context": additional_context,
-            "heritage_tags": heritage_tags,
-            "heritage_available": bool(cultural_heritage)
+            
+            # Additional context
+            "location": patient_profile.get("city", "") + ", " + patient_profile.get("state", ""),
+            "additional_context": patient_profile.get("additional_context", ""),
+            
+            # Profile completeness
+            "profile_complete": bool(first_name and birth_year and cultural_heritage)
         }
+        
+        logger.info(f"📝 Basic profile: {first_name}, age {current_age}, {cultural_heritage}")
+        return basic_info
     
-    def _extract_preferences_info(self, feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract preferences from feedback data (unchanged)"""
+    def _process_feedback(self, feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process simple feedback mechanism (likes/dislikes)"""
+        
         if not feedback_data:
             return {
-                "explicit_preferences": {"tags": []},
-                "learned_preferences": {},
-                "blocked_content": [],
-                "preferences_available": False
+                "likes": [],
+                "dislikes": [],
+                "total_feedback": 0,
+                "feedback_available": False
             }
         
-        # Extract explicit preferences
-        explicit_preferences = {"tags": feedback_data.get("preference_tags", [])}
+        # Extract likes and dislikes
+        likes = feedback_data.get("likes", [])
+        dislikes = feedback_data.get("dislikes", [])
         
-        # Extract blocked content
-        blocked_content = feedback_data.get("blocked_items", [])
+        # Ensure they're lists
+        if not isinstance(likes, list):
+            likes = []
+        if not isinstance(dislikes, list):
+            dislikes = []
         
-        # Extract learned preferences
-        learned_preferences = feedback_data.get("preferences", {})
-        
-        preferences_available = bool(explicit_preferences["tags"] or learned_preferences or blocked_content)
-        
-        return {
-            "explicit_preferences": explicit_preferences,
-            "learned_preferences": learned_preferences,
-            "blocked_content": blocked_content,
-            "preferences_available": preferences_available
+        feedback_summary = {
+            "likes": likes,
+            "dislikes": dislikes,
+            "total_feedback": len(likes) + len(dislikes),
+            "feedback_available": len(likes) + len(dislikes) > 0,
+            
+            # Simple feedback insights
+            "preferred_types": self._extract_preferred_types(likes),
+            "avoided_types": self._extract_avoided_types(dislikes)
         }
-    
-    def _extract_feedback_history(self, feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract feedback history for learning (unchanged)"""
-        if not feedback_data:
-            return {}
         
-        return {
-            "total_feedback_points": feedback_data.get("feedback_points", 0),
-            "recent_blocks": feedback_data.get("blocked_items", []),
-            "preference_patterns": feedback_data.get("preferences", {}),
-            "feedback_available": True
-        }
+        logger.info(f"🔄 Feedback processed: {len(likes)} likes, {len(dislikes)} dislikes")
+        return feedback_summary
     
-    def _select_daily_theme(self) -> Dict[str, Any]:
-        """FIXED: Select daily theme with proper method call"""
+    def _extract_preferred_types(self, likes: List[Dict[str, Any]]) -> List[str]:
+        """Extract content types from likes"""
+        types = []
+        for like in likes:
+            content_type = like.get("type", "unknown")
+            if content_type not in types:
+                types.append(content_type)
+        return types
+    
+    def _extract_avoided_types(self, dislikes: List[Dict[str, Any]]) -> List[str]:
+        """Extract content types from dislikes"""
+        types = []
+        for dislike in dislikes:
+            content_type = dislike.get("type", "unknown")
+            if content_type not in types:
+                types.append(content_type)
+        return types
+    
+    def _select_theme(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """Select theme using theme manager"""
+        
         try:
-            if theme_manager:
-                # CRITICAL FIX: Changed from get_todays_theme() to get_daily_theme()
-                daily_theme_data = theme_manager.get_daily_theme()
-                theme_of_the_day = daily_theme_data.get("theme_of_the_day", {})
-                theme_image = daily_theme_data.get("theme_image", {})
+            if self.theme_manager:
+                # Use theme manager to get daily theme
+                theme_data = self.theme_manager.get_daily_theme(session_id)
+                selected_theme = theme_data.get("theme_of_the_day", {})
                 
-                logger.info(f"✅ FIXED: Daily theme selected successfully: {theme_of_the_day.get('name', 'Unknown')}")
+                logger.info(f"🎯 Theme selected: {selected_theme.get('name', 'Unknown')}")
                 
                 return {
-                    "theme": theme_of_the_day,
-                    "theme_image": theme_image,
-                    "selection_metadata": {
-                        "date": datetime.now().date().isoformat(),
-                        "theme_manager_used": True,
-                        "image_available": bool(theme_image.get("filename")),
-                        "method_call_fixed": True,  # NEW: Indicates fix was applied
-                        "correct_method_used": "get_daily_theme"
-                    }
+                    "id": selected_theme.get("id", "general"),
+                    "name": selected_theme.get("name", "Memory Lane"),
+                    "description": selected_theme.get("description", "A time for remembering"),
+                    "conversation_prompts": selected_theme.get("conversation_prompts", []),
+                    "source": "theme_manager"
                 }
             else:
-                # Fallback theme
-                fallback_theme = {
-                    "id": "general",
-                    "name": "General",
-                    "description": "General daily activities and memories",
-                    "conversation_prompts": ["Tell me about something that makes you happy"],
-                    "recipe_keywords": ["comfort"],
-                    "content_preferences": {"qloo_priority": "places", "sensory_focus": "visual"}
-                }
-                
-                fallback_theme_image = self._create_fallback_theme_image(fallback_theme)
-                
-                return {
-                    "theme": fallback_theme,
-                    "theme_image": fallback_theme_image,
-                    "selection_metadata": {
-                        "date": datetime.now().date().isoformat(),
-                        "fallback_used": True,
-                        "fallback_reason": "theme_manager_unavailable"
-                    }
-                }
+                logger.warning("⚠️ No theme manager available, using fallback")
+                return self._get_fallback_theme()
                 
         except Exception as e:
             logger.error(f"❌ Theme selection failed: {e}")
-            return self._create_emergency_theme()
+            return self._get_fallback_theme()
     
-    def _create_fallback_theme_image(self, theme: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback theme image structure"""
+    def _get_fallback_theme(self) -> Dict[str, Any]:
+        """Fallback theme when theme manager fails"""
         return {
-            "filename": f"{theme['id']}_fallback.jpg",
-            "backend_path": f"/static/themes/{theme['id']}_fallback.jpg",
-            "frontend_path": f"images/{theme['id']}_fallback.jpg",
-            "theme_id": theme['id'],
-            "theme_name": theme['name'],
-            "exists": False,
-            "is_fallback": True
-        }
-    
-    def _create_emergency_theme(self) -> Dict[str, Any]:
-        """Create emergency theme when all else fails"""
-        emergency_theme = {
-            "id": "emergency",
-            "name": "Memory Lane",
-            "description": "General memories and conversations",
-            "conversation_prompts": ["Tell me about a happy memory"],
-            "recipe_keywords": ["comfort", "traditional"],
-            "content_preferences": {"qloo_priority": "places", "sensory_focus": "visual"}
-        }
-        
-        return {
-            "theme": emergency_theme,
-            "theme_image": self._create_fallback_theme_image(emergency_theme),
-            "selection_metadata": {
-                "date": datetime.now().date().isoformat(),
-                "emergency_fallback": True,
-                "fallback_reason": "all_theme_systems_failed"
-            }
+            "id": "memory_lane",
+            "name": "Memory Lane", 
+            "description": "A time for remembering special moments",
+            "conversation_prompts": [
+                "Tell me about a happy memory",
+                "What's something that always makes you smile?",
+                "Share a story from the good old days"
+            ],
+            "source": "fallback"
         }
     
-    def _create_fallback_consolidated_info(self, patient_profile: Dict[str, Any], 
-                                         request_type: str, 
-                                         session_id: Optional[str]) -> Dict[str, Any]:
-        """Create fallback consolidated information when main processing fails"""
+    def _create_fallback_profile(self, patient_profile: Dict[str, Any], 
+                                request_type: str, 
+                                session_id: Optional[str]) -> Dict[str, Any]:
+        """Create fallback profile when main processing fails"""
         
-        logger.warning("Creating fallback consolidated information")
-        
-        # Basic fallback data
-        fallback_demographics = {
-            "first_name": patient_profile.get("first_name", "Friend"),
-            "age_range": "55_and_older",
-            "demographics_available": False
-        }
-        
-        fallback_location = {
-            "primary_location": "your area",
-            "location_type": "unknown",
-            "location_available": False,
-            "rural_indicators": {"likely_rural": False, "reason": "fallback_mode"}
-        }
-        
-        fallback_theme = self._create_emergency_theme()
+        logger.warning("🔄 Creating fallback consolidated profile")
         
         return {
-            "patient_profile": patient_profile,
+            "patient_info": {
+                "first_name": patient_profile.get("first_name", "Friend"),
+                "cultural_heritage": "American",
+                "age_group": "senior",
+                "profile_complete": False
+            },
+            "selected_theme": self._get_fallback_theme(),
+            "feedback": {
+                "likes": [],
+                "dislikes": [],
+                "total_feedback": 0,
+                "feedback_available": False
+            },
             "session_metadata": {
-                "session_id": session_id,
+                "session_id": session_id or "fallback",
                 "request_type": request_type,
                 "timestamp": datetime.now().isoformat(),
-                "processing_agent": "information_consolidator_fallback"
+                "step": "information_consolidation_fallback"
             },
-            "demographics": fallback_demographics,
-            "heritage_info": {"heritage_available": False},
-            "preferences_info": {"preferences_available": False},
-            "location_info": fallback_location,
-            "daily_theme": fallback_theme,
-            "feedback_history": {},
-            "processing_metadata": {
-                "fallback_used": True,
-                "fallback_reason": "main_processing_failed",
-                "theme_method_available": theme_manager is not None
+            "pipeline_state": {
+                "current_step": 1,
+                "next_step": "photo_analysis",
+                "profile_ready": True,
+                "fallback_used": True
             }
         }
 
