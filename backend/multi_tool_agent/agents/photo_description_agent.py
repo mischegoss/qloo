@@ -1,5 +1,5 @@
 """
-Agent 4C: Cultural Photo Description Agent - CORRECTLY FIXED VERSION
+Agent 4C: Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
 File: backend/multi_tool_agent/agents/photo_description_agent.py
 
 CORRECT FIXES APPLIED:
@@ -9,9 +9,14 @@ CORRECT FIXES APPLIED:
 - ✅ Fixed Gemini response handling (string not dict)
 - ✅ Improved error handling and fallbacks
 
+NEW FEATURE:
+- ✅ Added dementia-friendly photo descriptions using Gemini
+- ✅ Replaces technical descriptions with simple, warm language
+
 PURPOSE:
 Takes today's theme and patient cultural profile, selects appropriate photo
-and uses Gemini AI to create culturally-relevant conversation starters.
+and uses Gemini AI to create culturally-relevant conversation starters
+AND generate simple, warm, dementia-friendly photo descriptions.
 """
 
 import asyncio
@@ -24,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 class PhotoDescriptionAgent:
     """
-    Agent 4C: Cultural Photo Description Agent - CORRECTLY FIXED VERSION
+    Agent 4C: Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
     
     CORRECT FIXES:
     - Fixed JSON file path (photo_analyses.json)
@@ -32,6 +37,9 @@ class PhotoDescriptionAgent:
     - Fixed theme-based photo selection
     - Fixed Gemini response handling
     - Improved fallback mechanisms
+    
+    NEW FEATURE:
+    - Generates simple, warm photo descriptions for dementia care
     """
     
     def __init__(self, gemini_tool=None):
@@ -43,7 +51,7 @@ class PhotoDescriptionAgent:
         logger.info("📷 Agent 4C: Cultural Photo Description initialized")
         logger.info(f"📊 Loaded {len(self.photo_database)} pre-analyzed photos")
         if self.gemini_tool:
-            logger.info("🤖 Gemini AI enabled for cultural enhancement")
+            logger.info("🤖 Gemini AI enabled for cultural enhancement AND dementia-friendly descriptions")
         else:
             logger.info("📝 Using pre-written conversation starters (fallback mode)")
     
@@ -120,6 +128,7 @@ class PhotoDescriptionAgent:
             
         Returns:
             Dict containing selected photo with culturally-enhanced conversation starters
+            AND dementia-friendly description
         """
         
         logger.info("📷 Agent 4C: Starting culturally-aware photo description")
@@ -150,7 +159,7 @@ class PhotoDescriptionAgent:
             photo_name = selected_photo.get("image_name", "unknown.png")
             logger.info(f"✅ Selected photo: {photo_name}")
             
-            # Step 2: Enhance with cultural context using Gemini if available
+            # Step 2: Enhance with cultural context AND generate dementia-friendly description
             enhanced_photo_data = await self._enhance_with_cultural_context(
                 selected_photo, patient_info, theme_info, qloo_intelligence
             )
@@ -183,51 +192,129 @@ class PhotoDescriptionAgent:
     
     async def _enhance_with_cultural_context(self, photo_data: Dict[str, Any], patient_info: Dict[str, Any], 
                                            theme_info: Dict[str, Any], qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
-        """Use Gemini AI to enhance photo conversation with cultural context"""
+        """Use Gemini AI to enhance photo conversation with cultural context AND generate dementia-friendly description"""
+        
+        heritage = patient_info.get("cultural_heritage", "American")
+        patient_name = patient_info.get("first_name", "Friend")
+        birth_year = patient_info.get("birth_year", 1945)
+        
+        # Get original conversation starters and description
+        original_starters = photo_data.get("conversation_starters", [])
+        original_description = photo_data.get("google_vision_description", "A meaningful photograph")
+        
+        # Process results
+        enhanced_data = photo_data.copy()
         
         if not self.gemini_tool:
-            logger.info("🤖 No Gemini tool available, using original conversation starters")
-            return photo_data
+            logger.info("🤖 No Gemini tool available, using JSON fallback descriptions")
+            # Use JSON fallback description
+            enhanced_data["dementia_friendly_description"] = self._get_fallback_description(photo_data)
+            enhanced_data["description_enhanced"] = False
+            enhanced_data["cultural_enhancement"] = False
+            return enhanced_data
         
         try:
-            heritage = patient_info.get("cultural_heritage", "American")
-            patient_name = patient_info.get("first_name", "Friend")
-            birth_year = patient_info.get("birth_year", 1945)
-            
-            # Get original conversation starters
-            original_starters = photo_data.get("conversation_starters", [])
-            visual_description = photo_data.get("google_vision_description", "A meaningful photograph")
-            
             # Get Qloo artists for additional context
             qloo_artists = self._extract_qloo_artists(qloo_intelligence)
             
-            # Create culturally-aware prompt for Gemini
-            cultural_prompt = self._create_cultural_enhancement_prompt(
-                heritage, visual_description, original_starters, qloo_artists, birth_year
+            # Step 1: Generate dementia-friendly photo description using Gemini
+            logger.info("🤖 Generating dementia-friendly photo description...")
+            dementia_friendly_description = await self.gemini_tool.generate_dementia_friendly_description(
+                original_description, patient_name, heritage
             )
             
-            # Get enhanced conversation starters from Gemini - FIXED response handling
+            # Step 2: Create culturally-aware prompt for conversation starters
+            cultural_prompt = self._create_cultural_enhancement_prompt(
+                heritage, original_description, original_starters, qloo_artists, birth_year
+            )
+            
+            # Step 3: Get enhanced conversation starters from Gemini
             gemini_content = await self.gemini_tool.generate_content(cultural_prompt)
             
-            if gemini_content:  # gemini_content is a string, not a dict
+            # Use dementia-friendly description if generated successfully, otherwise use JSON fallback
+            if dementia_friendly_description:
+                enhanced_data["dementia_friendly_description"] = dementia_friendly_description
+                enhanced_data["description_enhanced"] = True
+                enhanced_data["description_source"] = "gemini_generated"
+                logger.info("✅ Generated dementia-friendly description with Gemini")
+            else:
+                enhanced_data["dementia_friendly_description"] = self._get_fallback_description(photo_data)
+                enhanced_data["description_enhanced"] = False
+                enhanced_data["description_source"] = "json_fallback"
+                logger.warning("⚠️ Using JSON fallback description")
+            
+            # Use enhanced conversation starters if available
+            if gemini_content:
                 enhanced_starters = self._parse_gemini_conversation_starters(gemini_content)
                 
                 if enhanced_starters:
-                    # Create enhanced photo data
-                    enhanced_data = photo_data.copy()
                     enhanced_data["enhanced_conversation_starters"] = enhanced_starters
                     enhanced_data["cultural_enhancement"] = True
                     enhanced_data["enhancement_heritage"] = heritage
-                    
-                    logger.info(f"🤖 ✅ Gemini enhanced photo for {heritage} heritage")
-                    return enhanced_data
+                    logger.info(f"🤖 ✅ Gemini enhanced conversation starters for {heritage} heritage")
+                else:
+                    enhanced_data["cultural_enhancement"] = False
+                    logger.warning("⚠️ Could not parse Gemini conversation starters")
+            else:
+                enhanced_data["cultural_enhancement"] = False
+                logger.warning("⚠️ Gemini conversation enhancement failed")
             
-            logger.warning("⚠️ Gemini enhancement failed, using original starters")
-            return photo_data
+            return enhanced_data
             
         except Exception as e:
             logger.warning(f"⚠️ Cultural enhancement failed: {e}")
-            return photo_data
+            # Use JSON fallback description when Gemini fails
+            enhanced_data["dementia_friendly_description"] = self._get_fallback_description(photo_data)
+            enhanced_data["description_enhanced"] = False
+            enhanced_data["description_source"] = "json_fallback"
+            enhanced_data["cultural_enhancement"] = False
+            return enhanced_data
+    
+    def _get_fallback_description(self, photo_data: Dict[str, Any]) -> str:
+        """Get dementia-friendly description from JSON data, with emergency fallback"""
+        
+        # First try: Use pre-written dementia-friendly description from JSON
+        json_description = photo_data.get("dementia_friendly_description")
+        if json_description:
+            logger.info("📝 Using pre-written dementia-friendly description from JSON")
+            return json_description
+        
+        # Second try: Use basic text simplification
+        original_description = photo_data.get("google_vision_description", "A meaningful photograph")
+        simplified = self._create_simple_fallback_description(original_description)
+        logger.info("📝 Using basic text simplification fallback")
+        return simplified
+    
+    def _create_simple_fallback_description(self, original_description: str) -> str:
+        """Create a simple fallback description when Gemini and JSON fallbacks are not available"""
+        
+        # Basic simplification rules
+        simple_words = {
+            "photograph": "picture",
+            "captures": "shows",
+            "featuring": "with",
+            "individual": "person",
+            "composition": "picture",
+            "backdrop": "background",
+            "appears to be": "looks like",
+            "demonstrates": "shows"
+        }
+        
+        # Start with original and simplify
+        simplified = original_description.lower()
+        
+        for complex_word, simple_word in simple_words.items():
+            simplified = simplified.replace(complex_word, simple_word)
+        
+        # Make it warmer and shorter
+        if "family" in simplified:
+            return "Here's a lovely picture of a happy family together. Everyone looks so joyful and peaceful."
+        elif "child" in simplified or "young" in simplified:
+            return "This picture shows a happy child. It looks like such a wonderful, peaceful moment."
+        elif "music" in simplified or "piano" in simplified:
+            return "Here's a beautiful picture of someone making music. How lovely and peaceful it looks."
+        else:
+            return "This is a beautiful, peaceful picture that brings back happy memories."
     
     def _create_cultural_enhancement_prompt(self, heritage: str, visual_description: str, 
                                           original_starters: List[str], qloo_artists: List[str], 
@@ -302,18 +389,24 @@ class PhotoDescriptionAgent:
         return []
     
     def _format_photo_output(self, photo_data: Dict[str, Any], heritage: str, theme_id: str) -> Dict[str, Any]:
-        """Format the final photo output for the dashboard"""
+        """Format the final photo output for the dashboard with dementia-friendly description"""
         
         # Use enhanced starters if available, otherwise use original
         conversation_starters = photo_data.get("enhanced_conversation_starters", 
                                               photo_data.get("conversation_starters", []))
         is_enhanced = photo_data.get("cultural_enhancement", False)
         
+        # Use dementia-friendly description if available, otherwise use original
+        description = photo_data.get("dementia_friendly_description",
+                                   photo_data.get("google_vision_description", "A meaningful photograph"))
+        is_description_enhanced = photo_data.get("description_enhanced", False)
+        description_source = photo_data.get("description_source", "unknown")
+        
         return {
             "photo_content": {
                 "image_name": photo_data.get("image_name", "unknown.png"),
                 "theme": photo_data.get("theme", theme_id),
-                "description": photo_data.get("google_vision_description", "A meaningful photograph"),
+                "description": description,  # NOW USES DEMENTIA-FRIENDLY DESCRIPTION
                 "conversation_starters": conversation_starters[:3],  # Limit to 3 starters
                 "emotional_tone": photo_data.get("emotional_tone", "warm, meaningful"),
                 "key_elements": photo_data.get("key_elements", []),
@@ -325,6 +418,8 @@ class PhotoDescriptionAgent:
                 "selection_method": "gemini_enhanced" if is_enhanced else "theme_based_fallback",
                 "theme_match": True,
                 "cultural_enhancement": is_enhanced,
+                "description_simplified": is_description_enhanced,
+                "description_source": description_source,
                 "heritage_target": heritage,
                 "safety_level": "positive_memories",
                 "dementia_friendly": True
@@ -345,13 +440,17 @@ class PhotoDescriptionAgent:
             "image_name": "family.png",
             "theme": theme_id,
             "google_vision_description": "A warm, meaningful photograph",
+            "dementia_friendly_description": "Here's a lovely picture that brings back happy memories. Everyone looks so peaceful and joyful.",
             "conversation_starters": [
-                "This photo brings back memories",
+                "This picture brings back memories",
                 "Tell me what you see here",
                 "What does this remind you of?"
             ],
             "emotional_tone": "warm, comforting",
-            "key_elements": ["memories", "meaningful moments"]
+            "key_elements": ["memories", "meaningful moments"],
+            "description_enhanced": False,
+            "description_source": "emergency_fallback",
+            "cultural_enhancement": False
         }
         
         return self._format_photo_output(fallback_photo_data, heritage, theme_id)

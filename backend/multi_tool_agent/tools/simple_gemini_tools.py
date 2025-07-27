@@ -4,6 +4,8 @@ File: backend/multi_tool_agent/tools/simple_gemini_tools.py
 
 TIMEOUT FIX: Increased from 30 seconds to 90 seconds for all Gemini API calls
 (Gemini can take longer due to complex prompts and generation)
+
+NEW: Added dementia-friendly photo description generation
 """
 
 import asyncio
@@ -23,6 +25,7 @@ class SimpleGeminiTool:
     Simplified Gemini AI tool for content generation.
     
     TIMEOUT FIX: Increased all timeouts to 90 seconds for reliability.
+    NEW: Added dementia-friendly photo description generation.
     """
     
     def __init__(self, api_key: str):
@@ -212,6 +215,53 @@ class SimpleGeminiTool:
         except Exception as e:
             logger.error(f"❌ Gemini structured generation failed: {e}")
             return None
+    
+    async def generate_dementia_friendly_description(self, 
+                                                   original_description: str,
+                                                   patient_name: str = "Friend",
+                                                   heritage: str = "American") -> Optional[str]:
+        """
+        Generate simple, warm, dementia-friendly photo description.
+        
+        Args:
+            original_description: Technical photo description from Google Vision
+            patient_name: Patient's first name for personalization
+            heritage: Patient's cultural heritage
+            
+        Returns:
+            Simple, warm description or None if failed
+        """
+        
+        prompt = f"""
+        Convert this technical photo description into simple, warm language for a senior with dementia:
+        
+        Original description: {original_description}
+        
+        Create a description that:
+        - Uses very simple, everyday words
+        - Focuses on emotions and feelings (happy, loving, peaceful)
+        - Uses short, clear sentences
+        - Mentions colors, people, and familiar things
+        - Sounds warm and comforting
+        - Avoids technical photography terms
+        - Makes the viewer feel good
+        
+        Example style: "Here's a happy family having a picnic outside. A little girl with curly hair is smiling. Someone is taking her picture. A man is sitting on the grass watching. It looks like a beautiful, sunny day. The family looks so happy together."
+        
+        Write 3-5 short sentences that describe what {patient_name} would see in simple, loving words.
+        """
+        
+        result = await self.generate_content(prompt, max_tokens=200)
+        
+        if result:
+            # Clean up the description
+            description = result.strip()
+            # Ensure proper sentence structure
+            if not description.endswith('.'):
+                description += '.'
+            return description
+        
+        return None
     
     async def curate_music_selection(self, 
                                    heritage: str, 

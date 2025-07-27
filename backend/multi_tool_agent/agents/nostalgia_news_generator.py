@@ -8,6 +8,7 @@ ENHANCED:
 - Always works even when Gemini fails
 - Personalized content without dates in fallbacks
 - Comprehensive error handling
+- FIXED: Slice error in _extract_cultural_data method
 """
 
 import logging
@@ -122,34 +123,53 @@ class NostalgiaNewsGenerator:
                 },
                 "era_spotlight": {
                     "content": "Families often gathered around dinner tables for conversations, shared photo albums, and created traditions that brought everyone together.",
-                    "generic_facts": ["Sunday family dinners were cherished traditions", "Family photo albums were treasured keepsakes"]
+                    "generic_facts": ["Sunday dinners were family tradition highlights", "Photo albums were treasured family keepsakes"]
                 },
                 "heritage_traditions": {
-                    "content": "Every family has special ways of staying connected, from sharing recipes to telling stories and creating memories while honoring the past.",
-                    "generic_facts": ["Family recipes carry stories from past generations", "Holiday traditions help maintain cultural connections"]
+                    "content": "Each family heritage brings unique traditions, from special recipes passed down through generations to cultural celebrations that connect us to our roots.",
+                    "generic_facts": ["Family recipes often carry cultural history", "Heritage traditions strengthen family identity"]
                 },
                 "conversation_questions": [
-                    "Tell me about your favorite family tradition",
-                    "What family gatherings do you remember most fondly?",
-                    "Who was the storyteller in your family?"
+                    "What family traditions do you remember most fondly?",
+                    "Tell me about your favorite family gathering",
+                    "What made your family special?"
+                ]
+            },
+            "memory_lane": {
+                "on_this_day": {
+                    "content": "Walking down memory lane reminds us of all the beautiful moments that have shaped our lives! Every memory is a treasure that connects us to joy, love, and meaningful experiences.",
+                    "generic_facts": ["Memories help us appreciate life's journey", "Sharing memories strengthens relationships"]
+                },
+                "era_spotlight": {
+                    "content": "Each era brought its own special moments and memories, from music and dancing to simple pleasures that made life beautiful and meaningful.",
+                    "generic_facts": ["Every generation creates unique memories", "Music often triggers the strongest memories"]
+                },
+                "heritage_traditions": {
+                    "content": "Our heritage gives us rich memories and traditions that connect us to our families and cultural roots, creating a beautiful tapestry of experiences.",
+                    "generic_facts": ["Cultural memories span generations", "Heritage traditions create lasting memories"]
+                },
+                "conversation_questions": [
+                    "What's one of your happiest memories?",
+                    "What always makes you smile when you think about it?",
+                    "Tell me about a perfect day from your past"
                 ]
             }
         }
     
     def _get_builtin_emergency_fallback(self) -> Dict[str, Any]:
-        """Built-in emergency fallback when everything else fails"""
+        """Built-in emergency fallback when everything fails"""
         
         return {
             "on_this_day": {
-                "content": "Every day holds the potential for joy and connection! Life is filled with precious moments that bring meaning and happiness.",
-                "generic_facts": ["Simple moments of joy can make any day special", "Human connections bring meaning to daily life"]
+                "content": "Today is a special day to celebrate the wonderful person you are! Every day brings new opportunities for joy, connection, and beautiful moments.",
+                "generic_facts": ["Every day is an opportunity for joy", "Human connections make life meaningful"]
             },
             "era_spotlight": {
-                "content": "Throughout all times, people have found ways to create meaning, connection, and joy through simple pleasures and caring relationships.",
-                "generic_facts": ["Every generation has found ways to create happiness", "Simple pleasures are the foundation of contentment"]
+                "content": "Throughout all the years, the most important things remain the same: kindness, love, and the connections we make with others.",
+                "generic_facts": ["Love and kindness are timeless", "Human connections transcend all eras"]
             },
             "heritage_traditions": {
-                "content": "The human experience is rich with traditions of kindness, care, and connection that bring people together in meaningful ways.",
+                "content": "No matter where we come from, we all share the universal values of family, kindness, and caring for one another.",
                 "generic_facts": ["Kindness and care are universal human values", "Every person has unique experiences to share"]
             },
             "conversation_questions": [
@@ -159,93 +179,44 @@ class NostalgiaNewsGenerator:
             ]
         }
     
-    async def run(self,
-                  agent1_output: Dict[str, Any],
-                  agent2_output: Dict[str, Any], 
-                  agent3_output: Dict[str, Any],
-                  agent4a_output: Dict[str, Any],
-                  agent4b_output: Dict[str, Any],
-                  agent4c_output: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generate personalized Nostalgia News with extensive fallback support
-        
-        This method ALWAYS succeeds and returns properly formatted content.
-        """
-        
-        logger.info("📰 Agent 5: Generating Nostalgia News with extensive fallbacks")
-        
-        try:
-            # Extract profile data (always works)
-            profile_data = self._extract_profile_data(agent1_output)
-            
-            logger.info(f"📋 Generating news for: {profile_data['first_name']} - Theme: {profile_data['theme']}")
-            
-            # Try Gemini first if available
-            if self.gemini_tool:
-                logger.info("🧠 Attempting Gemini generation...")
-                try:
-                    cultural_data = self._extract_cultural_data(agent3_output)
-                    content_data = self._extract_content_data(agent4a_output, agent4b_output, agent4c_output)
-                    
-                    gemini_result = await self._generate_with_gemini(profile_data, cultural_data, content_data)
-                    
-                    if gemini_result and gemini_result.get("success"):
-                        logger.info("✅ Gemini generation successful!")
-                        return {"nostalgia_news": gemini_result}
-                    else:
-                        logger.warning("⚠️ Gemini generation unsuccessful, using theme fallback")
-                        
-                except Exception as gemini_error:
-                    logger.warning(f"⚠️ Gemini generation failed: {gemini_error}")
-            else:
-                logger.info("ℹ️ Gemini tool not available, using theme fallback")
-            
-            # Use theme-based fallback (always works)
-            theme_fallback = self._generate_theme_fallback(profile_data)
-            
-            logger.info("✅ Agent 5: Nostalgia News generated successfully using theme fallback")
-            return {"nostalgia_news": theme_fallback}
-            
-        except Exception as e:
-            logger.error(f"❌ Unexpected error in Agent 5: {e}")
-            # Use emergency fallback (guaranteed to work)
-            emergency_result = self._generate_emergency_fallback(agent1_output)
-            logger.info("✅ Agent 5: Emergency fallback used - feature still works!")
-            return {"nostalgia_news": emergency_result}
-    
     def _extract_profile_data(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Safely extract profile information with defaults"""
+        """Safely extract profile data with defaults"""
         
         try:
             patient_info = agent1_output.get("patient_info", {})
             theme_info = agent1_output.get("theme_info", {})
             
-            # Calculate age and era safely
+            first_name = patient_info.get("first_name", "Friend")
+            age = patient_info.get("current_age", 80)
+            heritage = patient_info.get("cultural_heritage", "american")
             birth_year = patient_info.get("birth_year", 1945)
-            current_year = datetime.now().year
-            age = current_year - birth_year if birth_year else 80
-            era = f"{(birth_year//10*10)}s" if birth_year else "1940s"
+            theme = theme_info.get("name", "memory_lane")
+            theme_display = theme_info.get("display_name", "Memory Lane")
             
-            # Clean theme name for lookup
-            theme_raw = theme_info.get("name", "memory_lane")
-            theme_clean = theme_raw.lower().replace(" ", "_").replace("-", "_")
+            # Calculate era based on birth year
+            if birth_year <= 1945:
+                era = "1940s"
+            elif birth_year <= 1955:
+                era = "1950s"
+            elif birth_year <= 1965:
+                era = "1960s"
+            else:
+                era = "1970s"
             
             return {
-                "first_name": patient_info.get("first_name", "Friend"),
-                "birth_year": birth_year,
+                "first_name": first_name,
                 "age": age,
-                "heritage": patient_info.get("cultural_heritage", "American").lower(),
-                "theme": theme_clean,
-                "theme_display": theme_raw,
+                "heritage": heritage.lower(), 
+                "theme": theme,
+                "theme_display": theme_display,
                 "current_date": datetime.now().strftime("%B %d"),
                 "full_date": datetime.now().strftime("%B %d, %Y"),
                 "era": era,
-                "month": datetime.now().strftime("%B").lower()
+                "birth_year": birth_year
             }
             
         except Exception as e:
             logger.warning(f"⚠️ Error extracting profile data: {e}")
-            # Return safe defaults
             return {
                 "first_name": "Friend",
                 "age": 80,
@@ -258,16 +229,25 @@ class NostalgiaNewsGenerator:
             }
     
     def _extract_cultural_data(self, agent3_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Safely extract cultural intelligence with defaults"""
+        """Safely extract cultural intelligence with defaults - FIXED SLICE ERROR"""
         
         try:
             qloo_data = agent3_output.get("qloo_intelligence", {})
             cultural_recs = qloo_data.get("cultural_recommendations", {})
             
-            artists = cultural_recs.get("artists", {}).get("entities", [])
+            # CRITICAL FIX: Safe extraction with type checking before slicing
+            artists_data = cultural_recs.get("artists", {})
+            if isinstance(artists_data, dict):
+                artists = artists_data.get("entities", [])
+            else:
+                artists = []
+                
+            # CRITICAL FIX: Ensure artists is a list before slicing
+            if not isinstance(artists, list):
+                artists = []
             
             return {
-                "preferred_artists": [artist.get("name", "") for artist in artists[:3] if artist.get("name")],
+                "preferred_artists": [artist.get("name", "") for artist in artists[:3] if isinstance(artist, dict) and artist.get("name")],
                 "cultural_insights": qloo_data.get("cultural_insights", {}),
                 "heritage_connections": qloo_data.get("heritage_connections", [])
             }
@@ -314,7 +294,7 @@ class NostalgiaNewsGenerator:
                                    cultural_data: Dict[str, Any], 
                                    content_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate nostalgia news using Gemini AI with error handling"""
-        
+    
         try:
             # Create comprehensive prompt
             prompt = self._create_gemini_prompt(profile_data, cultural_data, content_data)
@@ -588,6 +568,56 @@ JSON format:
                 return f"{question}, {first_name}?"
         
         return question
+
+    async def run(self,
+                  agent1_output: Dict[str, Any],
+                  agent2_output: Dict[str, Any], 
+                  agent3_output: Dict[str, Any],
+                  agent4a_output: Dict[str, Any],
+                  agent4b_output: Dict[str, Any],
+                  agent4c_output: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate personalized Nostalgia News with extensive fallback support
+        
+        This method ALWAYS succeeds and returns properly formatted content.
+        """
+        
+        logger.info("📰 Agent 5: Generating Nostalgia News with extensive fallbacks")
+        
+        try:
+            # Extract profile data (always works)
+            profile_data = self._extract_profile_data(agent1_output)
+            
+            logger.info(f"📋 Generating news for: {profile_data['first_name']} - Theme: {profile_data['theme']}")
+            
+            # Try Gemini first if available
+            if self.gemini_tool:
+                logger.info("🧠 Attempting Gemini generation...")
+                try:
+                    cultural_data = self._extract_cultural_data(agent3_output)
+                    content_data = self._extract_content_data(agent4a_output, agent4b_output, agent4c_output)
+                    
+                    gemini_result = await self._generate_with_gemini(profile_data, cultural_data, content_data)
+                    
+                    if gemini_result and gemini_result.get("success"):
+                        logger.info("✅ Gemini generation successful!")
+                        return {"nostalgia_news": gemini_result}
+                    else:
+                        logger.info("⚠️ Gemini generation failed, using theme fallback")
+                        
+                except Exception as e:
+                    logger.warning(f"⚠️ Gemini generation error: {e}")
+            
+            # If Gemini failed or unavailable, use theme-based fallback
+            logger.info("📰 Using theme-based fallback generation")
+            theme_fallback = self._generate_theme_fallback(profile_data)
+            return {"nostalgia_news": theme_fallback}
+            
+        except Exception as e:
+            # Last resort: emergency fallback
+            logger.error(f"❌ All fallbacks failed, using emergency mode: {e}")
+            emergency_fallback = self._generate_emergency_fallback(agent1_output)
+            return {"nostalgia_news": emergency_fallback}
 
 # Export the main class
 __all__ = ["NostalgiaNewsGenerator"]

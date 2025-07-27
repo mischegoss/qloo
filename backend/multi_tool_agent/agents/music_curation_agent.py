@@ -1,16 +1,17 @@
 """
-Agent 4A: Music Curation Agent - FIXED QLOO DATA EXTRACTION
+Agent 4A: Music Curation Agent - WITH RECENT SELECTION AVOIDANCE
 File: backend/multi_tool_agent/agents/music_curation_agent.py
 
-CRITICAL FIXES:
-- Fixed Qloo artist data extraction ('str' object has no attribute 'get')
-- Added safe data type checking for all Qloo responses
-- Improved error handling with detailed logging
-- Maintained fallback functionality
+NEW FEATURES:
+- Checks recent_music.json to avoid repeating same artist/piece
+- Simple rotation system - if same artist was used recently, pick different one
+- Dashboard Synthesizer will write current selection back to the file
 """
 
 import logging
 import random
+import json
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -18,20 +19,20 @@ logger = logging.getLogger(__name__)
 
 class MusicCurationAgent:
     """
-    Agent 4A: Simplified Music Curation Agent - FIXED VERSION
-    
-    CRITICAL FIXES APPLIED:
-    - Safe Qloo data extraction with type checking
-    - Proper handling of string vs dict responses
-    - Enhanced error logging for debugging
-    - Maintained all fallback mechanisms
+    Agent 4A: Music Curation Agent with Recent Selection Avoidance
     """
     
     def __init__(self, youtube_tool=None, gemini_tool=None):
         self.youtube_tool = youtube_tool
         self.gemini_tool = gemini_tool
         
-        # Classical composers database with heritage mapping
+        # Path to recent music tracking file
+        self.recent_music_file = os.path.join(
+            os.path.dirname(__file__), 
+            "..", "..", "config", "recent_music.json"
+        )
+        
+        # Classical composers database
         self.classical_database = [
             {
                 "artist": "Johann Sebastian Bach",
@@ -87,26 +88,59 @@ class MusicCurationAgent:
                     "Beethoven's music tells such beautiful stories"
                 ],
                 "fun_fact": "Beethoven continued composing even after he lost his hearing"
+            },
+            {
+                "artist": "Claude Debussy",
+                "search_name": "debussy",
+                "pieces": ["Clair de Lune", "Arabesque No. 1", "The Girl with the Flaxen Hair"],
+                "heritage_tags": ["french", "european"],
+                "conversation_starters": [
+                    "Debussy's music flows like water",
+                    "This music paints such beautiful pictures"
+                ],
+                "fun_fact": "Debussy was a leader in musical impressionism"
             }
         ]
         
-        logger.info("🎵 Agent 4A: Simplified Music Curation initialized with fixed tools")
+        logger.info("🎵 Agent 4A: Music Curation initialized with recent selection tracking")
+    
+    def _load_recent_music(self) -> Dict[str, Any]:
+        """Load recent music selection to avoid repetition"""
+        
+        try:
+            if os.path.exists(self.recent_music_file):
+                with open(self.recent_music_file, 'r', encoding='utf-8') as f:
+                    recent_data = json.load(f)
+                logger.info(f"📖 Previous selection: {recent_data.get('artist', 'none')} - {recent_data.get('piece_title', 'none')}")
+                return recent_data
+            else:
+                logger.info("📖 No recent music file found - first time selection")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"❌ Error loading recent music: {e}")
+            return {}
     
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Main execution: Simple music curation using heritage + Qloo data
-        """
+        """Main execution with recent selection avoidance"""
+        
         try:
-            logger.info("🎵 Agent 4A: Starting simplified music curation")
+            logger.info("🎵 Agent 4A: Starting music curation with repetition avoidance")
             
-            # Extract simple context with safe data handling
+            # Load recent selection to avoid repetition
+            recent_music = self._load_recent_music()
+            recent_artist = recent_music.get("artist", "").lower()
+            recent_piece = recent_music.get("piece_title", "").lower()
+            
+            # Extract context
             heritage = self._extract_heritage(enhanced_profile)
             qloo_artists = self._extract_qloo_artists_safe(enhanced_profile)
             
             logger.info(f"👤 Heritage: {heritage}")
             logger.info(f"🎼 Qloo artists available: {len(qloo_artists)}")
+            logger.info(f"🚫 Avoiding: {recent_artist} ({recent_piece})")
             
-            # Try Gemini-powered curation first, fall back to simple logic
+            # Try Gemini-powered curation first
             curated_selection = await self._try_gemini_curation(heritage, qloo_artists)
             
             if curated_selection:
@@ -117,20 +151,19 @@ class MusicCurationAgent:
                 fun_fact = curated_selection["fun_fact"]
                 curation_method = "gemini_powered"
             else:
-                # Fall back to simple selection
-                selected_composer = self._select_best_composer(heritage, qloo_artists)
-                selected_piece = random.choice(selected_composer["pieces"])
+                # Fall back to smart selection avoiding recent choice
+                selected_composer, selected_piece = self._select_avoiding_recent(heritage, qloo_artists, recent_artist, recent_piece)
                 conversation_starters = selected_composer["conversation_starters"]
                 fun_fact = selected_composer["fun_fact"]
-                curation_method = "simple_fallback"
+                curation_method = "smart_rotation"
             
-            # Create YouTube search query using fixed format
+            # Create YouTube search query
             search_query = f"{selected_composer['search_name']} {selected_piece.lower()}"
-            
-            # Search YouTube using FIXED API
+    
+            # Search YouTube
             youtube_result = await self._search_youtube(search_query)
             
-            # Return simple result
+            # Return result (Dashboard Synthesizer will save this to recent_music.json)
             return {
                 "music_content": {
                     "artist": selected_composer["artist"],
@@ -145,6 +178,7 @@ class MusicCurationAgent:
                 "metadata": {
                     "heritage_match": self._heritage_matches(heritage, selected_composer),
                     "selection_method": curation_method,
+                    "avoided_repetition": bool(recent_artist),
                     "agent": "music_curation_agent_4a"
                 }
             }
@@ -155,146 +189,121 @@ class MusicCurationAgent:
             logger.error(traceback.format_exc())
             return self._emergency_fallback()
     
+    def _select_avoiding_recent(self, heritage: str, qloo_artists: List[str], recent_artist: str, recent_piece: str) -> tuple:
+        """Select composer and piece while avoiding recent selection"""
+        
+        # Filter out recent artist from available options
+        available_composers = []
+        for composer in self.classical_database:
+            if composer["artist"].lower() != recent_artist and composer["search_name"] != recent_artist:
+                available_composers.append(composer)
+        
+        # If we filtered out everything, use full list (better than same artist)
+        if not available_composers:
+            available_composers = self.classical_database
+            logger.warning("⚠️ All composers were recent - using full list")
+        
+        # Try heritage match first (from filtered list)
+        heritage_matches = []
+        for composer in available_composers:
+            if any(tag in heritage for tag in composer["heritage_tags"]):
+                heritage_matches.append(composer)
+        
+        if heritage_matches:
+            selected_composer = random.choice(heritage_matches)
+            logger.info(f"✅ Heritage match (avoiding recent): {selected_composer['artist']}")
+        else:
+            # Random selection from available (non-recent) composers
+            selected_composer = random.choice(available_composers)
+            logger.info(f"✅ Random selection (avoiding recent): {selected_composer['artist']}")
+        
+        # Select piece, avoiding recent piece if same composer
+        available_pieces = selected_composer["pieces"].copy()
+        if selected_composer["artist"].lower() == recent_artist:
+            # Same composer - try to avoid same piece
+            available_pieces = [p for p in available_pieces if p.lower() != recent_piece]
+            if not available_pieces:
+                available_pieces = selected_composer["pieces"]  # Use all if we filtered everything
+        
+        selected_piece = random.choice(available_pieces)
+        
+        return selected_composer, selected_piece
+    
+    # ... (keeping all the existing helper methods unchanged)
     def _extract_heritage(self, enhanced_profile: Dict[str, Any]) -> str:
         """Extract heritage from enhanced profile"""
-        
         patient_info = enhanced_profile.get("patient_info", {})
         heritage = patient_info.get("cultural_heritage", "Universal")
-        
         return heritage.lower()
     
     def _extract_qloo_artists_safe(self, enhanced_profile: Dict[str, Any]) -> List[str]:
-        """
-        CRITICAL FIX: Safe extraction of Qloo artist names with type checking
-        """
-        
+        """Safe extraction of Qloo artist names with type checking"""
         try:
-            # Navigate to Qloo data safely
             qloo_data = enhanced_profile.get("qloo_intelligence", {})
             
-            # Handle potential double-wrapping
             if "qloo_intelligence" in qloo_data and isinstance(qloo_data["qloo_intelligence"], dict):
                 qloo_data = qloo_data["qloo_intelligence"]
             
             cultural_recs = qloo_data.get("cultural_recommendations", {})
             artists_data = cultural_recs.get("artists", {})
             
-            logger.debug(f"🔍 Qloo artists_data type: {type(artists_data)}")
-            logger.debug(f"🔍 Qloo artists_data content: {artists_data}")
-            
-            # CRITICAL FIX: Check if artists_data is a dict and has expected structure
             if not isinstance(artists_data, dict):
                 logger.warning(f"⚠️ artists_data is not a dict: {type(artists_data)}")
                 return []
             
-            # Check if call was successful
             if not artists_data.get("success", False):
                 logger.warning("⚠️ Qloo artists call was not successful")
                 return []
             
-            # Extract entities safely
-            entities = artists_data.get("entities", [])
+            entities = None
+            if "results" in artists_data and isinstance(artists_data["results"], dict):
+                entities = artists_data["results"].get("entities", [])
+            else:
+                entities = artists_data.get("entities", [])
             
-            # CRITICAL FIX: Ensure entities is a list
             if not isinstance(entities, list):
                 logger.warning(f"⚠️ entities is not a list: {type(entities)}")
-                return []
+                if isinstance(entities, dict) and "entities" in entities:
+                    entities = entities["entities"]
+                    if not isinstance(entities, list):
+                        return []
+                else:
+                    return []
             
-            # Extract artist names with safe iteration
             artist_names = []
             for entity in entities:
-                # CRITICAL FIX: Check if entity is a dict before calling .get()
                 if isinstance(entity, dict):
                     name = entity.get("name", "")
                     if name and isinstance(name, str):
                         artist_names.append(name.lower())
                 elif isinstance(entity, str):
-                    # Handle case where entity is just a string
                     artist_names.append(entity.lower())
-                else:
-                    logger.warning(f"⚠️ Unexpected entity type: {type(entity)}")
             
             logger.info(f"✅ Successfully extracted {len(artist_names)} artist names")
             return artist_names
             
         except Exception as e:
             logger.error(f"❌ Error extracting Qloo artists: {e}")
-            logger.error(f"❌ enhanced_profile structure: {enhanced_profile.keys()}")
-            
-            # Try to log the problematic data for debugging
-            try:
-                qloo_data = enhanced_profile.get("qloo_intelligence", {})
-                logger.error(f"❌ qloo_intelligence keys: {qloo_data.keys() if isinstance(qloo_data, dict) else 'not a dict'}")
-                
-                cultural_recs = qloo_data.get("cultural_recommendations", {}) if isinstance(qloo_data, dict) else {}
-                logger.error(f"❌ cultural_recommendations keys: {cultural_recs.keys() if isinstance(cultural_recs, dict) else 'not a dict'}")
-                
-                artists_data = cultural_recs.get("artists", {}) if isinstance(cultural_recs, dict) else {}
-                logger.error(f"❌ artists_data: {artists_data}")
-                
-            except Exception as debug_error:
-                logger.error(f"❌ Debug logging failed: {debug_error}")
-            
             return []
-    
-    def _select_best_composer(self, heritage: str, qloo_artists: List[str]) -> Dict[str, Any]:
-        """Select best classical composer based on heritage and Qloo data"""
-        
-        # First try: Match BOTH heritage AND Qloo artists (best match)
-        for composer in self.classical_database:
-            composer_name = composer["search_name"]
-            heritage_match = any(tag in heritage for tag in composer["heritage_tags"])
-            qloo_match = any(composer_name in qloo_artist for qloo_artist in qloo_artists)
-            
-            if heritage_match and qloo_match:
-                logger.info(f"✅ Perfect match (heritage + Qloo): {composer['artist']}")
-                return composer
-        
-        # Second try: Heritage match (prioritize cultural connection)
-        heritage_matches = []
-        for composer in self.classical_database:
-            if any(tag in heritage for tag in composer["heritage_tags"]):
-                heritage_matches.append(composer)
-        
-        if heritage_matches:
-            selected = random.choice(heritage_matches)
-            logger.info(f"✅ Heritage match: {selected['artist']} for {heritage}")
-            return selected
-        
-        # Third try: Any Qloo match
-        for composer in self.classical_database:
-            composer_name = composer["search_name"]
-            if any(composer_name in qloo_artist for qloo_artist in qloo_artists):
-                logger.info(f"✅ Qloo match found: {composer['artist']}")
-                return composer
-        
-        # Fourth try: Default to Bach (most universally known)
-        default_composer = self.classical_database[0]  # Bach
-        logger.info(f"✅ Default selection: {default_composer['artist']}")
-        return default_composer
     
     async def _try_gemini_curation(self, heritage: str, qloo_artists: List[str]) -> Optional[Dict[str, Any]]:
         """Try to use Gemini for intelligent music curation"""
-        
         if not self.gemini_tool:
-            logger.info("💡 Gemini tool not available, using simple selection")
             return None
        
         try:
             logger.info("🤖 Trying Gemini-powered music curation")
             
-            # Use SimpleGeminiTool's specialized method
             result = await self.gemini_tool.curate_music_selection(
                 heritage=heritage,
                 available_artists=qloo_artists,
-                theme="classical music"  # Could be enhanced with actual theme
+                theme="classical music"
             )
             
             if result and result.get("selected_artist"):
                 logger.info(f"✅ Gemini selected: {result['selected_artist']}")
                 return result
             else:
-                logger.warning("⚠️ Gemini returned invalid result")
                 return None
                 
         except Exception as e:
@@ -303,7 +312,6 @@ class MusicCurationAgent:
     
     def _find_composer_by_name(self, artist_name: str) -> Dict[str, Any]:
         """Find composer in database by name"""
-        
         artist_lower = artist_name.lower()
         
         for composer in self.classical_database:
@@ -311,7 +319,6 @@ class MusicCurationAgent:
                 artist_lower in composer["search_name"].lower()):
                 return composer
         
-        # Default to Bach if not found
         return self.classical_database[0]
     
     def _heritage_matches(self, heritage: str, composer: Dict[str, Any]) -> bool:
@@ -319,20 +326,17 @@ class MusicCurationAgent:
         return any(tag in heritage for tag in composer["heritage_tags"])
     
     async def _search_youtube(self, search_query: str) -> Optional[Dict[str, Any]]:
-        """Search YouTube using the FIXED Creative Commons API"""
-        
+        """Search YouTube using the Creative Commons API"""
         if not self.youtube_tool:
-            logger.warning("⚠️ YouTube tool not available")
             return self._youtube_fallback()
         
         try:
-            logger.info(f"🔍 YouTube search: {search_query} classical music audio (Creative Commons)")
+            logger.info(f"🔍 YouTube search: {search_query} classical music audio")
             
-            # Use the FIXED YouTubeAPI.search_videos method
             results = await self.youtube_tool.search_videos(
                 query=f"{search_query} classical music audio",
                 max_results=1,
-                audio_only=True  # Prioritize audio-only content
+                audio_only=True
             )
             
             if results and len(results) > 0:
@@ -347,7 +351,6 @@ class MusicCurationAgent:
                     "license": "Creative Commons"
                 }
             else:
-                logger.warning("⚠️ No Creative Commons videos found")
                 return self._youtube_fallback()
                 
         except Exception as e:
@@ -367,10 +370,8 @@ class MusicCurationAgent:
     
     def _emergency_fallback(self) -> Dict[str, Any]:
         """Emergency fallback when everything fails"""
-        
         logger.warning("🔄 Using emergency fallback for music curation")
         
-        # Default to Bach
         default_composer = self.classical_database[0]
         
         return {
