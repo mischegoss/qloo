@@ -1,0 +1,301 @@
+{
+  "theme_fallbacks": {
+    "birthday": {
+      "on_this_day": {
+        "content": "Birthdays have always been special celebrations that bring families together! Throughout history, people have marked these precious days with joy, love, and treasured memories.",
+        "generic_facts": [
+          "Birthday celebrations date back thousands of years to ancient civilizations",
+          "The tradition of birthday candles comes from ancient Greece",
+          "Making birthday wishes is a tradition found in cultures worldwide"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Throughout the decades, families have celebrated birthdays with homemade cakes, gathered around pianos for sing-alongs, and created beautiful memories with music and laughter.",
+        "generic_facts": [
+          "In the 1950s, birthday parties often featured family sing-alongs",
+          "Homemade birthday cakes were a labor of love in past decades",
+          "Birthday celebrations brought extended families together for special meals"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture has beautiful birthday traditions that honor the special person, from sharing favorite foods to singing traditional songs and creating lasting memories with loved ones.",
+        "generic_facts": [
+          "Many cultures have special birthday foods that bring good fortune",
+          "Birthday songs exist in nearly every language and culture",
+          "Family recipes are often shared during birthday celebrations"
+        ]
+      },
+      "conversation_questions": [
+        "What was your most memorable birthday celebration?",
+        "Did your family have special birthday traditions?",
+        "What's your favorite birthday memory?",
+        "What kind of birthday cake did you enjoy most?",
+        "Who made birthdays special in your family?"
+      ]
+    },
+    "family": {
+      "on_this_day": {
+        "content": "Family gatherings have always been the heart of happy memories! Across all times and places, families have come together to share stories, laughter, and the bonds that make life meaningful.",
+        "generic_facts": [
+          "Family traditions help preserve cultural heritage across generations",
+          "Studies show family gatherings strengthen emotional bonds",
+          "Sharing family stories helps preserve important memories"
+        ]
+      },
+      "era_spotlight": {
+        "content": "In past decades, families often gathered around dinner tables for long conversations, shared family albums, and created traditions that brought everyone together for special occasions.",
+        "generic_facts": [
+          "Sunday family dinners were a cherished tradition in many households",
+          "Family photo albums were treasured keepsakes passed down through generations",
+          "Extended families often lived closer together in past decades"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every family has its own special ways of staying connected, from sharing traditional recipes to telling beloved family stories and creating new memories while honoring the past.",
+        "generic_facts": [
+          "Family recipes often carry stories and memories from past generations",
+          "Many families have special phrases or sayings passed down over time",
+          "Holiday traditions help families maintain their cultural connections"
+        ]
+      },
+      "conversation_questions": [
+        "Tell me about your favorite family tradition",
+        "What family gatherings do you remember most fondly?",
+        "Who was the storyteller in your family?",
+        "What family recipes were special to you?",
+        "What made your family gatherings memorable?"
+      ]
+    },
+    "memory_lane": {
+      "on_this_day": {
+        "content": "Every day holds precious memories waiting to be shared! The beautiful moments from our past continue to bring joy and warmth to our hearts whenever we revisit them.",
+        "generic_facts": [
+          "Sharing memories helps strengthen social connections and well-being",
+          "Pleasant memories often become more vivid and meaningful over time",
+          "Reminiscing about happy times can improve mood and reduce stress"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Looking back through the years brings such wonderful feelings! Each decade held its own special charm, from the music and fashions to the simple pleasures that made everyday life meaningful.",
+        "generic_facts": [
+          "Each generation has unique cultural touchstones that define their era",
+          "Music and fashion often trigger the strongest memories from our past",
+          "Simple pleasures from the past often hold the most cherished memories"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Our personal history is filled with beautiful traditions and meaningful moments that connect us to our heritage and the people who shaped our lives with love and care.",
+        "generic_facts": [
+          "Personal traditions often blend family heritage with individual experiences",
+          "Cultural celebrations help maintain connections to our roots",
+          "Stories from our past help preserve important family history"
+        ]
+      },
+      "conversation_questions": [
+        "What's a memory that always makes you smile?",
+        "Tell me about a time that brings you joy to remember",
+        "What traditions were most important to you?",
+        "What simple pleasures did you enjoy most?",
+        "Share a story that you love to tell"
+      ]
+    },
+    "comfort": {
+      "on_this_day": {
+        "content": "Comfort and care have always been essential parts of human life! The simple acts of kindness, warm meals, and gentle moments create the foundation of our most treasured experiences.",
+        "generic_facts": [
+          "Comfort foods often connect us to childhood memories and family traditions",
+          "Acts of care and kindness create lasting positive memories",
+          "Simple comfort rituals help us feel safe and nurtured"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Throughout the decades, people have found comfort in simple pleasures: a warm cup of tea, a favorite song on the radio, or the gentle rhythm of familiar routines that bring peace.",
+        "generic_facts": [
+          "Radio programs provided comfort and entertainment for families in past decades",
+          "Simple routines like afternoon tea were important comfort rituals",
+          "Favorite songs and music provided emotional comfort across all eras"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture has its own special ways of providing comfort, from traditional remedies and foods to gentle customs that help people feel cared for and loved.",
+        "generic_facts": [
+          "Traditional comfort foods vary by culture but serve the same nurturing purpose",
+          "Many cultures have special rituals for times when comfort is needed",
+          "Grandmother's remedies and wisdom often provided the greatest comfort"
+        ]
+      },
+      "conversation_questions": [
+        "What always brought you comfort when you needed it?",
+        "What foods made you feel better when you were unwell?",
+        "Who was your greatest source of comfort?",
+        "What simple things brought you peace?",
+        "What traditions helped you feel safe and cared for?"
+      ]
+    },
+    "music": {
+      "on_this_day": {
+        "content": "Music has the magical power to transport us through time and touch our hearts! Throughout history, melodies and songs have brought joy, comfort, and connection to people everywhere.",
+        "generic_facts": [
+          "Music can trigger vivid memories and emotions from years past",
+          "Every culture has developed its own unique musical traditions",
+          "Singing together has been a human bonding activity for thousands of years"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Each era had its own special sound that defined the times! From big band music to classical radio programs, the melodies of the past continue to bring joy and nostalgia to our hearts.",
+        "generic_facts": [
+          "Radio brought music into homes and connected families to the wider world",
+          "Dancing to favorite songs was a popular social activity across all decades",
+          "Many families had pianos and gathered around them for sing-alongs"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture has its own musical heritage that tells the story of its people, from traditional folk songs to classical pieces that have been cherished for generations.",
+        "generic_facts": [
+          "Traditional songs often tell stories about cultural history and values",
+          "Many families passed down musical skills and favorite songs through generations",
+          "Cultural celebrations are often centered around traditional music and dancing"
+        ]
+      },
+      "conversation_questions": [
+        "What music did you love when you were young?",
+        "Did anyone in your family play musical instruments?",
+        "What songs always make you feel happy?",
+        "Did you enjoy dancing to your favorite music?",
+        "What music brings back the best memories?"
+      ]
+    },
+    "cooking": {
+      "on_this_day": {
+        "content": "Cooking and sharing meals have always been at the heart of human connection! The aromas, flavors, and love that go into preparing food create some of our most cherished memories.",
+        "generic_facts": [
+          "Cooking traditions are often passed down through generations of families",
+          "The sense of smell can trigger powerful memories related to food and cooking",
+          "Sharing meals together strengthens family and community bonds"
+        ]
+      },
+      "era_spotlight": {
+        "content": "In past decades, kitchens were often the heart of the home, where families gathered to prepare meals together and share the events of their day over delicious homemade food.",
+        "generic_facts": [
+          "Home cooking was more common in past decades, with families preparing most meals together",
+          "Many traditional cooking techniques were passed down through hands-on learning",
+          "Kitchen gardens provided fresh ingredients for family meals"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture has its own special recipes and cooking traditions that tell the story of its people, from holiday feasts to everyday comfort foods made with love.",
+        "generic_facts": [
+          "Traditional recipes often have stories and cultural significance behind them",
+          "Many cultures have special foods for celebrations and important occasions",
+          "Cooking techniques and ingredient knowledge were treasured family wisdom"
+        ]
+      },
+      "conversation_questions": [
+        "What was your favorite dish to prepare?",
+        "Who taught you to cook your best recipes?",
+        "What foods remind you of special occasions?",
+        "What aromas from cooking bring back happy memories?",
+        "What recipes did your family treasure most?"
+      ]
+    },
+    "friendship": {
+      "on_this_day": {
+        "content": "Friendship has always been one of life's greatest treasures! The connections we make with others bring laughter, support, and countless precious memories throughout our lives.",
+        "generic_facts": [
+          "Friendships formed in youth often remain some of the strongest throughout life",
+          "Social connections are essential for emotional well-being and happiness",
+          "Shared activities and experiences help deepen friendships over time"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Friendships in past decades often developed through neighborhood connections, school activities, and community gatherings where people came together to share common interests and support each other.",
+        "generic_facts": [
+          "Neighborhood friendships were often lifelong connections in past decades",
+          "Community events and social clubs helped people form lasting friendships",
+          "Friends often gathered in each other's homes for simple, enjoyable activities"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture values friendship and has its own ways of celebrating and maintaining these special bonds, from shared meals to traditional activities that bring people together in joy.",
+        "generic_facts": [
+          "Many cultures have special rituals or customs for celebrating friendship",
+          "Traditional games and activities often brought friends together",
+          "Hospitality and welcoming friends into the home is valued across cultures"
+        ]
+      },
+      "conversation_questions": [
+        "Tell me about your closest friend",
+        "What activities did you enjoy doing with friends?",
+        "Who was someone who always made you laugh?",
+        "What made your friendships special?",
+        "How did you and your friends like to spend time together?"
+      ]
+    },
+    "celebration": {
+      "on_this_day": {
+        "content": "Celebrations bring such joy and meaning to our lives! From small everyday moments to special occasions, the act of celebrating creates beautiful memories that warm our hearts for years to come.",
+        "generic_facts": [
+          "Celebrations help mark important milestones and create lasting memories",
+          "Every culture has developed unique ways to celebrate life's special moments",
+          "Shared celebrations strengthen bonds between family and friends"
+        ]
+      },
+      "era_spotlight": {
+        "content": "Throughout the decades, celebrations brought communities together with music, food, and joyful traditions that created lasting memories for everyone who participated in these special occasions.",
+        "generic_facts": [
+          "Community celebrations often featured local music and traditional foods",
+          "Many celebrations centered around seasonal changes and harvests",
+          "Dress-up occasions and special celebrations gave people chances to come together"
+        ]
+      },
+      "heritage_traditions": {
+        "content": "Every culture has its own beautiful ways of celebrating, from traditional festivals to family customs that honor important occasions with special foods, music, and meaningful rituals.",
+        "generic_facts": [
+          "Traditional celebrations often include specific foods that have cultural meaning",
+          "Many celebrations involve music, dancing, and community participation",
+          "Religious and cultural festivals help preserve important traditions"
+        ]
+      },
+      "conversation_questions": [
+        "What celebrations were most important in your family?",
+        "What made a celebration truly special for you?",
+        "How did your community celebrate together?",
+        "What traditions made your celebrations memorable?",
+        "What was your favorite type of celebration to attend?"
+      ]
+    }
+  },
+  "emergency_fallback": {
+    "on_this_day": {
+      "content": "Every day holds the potential for joy and connection! Life is filled with precious moments that bring meaning and happiness to our daily experiences.",
+      "generic_facts": [
+        "Simple moments of joy can make any day special",
+        "Human connections bring the most meaning to our daily lives",
+        "Finding beauty in everyday moments enhances well-being"
+      ]
+    },
+    "era_spotlight": {
+      "content": "Throughout all times and places, people have found ways to create meaning, connection, and joy in their lives through simple pleasures and caring relationships.",
+      "generic_facts": [
+        "Every generation has found its own ways to create happiness",
+        "Simple pleasures have always been the foundation of contentment",
+        "Human kindness and care have remained constant throughout history"
+      ]
+    },
+    "heritage_traditions": {
+      "content": "The human experience is rich with traditions of kindness, care, and connection that transcend all cultures and bring people together in meaningful ways.",
+      "generic_facts": [
+        "Kindness and care are universal human values",
+        "Every person has their own unique story and experiences to share",
+        "Creating connections with others enriches everyone's life"
+      ]
+    },
+    "conversation_questions": [
+      "What brings you joy today?",
+      "Tell me about something that makes you smile",
+      "What are you grateful for?",
+      "What's something beautiful you've noticed recently?",
+      "Share something that makes you feel good"
+    ]
+  }
+}

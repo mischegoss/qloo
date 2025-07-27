@@ -1,135 +1,317 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Dict, Any, Optional
-from contextlib import asynccontextmanager
+"""
+Updated main.py - 6 Agent Pipeline with Nostalgia News Integration
+File: backend/main.py
+
+UPDATED: Integrates the new 6-agent pipeline with Nostalgia News Generator
+- Agent 1: Information Consolidator
+- Agent 2: Simple Photo Analysis  
+- Agent 3: Qloo Cultural Intelligence
+- Agents 4A/4B/4C: Content Generation
+- Agent 5: Nostalgia News Generator (STAR FEATURE)
+- Agent 6: Dashboard Synthesizer
+"""
+
 import logging
-import json
-import os
 import uvicorn
-from pathlib import Path
-from datetime import datetime, timedelta
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from typing import Dict, Any, Optional
+import os
+from datetime import datetime
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Import configuration and managers
+from config.settings import config
+from patient_data.demo_patient_manager import DemoPatientManager
 
-# Import the sequential agent and tools
+# Import the updated sequential agent and all individual agents
 from multi_tool_agent.sequential_agent import SequentialAgent
+from multi_tool_agent.agents.information_consolidator_agent import InformationConsolidatorAgent
+from multi_tool_agent.agents.simple_photo_analysis_agent import SimplePhotoAnalysisAgent
+from multi_tool_agent.agents.qloo_cultural_analysis_agent import QlooCulturalAnalysisAgent
+from multi_tool_agent.agents.music_curation_agent import MusicCurationAgent
+from multi_tool_agent.agents.recipe_selection_agent import RecipeSelectionAgent
+from multi_tool_agent.agents.photo_description_agent import PhotoDescriptionAgent
+from multi_tool_agent.agents.nostalgia_news_generator import NostalgiaNewsGenerator
+from multi_tool_agent.agents.dashboard_synthesizer import DashboardSynthesizer
+
+# Import tools
 from multi_tool_agent.tools import initialize_all_tools
 
-# Patient profile model
-class PatientProfile(BaseModel):
-    first_name: Optional[str] = None
-    birth_year: Optional[int] = None
-    birth_month: Optional[str] = None
-    cultural_heritage: Optional[str] = None
-    hometown: Optional[str] = None  # NEW: Hometown preference
-    location: Optional[str] = None  # Current location fallback
-    city: Optional[str] = None      # Legacy support
-    state: Optional[str] = None     # Legacy support
-    additional_context: Optional[str] = None
-
-class CareConnectRequest(BaseModel):
-    patient_profile: PatientProfile
-    request_type: str = "dashboard"
-    session_id: Optional[str] = None
-    feedback_history: Optional[Dict[str, Any]] = None
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Global variables
+app = FastAPI(
+    title="Enhanced CareConnect API with Nostalgia News",
+    description="Personalized dementia care dashboard with cultural storytelling",
+    version="2.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global components
 tools = None
 sequential_agent = None
 patient_manager = None
 
-# Enhanced Demo Patient Manager class
-class DemoPatientManager:
-    """Enhanced demo patient manager - NO CACHING"""
+@app.on_event("startup")
+async def startup():
+    """Initialize the application with 6-agent pipeline"""
+    global tools, sequential_agent, patient_manager
     
-    def __init__(self):
-        self.data_dir = Path(__file__).parent / "frontend" / "static" / "demo" / "data"
-        self.patients_file = self.data_dir / "patients.json"
+    try:
+        logger.info("🚀 Starting Enhanced CareConnect API with Nostalgia News...")
         
-        # Ensure directories exist
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        # Initialize patient manager
+        patient_manager = DemoPatientManager()
+        logger.info("✅ Patient manager initialized")
         
-        logger.info(f"📁 Enhanced demo patient manager initialized - NO CACHING")
-        logger.info(f"📄 Patients file: {self.patients_file}")
-    
-    def get_patient(self):
-        """Get the demo patient"""
-        try:
-            if self.patients_file.exists():
-                with open(self.patients_file, 'r') as f:
-                    data = json.load(f)
-                    return data.get("demo_patient")
-            return self._create_demo_patient()
-        except Exception as e:
-            logger.error(f"Error loading patient: {e}")
-            return self._create_demo_patient()
-    
-    def update_patient(self, patient_data):
-        """Update the demo patient data"""
-        try:
-            # Read existing data
-            if self.patients_file.exists():
-                with open(self.patients_file, 'r') as f:
-                    data = json.load(f)
-            else:
-                data = {}
-            
-            # Update demo patient
-            data["demo_patient"] = patient_data
-            
-            # Write back to file
-            with open(self.patients_file, 'w') as f:
-                json.dump(data, f, indent=2)
-                
-            logger.info("✅ Patient data updated successfully")
-            
-        except Exception as e:
-            logger.error(f"Error updating patient: {e}")
-    
-    def _create_demo_patient(self):
-        """Create demo patient with enhanced fields"""
-        demo_patient = {
-            "first_name": "Maria",
-            "birth_year": 1945,
-            "birth_month": "March",
-            "cultural_heritage": "Italian-American",
-            "city": "Brooklyn",
-            "state": "New York",
-            "additional_context": "Loves music and cooking",
-            "caregiver_notes": "Enjoys family activities and traditional Italian recipes",
-            "photo_library": [
-                "static/demo/images/maria_brooklyn_street.jpg",
-                "static/demo/images/maria_family_dinner.jpg",
-                "static/demo/images/maria_italian_market.jpg"
-            ],
-            "feedback_points": 0,
-            "learning_insights": {
-                "prefers": [],
-                "avoiding": []
-            }
-        }
+        # Initialize all tools
+        tools = initialize_all_tools()
+        logger.info("✅ Tools initialized successfully")
+        logger.info(f"📊 Available tools: {list(tools.keys())}")
         
-        # Save to file
-        try:
-            self.data_dir.mkdir(parents=True, exist_ok=True)
-            with open(self.patients_file, 'w') as f:
-                json.dump({"demo_patient": demo_patient}, f, indent=2)
-            logger.info("✅ Demo patient created and saved")
-        except Exception as e:
-            logger.error(f"Error saving demo patient: {e}")
+        # Initialize all 8 agents for the 6-agent pipeline
+        logger.info("🤖 Initializing 6-agent pipeline...")
         
-        return demo_patient
+        # Agent 1: Information Consolidator
+        agent1 = InformationConsolidatorAgent()
+        logger.info("✅ Agent 1 (Information Consolidator) initialized")
+        
+        # Agent 2: Simple Photo Analysis
+        vision_tool = tools.get("vision_ai_tool")
+        agent2 = SimplePhotoAnalysisAgent(vision_tool=vision_tool)
+        logger.info("✅ Agent 2 (Simple Photo Analysis) initialized")
+        
+        # Agent 3: Qloo Cultural Intelligence
+        qloo_tool = tools.get("qloo_tool")
+        agent3 = QlooCulturalAnalysisAgent(qloo_tool=qloo_tool)
+        logger.info("✅ Agent 3 (Qloo Cultural Intelligence) initialized")
+        
+        # Agent 4A: Music Curation
+        youtube_tool = tools.get("youtube_tool")
+        gemini_tool = tools.get("gemini_tool")  # This could be simple_gemini_tool
+        agent4a = MusicCurationAgent(youtube_tool=youtube_tool, gemini_tool=gemini_tool)
+        logger.info("✅ Agent 4A (Music Curation) initialized")
+        
+        # Agent 4B: Recipe Selection
+        agent4b = RecipeSelectionAgent()
+        logger.info("✅ Agent 4B (Recipe Selection) initialized")
+        
+        # Agent 4C: Photo Description
+        agent4c = PhotoDescriptionAgent(gemini_tool=gemini_tool)
+        logger.info("✅ Agent 4C (Photo Description) initialized")
+        
+        # Agent 5: Nostalgia News Generator (STAR FEATURE)
+        # Uses simple_gemini_tools for consistency
+        agent5 = NostalgiaNewsGenerator(gemini_tool=gemini_tool)
+        logger.info("✅ Agent 5 (Nostalgia News Generator) initialized - STAR FEATURE!")
+        
+        # Agent 6: Dashboard Synthesizer
+        agent6 = DashboardSynthesizer()
+        logger.info("✅ Agent 6 (Dashboard Synthesizer) initialized")
+        
+        # Initialize Sequential Agent with all 8 agents
+        sequential_agent = SequentialAgent(
+            agent1=agent1,   # Information Consolidator
+            agent2=agent2,   # Simple Photo Analysis
+            agent3=agent3,   # Qloo Cultural Intelligence
+            agent4a=agent4a, # Music Curation
+            agent4b=agent4b, # Recipe Selection
+            agent4c=agent4c, # Photo Description
+            agent5=agent5,   # Nostalgia News Generator
+            agent6=agent6    # Dashboard Synthesizer
+        )
+        logger.info("✅ Sequential agent initialized with 6-agent pipeline")
+        
+        # Log agent status
+        agent_status = sequential_agent.get_agent_status()
+        logger.info(f"🤖 Pipeline Status: {agent_status['total_agents_available']}/8 agents ready")
+        logger.info(f"🌟 Star Feature: {agent_status['star_feature']}")
+        logger.info(f"📰 Ready for Nostalgia News generation!")
+        
+        logger.info("🎉 Enhanced CareConnect API startup completed successfully!")
+        
+    except Exception as e:
+        logger.error(f"❌ Startup failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise
 
-def _generate_learning_message(patient: Dict[str, Any]) -> str:
-    """Generate learning message based on feedback points"""
-    feedback_points = patient.get("feedback_points", 0)
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "Enhanced CareConnect API with Nostalgia News",
+        "version": "2.0.0",
+        "star_feature": "Nostalgia News Generator",
+        "pipeline": "6-agent cultural storytelling",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    
+    agent_status = sequential_agent.get_agent_status() if sequential_agent else {}
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "pipeline_ready": agent_status.get("ready_for_execution", False),
+        "star_feature_ready": agent_status.get("star_feature") == "nostalgia_news_generator",
+        "agents_available": agent_status.get("total_agents_available", 0),
+        "tools_available": {
+            "qloo_insights": tools.get("qloo_tool") is not None if tools else False,
+            "youtube_api": tools.get("youtube_tool") is not None if tools else False,
+            "gemini_ai": tools.get("gemini_tool") is not None if tools else False,
+            "google_vision": tools.get("vision_ai_tool") is not None if tools else False
+        }
+    }
+
+@app.post("/dashboard")
+async def generate_dashboard(request_data: Dict[str, Any]):
+    """
+    Generate personalized dashboard with Nostalgia News
+    
+    Main endpoint that runs the complete 6-agent pipeline to create
+    a personalized dashboard including the star Nostalgia News feature.
+    """
+    
+    logger.info("📱 Dashboard generation request received")
+    
+    try:
+        # Validate request
+        if not sequential_agent:
+            raise HTTPException(status_code=503, detail="Sequential agent not initialized")
+        
+        if not patient_manager:
+            raise HTTPException(status_code=503, detail="Patient manager not initialized")
+        
+        # Extract request parameters
+        patient_id = request_data.get("patient_id", "demo_patient")
+        request_type = request_data.get("request_type", "dashboard")
+        session_id = request_data.get("session_id", f"session_{int(datetime.now().timestamp())}")
+        feedback_data = request_data.get("feedback_data")
+        
+        logger.info(f"📋 Processing request: patient={patient_id}, type={request_type}, session={session_id}")
+        
+        # Get patient profile
+        patient_profile = patient_manager.get_patient_profile(patient_id)
+        if not patient_profile:
+            raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+        
+        logger.info(f"👤 Patient: {patient_profile.get('first_name')} ({patient_profile.get('cultural_heritage')})")
+        
+        # Run the complete 6-agent pipeline
+        logger.info("🚀 Starting 6-agent pipeline with Nostalgia News...")
+        
+        dashboard_result = await sequential_agent.run(
+            patient_profile=patient_profile,
+            request_type=request_type,
+            session_id=session_id,
+            feedback_data=feedback_data
+        )
+        
+        # Check for success
+        if not dashboard_result.get("success", True):
+            logger.error(f"❌ Pipeline failed: {dashboard_result.get('error')}")
+            raise HTTPException(status_code=500, detail=dashboard_result.get("error", "Pipeline execution failed"))
+        
+        # Log success
+        logger.info("✅ Dashboard generated successfully!")
+        
+        # Log Nostalgia News status
+        nostalgia_news = dashboard_result.get("nostalgia_news", {})
+        if nostalgia_news.get("title"):
+            logger.info(f"📰 Nostalgia News: {nostalgia_news['title']}")
+            logger.info("🌟 Star feature successfully generated!")
+        
+        # Update patient feedback (background task)
+        if feedback_data:
+            patient_manager.update_patient_feedback(patient_id, feedback_data)
+            logger.info("💡 Patient feedback updated")
+        
+        return dashboard_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Dashboard generation failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        
+        raise HTTPException(
+            status_code=500,
+            detail=f"Dashboard generation failed: {str(e)}"
+        )
+
+@app.get("/patient/{patient_id}")
+async def get_patient_profile(patient_id: str):
+    """Get patient profile information"""
+    
+    if not patient_manager:
+        raise HTTPException(status_code=503, detail="Patient manager not initialized")
+    
+    patient_profile = patient_manager.get_patient_profile(patient_id)
+    if not patient_profile:
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+    
+    return patient_profile
+
+@app.post("/patient/{patient_id}/feedback")
+async def update_patient_feedback(patient_id: str, feedback_data: Dict[str, Any]):
+    """Update patient feedback"""
+    
+    if not patient_manager:
+        raise HTTPException(status_code=503, detail="Patient manager not initialized")
+    
+    try:
+        result = patient_manager.update_patient_feedback(patient_id, feedback_data)
+        return {"success": True, "feedback_summary": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/status")
+async def get_system_status():
+    """Get detailed system status"""
+    
+    agent_status = sequential_agent.get_agent_status() if sequential_agent else {}
+    
+    return {
+        "system_status": "operational",
+        "pipeline_version": "6_agent_nostalgia_news",
+        "star_feature": "Nostalgia News Generator",
+        "timestamp": datetime.now().isoformat(),
+        "pipeline": agent_status,
+        "tools_available": {
+            "qloo_insights": tools.get("qloo_tool") is not None if tools else False,
+            "youtube_api": tools.get("youtube_tool") is not None if tools else False,
+            "gemini_ai": tools.get("gemini_tool") is not None if tools else False,
+            "google_vision": tools.get("vision_ai_tool") is not None if tools else False
+        },
+        "patient_manager_ready": patient_manager is not None,
+        "total_agents_available": agent_status.get("total_agents_available", 0),
+        "ready_for_production": agent_status.get("ready_for_execution", False)
+    }
+
+def get_learning_insight(feedback_points: int) -> str:
+    """Generate learning insight based on feedback points"""
     
     if feedback_points == 0:
-        return "I'm just getting to know Maria's preferences!"
+        return "I'm just getting to know Maria's preferences."
     elif feedback_points < 3:
         return "I'm starting to learn what Maria enjoys most."
     elif feedback_points < 7:
@@ -137,279 +319,13 @@ def _generate_learning_message(patient: Dict[str, Any]) -> str:
     else:
         return "I know Maria's preferences well and am tailoring content accordingly."
 
-async def startup():
-    """Initialize the application"""
-    global tools, sequential_agent, patient_manager
-    
-    try:
-        logger.info("🚀 Starting Enhanced CareConnect API...")
-        
-        # Initialize patient manager
-        patient_manager = DemoPatientManager()
-        logger.info("✅ Patient manager initialized")
-        
-        # Create tools
-        tools = initialize_all_tools()
-        logger.info("✅ Tools created successfully")
-        
-        # Initialize sequential agent with all 6 agents
-        from multi_tool_agent.agents.information_consolidator_agent import InformationConsolidatorAgent
-        from multi_tool_agent.agents.cultural_profile_agent import CulturalProfileBuilderAgent
-        from multi_tool_agent.agents.qloo_cultural_intelligence_agent import QlooCulturalIntelligenceAgent
-        from multi_tool_agent.agents.sensory_content_generator_agent import SensoryContentGeneratorAgent
-        from multi_tool_agent.agents.photo_cultural_analyzer_agent import PhotoCulturalAnalyzerAgent
-        from multi_tool_agent.agents.mobile_synthesizer_agent import MobileSynthesizerAgent
-        
-        # Initialize agents
-        agent1 = InformationConsolidatorAgent()
-        agent2 = CulturalProfileBuilderAgent()
-        agent3 = QlooCulturalIntelligenceAgent(tools['qloo_tool'])
-        agent4 = SensoryContentGeneratorAgent(tools['gemini_tool'], tools['youtube_tool'])
-        agent5 = PhotoCulturalAnalyzerAgent(tools['vision_ai_tool'])
-        agent6 = MobileSynthesizerAgent()
-        
-        sequential_agent = SequentialAgent(agent1, agent2, agent3, agent4, agent5, agent6)
-        logger.info("✅ Sequential agent initialized")
-        
-        logger.info("🎯 Enhanced CareConnect API startup completed successfully!")
-        
-    except Exception as e:
-        logger.error(f"❌ Startup failed: {e}")
-        raise
-
-# Lifespan manager
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await startup()
-    yield
-
-# FastAPI app
-app = FastAPI(
-    title="Enhanced CareConnect Cultural Intelligence API",
-    description="AI-powered dementia care assistant - NO CACHING for Hackathon Demo",
-    version="1.0.0",
-    lifespan=lifespan
-)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Serve static files
-static_path = Path(__file__).parent / "frontend" / "static"
-if static_path.exists():
-    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
-    logger.info(f"📁 Static files mounted from: {static_path}")
-
-@app.get("/")
-async def root():
-    """Root endpoint with enhanced API information"""
-    return {
-        "message": "Enhanced CareConnect Cultural Intelligence API - Hackathon Version - NO CACHING",
-        "version": "1.0.0",
-        "description": "AI-powered dementia care assistant with learning feedback",
-        "endpoints": {
-            "dashboard": "/dashboard",
-            "refresh": "/refresh-dashboard",
-            "patient": "/patient",
-            "feedback": "/feedback",
-            "health": "/health",
-            "tools_status": "/tools/status"
-        },
-        "features": {
-            "qloo_cultural_intelligence": "Multi-domain cultural recommendations",
-            "vision_analysis": "Google Vision analysis of place photos",
-            "theme_integration": "Daily themed conversations",
-            "feedback_learning": "Enhanced caregiver feedback adaptation",
-            "profile_insights": "Learning insights and preferences tracking"
-        },
-        "pipeline_mode": "enhanced_with_learning_feedback_no_caching",
-        "demo_patient": "Maria - Italian-American from Brooklyn, NY",
-        "caching_status": "DISABLED for fresh content generation"
-    }
-
-# ===== DASHBOARD ENDPOINTS =====
-
-@app.get("/dashboard")
-async def get_dashboard():
-    """Get dashboard - NO CACHING, always run pipeline"""
-    try:
-        if not sequential_agent:
-            raise HTTPException(status_code=503, detail="Sequential agent not initialized")
-        
-        patient = patient_manager.get_patient()
-        if not patient:
-            raise HTTPException(status_code=404, detail="Demo patient not found")
-        
-        # Always run the complete pipeline - NO CACHING
-        logger.info("🚀 Running enhanced 6-agent pipeline (NO CACHING)...")
-        result = await sequential_agent.run(
-            patient_profile=patient,
-            request_type="dashboard",
-            session_id="demo_session"
-        )
-        
-        if result and result.get("success"):
-            logger.info("✅ Enhanced pipeline execution successful")
-            
-            # Add learning message to result
-            learning_message = _generate_learning_message(patient)
-            if "dashboard_data" in result:
-                result["dashboard_data"]["learning_message"] = learning_message
-            
-            return result
-        else:
-            logger.error("❌ Pipeline execution failed")
-            raise HTTPException(status_code=500, detail="Pipeline execution failed")
-        
-    except Exception as e:
-        logger.error(f"❌ Dashboard retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Dashboard retrieval failed: {str(e)}")
-
-@app.post("/refresh-dashboard")
-async def refresh_dashboard():
-    """Run the complete agent pipeline to generate NEW dashboard content - NO CACHING"""
-    try:
-        if not sequential_agent:
-            raise HTTPException(status_code=503, detail="Sequential agent not initialized")
-        
-        patient = patient_manager.get_patient()
-        if not patient:
-            raise HTTPException(status_code=404, detail="Demo patient not found")
-        
-        # Run the complete pipeline - NO CACHING
-        logger.info("🚀 Running enhanced 6-agent pipeline for FRESH content (NO CACHING)...")
-        result = await sequential_agent.run(
-            patient_profile=patient,
-            request_type="dashboard",
-            session_id="demo_session"
-        )
-        
-        if result and result.get("success"):
-            logger.info("✅ Enhanced pipeline execution successful - NEW CONTENT GENERATED")
-            
-            # Add learning message to result
-            learning_message = _generate_learning_message(patient)
-            if "dashboard_data" in result:
-                result["dashboard_data"]["learning_message"] = learning_message
-            
-            return result
-        else:
-            logger.error("❌ Pipeline execution failed")
-            raise HTTPException(status_code=500, detail="Pipeline execution failed")
-            
-    except Exception as e:
-        logger.error(f"❌ Dashboard refresh failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Dashboard refresh failed: {str(e)}")
-
-# ===== PATIENT AND FEEDBACK ENDPOINTS =====
-
-@app.get("/patient")  
-async def get_patient_profile():
-    """Get patient profile for profile page with enhanced learning insights"""
-    patient = patient_manager.get_patient()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Demo patient not found")
-    
-    # Generate learning insights summary
-    learning_insights = patient.get("learning_insights", {})
-    avoiding = learning_insights.get("avoiding", [])
-    prefers = learning_insights.get("prefers", [])
-    
-    return {
-        "status": "success",
-        "patient": patient,
-        "personalization_status": {
-            "feedback_points": patient.get("feedback_points", 0),
-            "status": "Getting started!" if patient.get("feedback_points", 0) < 3 else "Learning well!",
-            "insights_summary": {
-                "total_preferences": len(prefers),
-                "total_avoiding": len(avoiding),
-                "recent_feedback": "Active learning mode" if patient.get("feedback_points", 0) > 0 else "No feedback yet"
-            }
-        }
-    }
-
-@app.post("/feedback")
-async def submit_feedback():
-    """Submit feedback for learning enhancement"""
-    try:
-        patient = patient_manager.get_patient()
-        if not patient:
-            raise HTTPException(status_code=404, detail="Demo patient not found")
-        
-        # Increment feedback points
-        patient["feedback_points"] = patient.get("feedback_points", 0) + 1
-        
-        # Update patient data
-        patient_manager.update_patient(patient)
-        
-        return {
-            "status": "success",
-            "message": "Feedback received and learning updated",
-            "feedback_points": patient["feedback_points"],
-            "learning_status": _generate_learning_message(patient)
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Feedback submission failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Feedback submission failed: {str(e)}")
-
-# ===== UTILITY ENDPOINTS =====
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "api_keys_configured": {
-            "qloo": bool(config.QLOO_API_KEY),
-            "youtube": bool(config.YOUTUBE_API_KEY),
-            "google_cloud": bool(config.GOOGLE_CLOUD_API_KEY),
-            "gemini": bool(config.GEMINI_API_KEY)
-        },
-        "port": config.PORT,
-        "tools_initialized": tools is not None,
-        "agent_available": sequential_agent is not None,
-        "pipeline_mode": "enhanced_with_profile_feedback_no_caching",
-        "learning_system": "active",
-        "caching_status": "DISABLED"
-    }
-
-@app.get("/tools/status")
-async def get_tools_status():
-    """Get status of all tools and agents"""
-    if not sequential_agent:
-        return {"error": "Sequential agent not initialized"}
-    
-    agent_status = sequential_agent.get_agent_status()
-    
-    return {
-        "tools_status": "operational" if tools else "not_initialized",
-        "agent_pipeline": agent_status,
-        "tools_available": {
-            "qloo_insights": tools.get("qloo_insights") is not None if tools else False,
-            "youtube_api": tools.get("youtube_api") is not None if tools else False,
-            "gemini_recipe": tools.get("gemini_recipe") is not None if tools else False,
-            "google_vision": tools.get("google_vision") is not None if tools else False
-        },
-        "caching_status": "DISABLED for fresh content generation"
-    }
-
 if __name__ == "__main__":
     # Run the server
-    logger.info(f"Starting Enhanced CareConnect API server on port {config.PORT}")
-    logger.info(f"Data directory: {patient_manager.data_dir if patient_manager else 'Not initialized'}")
-    logger.info("🎯 ENHANCED: Profile-based learning feedback system active")
-    logger.info("📍 Places with Google Vision analysis enabled")
-    logger.info("🎯 Single patient demo mode with learning insights")
-    logger.info("🚫 CACHING DISABLED for hackathon demo - fresh content every time")
+    logger.info(f"🚀 Starting Enhanced CareConnect API with Nostalgia News on port {config.PORT}")
+    logger.info(f"📁 Data directory: {patient_manager.data_dir if patient_manager else 'Not initialized'}")
+    logger.info("🌟 STAR FEATURE: Nostalgia News Generator with Gemini AI")
+    logger.info("📰 Personalized cultural storytelling for dementia care")
+    logger.info("🎯 6-agent pipeline: Info → Photo → Qloo → Content → Nostalgia News → Dashboard")
     
     uvicorn.run(
         "main:app",
