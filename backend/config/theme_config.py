@@ -1,6 +1,6 @@
 """
 Step 1: Enhanced Theme Manager (Simplified for Pipeline)
-File: backend/config/theme_manager.py
+File: backend/config/theme_config.py
 
 SIMPLIFIED FOR NEW PIPELINE:
 - Clean theme selection from themes.json
