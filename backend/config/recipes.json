@@ -934,5 +934,236 @@
     ],
     "prep_time": "3 minutes",
     "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Birthday Biscotti (Quick)",
+    "ingredients": [
+      "1/4 cup flour",
+      "1 tablespoon sugar",
+      "1 tablespoon butter (softened)",
+      "1/2 teaspoon vanilla",
+      "1 tablespoon mini chocolate chips"
+    ],
+    "instructions": [
+      "Mix flour and sugar in microwave-safe mug",
+      "Add softened butter and vanilla, mix well",
+      "Fold in chocolate chips",
+      "Microwave for 60-90 seconds until set"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["birthday"],
+    "cultural_context": "Biscotti are traditional Italian cookies often made for special celebrations and birthdays",
+    "conversation_starters": [
+      "Did your family make special cookies for birthdays?",
+      "Do you remember Italian birthday traditions?",
+      "What was your favorite birthday treat growing up?"
+    ],
+    "prep_time": "3 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Family-Style Pasta in a Cup",
+    "ingredients": [
+      "1/2 cup small pasta (ditalini)",
+      "3/4 cup chicken broth",
+      "1 tablespoon tomato sauce",
+      "1 teaspoon Parmesan cheese",
+      "Pinch of Italian seasoning"
+    ],
+    "instructions": [
+      "Combine pasta and broth in microwave-safe bowl",
+      "Microwave for 4-5 minutes until pasta is tender",
+      "Stir in tomato sauce and Italian seasoning",
+      "Top with Parmesan cheese and let sit 1 minute"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["family"],
+    "cultural_context": "Simple pasta dishes were the heart of Italian family meals, bringing everyone together",
+    "conversation_starters": [
+      "Did your family gather for pasta dinners?",
+      "Do you remember Italian family Sunday meals?",
+      "What Italian dishes did your nonna make?"
+    ],
+    "prep_time": "6 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Opera Singer's Warm Honey Milk",
+    "ingredients": [
+      "3/4 cup milk",
+      "1 tablespoon honey",
+      "1/4 teaspoon vanilla",
+      "Pinch of cinnamon"
+    ],
+    "instructions": [
+      "Heat milk in microwave-safe mug for 90 seconds",
+      "Stir in honey until dissolved",
+      "Add vanilla and cinnamon",
+      "Heat for additional 30 seconds if needed"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["music"],
+    "cultural_context": "Italian opera singers traditionally drank warm honey milk to soothe their voices before performances",
+    "conversation_starters": [
+      "Did you ever listen to Italian opera or music?",
+      "Do you remember Italian singers like Pavarotti?",
+      "What music did Italian families in your neighborhood enjoy?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Countryside Polenta Cup",
+    "ingredients": [
+      "1/4 cup instant polenta",
+      "3/4 cup warm water",
+      "1 tablespoon butter",
+      "1 tablespoon Parmesan cheese",
+      "Pinch of salt"
+    ],
+    "instructions": [
+      "Mix polenta and warm water in microwave-safe bowl",
+      "Microwave for 2-3 minutes, stirring halfway",
+      "Stir in butter and Parmesan until creamy",
+      "Season with salt to taste"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["food"],
+    "cultural_context": "Polenta is a traditional Northern Italian staple, comfort food made with love in Italian kitchens",
+    "conversation_starters": [
+      "Did you ever try polenta or cornmeal dishes?",
+      "Do you remember Italian comfort foods?",
+      "What Italian dishes reminded you of home?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Traveler's Espresso Affogato",
+    "ingredients": [
+      "1/4 cup vanilla ice cream or frozen yogurt",
+      "1/4 cup strong coffee (cooled)",
+      "1 teaspoon sugar",
+      "Pinch of cocoa powder"
+    ],
+    "instructions": [
+      "Place ice cream in microwave-safe mug",
+      "Let soften for 30 seconds",
+      "Pour cooled coffee over ice cream",
+      "Sprinkle with sugar and cocoa powder"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["travel"],
+    "cultural_context": "Affogato is a classic Italian dessert enjoyed in cafes throughout Italy, perfect for travelers",
+    "conversation_starters": [
+      "Did you ever travel to Italy or Italian neighborhoods?",
+      "Do you remember Italian cafes or coffee shops?",
+      "What places with Italian culture did you visit?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Seasonal Zuppa (Vegetable Cup)",
+    "ingredients": [
+      "1/2 cup vegetable broth",
+      "2 tablespoons mixed vegetables (frozen)",
+      "1 tablespoon small pasta",
+      "1 teaspoon tomato paste",
+      "1 teaspoon Italian herbs"
+    ],
+    "instructions": [
+      "Heat broth in microwave-safe mug for 1 minute",
+      "Add vegetables and pasta",
+      "Microwave for 3-4 minutes until pasta is tender",
+      "Stir in tomato paste and herbs"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["seasons"],
+    "cultural_context": "Italian families made seasonal vegetable soups using whatever was fresh from the garden",
+    "conversation_starters": [
+      "Did Italian families you knew grow vegetables?",
+      "Do you remember seasonal Italian dishes?",
+      "What vegetables were special in Italian cooking?"
+    ],
+    "prep_time": "5 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Christmas Panettone Bread Pudding",
+    "ingredients": [
+      "2 cubes day-old bread (or panettone)",
+      "1/4 cup milk",
+      "1 tablespoon sugar",
+      "1/2 teaspoon vanilla",
+      "1 tablespoon raisins"
+    ],
+    "instructions": [
+      "Place bread cubes in microwave-safe mug",
+      "Mix milk, sugar, and vanilla",
+      "Pour over bread and let soak 2 minutes",
+      "Add raisins and microwave 90 seconds"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["holidays"],
+    "cultural_context": "Panettone is the traditional Italian Christmas bread, often repurposed into delicious holiday treats",
+    "conversation_starters": [
+      "Did you enjoy panettone during Christmas?",
+      "Do you remember Italian holiday traditions?",
+      "What Italian holiday foods were special to your family?"
+    ],
+    "prep_time": "4 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian School Day Bread and Olive Oil",
+    "ingredients": [
+      "1 slice good bread",
+      "1 tablespoon olive oil",
+      "1 teaspoon balsamic vinegar",
+      "Pinch of salt",
+      "1 teaspoon Parmesan cheese"
+    ],
+    "instructions": [
+      "Toast bread lightly in microwave for 30 seconds",
+      "Drizzle with olive oil and balsamic vinegar",
+      "Sprinkle with salt and Parmesan",
+      "Heat for additional 30 seconds to warm"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["school"],
+    "cultural_context": "Simple bread with olive oil was a common after-school snack for Italian children",
+    "conversation_starters": [
+      "Do you remember simple snacks after school?",
+      "Did Italian families you knew use good olive oil?",
+      "What did children eat for simple meals?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
+  },
+  {
+    "name": "Italian Shepherd's Warm Milk with Honey",
+    "ingredients": [
+      "3/4 cup whole milk",
+      "1 tablespoon honey",
+      "1/4 teaspoon vanilla",
+      "Pinch of nutmeg"
+    ],
+    "instructions": [
+      "Heat milk in microwave-safe mug for 90 seconds",
+      "Stir in honey until dissolved",
+      "Add vanilla and nutmeg",
+      "Heat for additional 30 seconds if needed"
+    ],
+    "heritage_tags": ["italian", "italian-american"],
+    "theme_tags": ["pets"],
+    "cultural_context": "Italian shepherds and farmers often shared simple, nourishing drinks while caring for their animals",
+    "conversation_starters": [
+      "Did you ever see farm animals or visit Italian farms?",
+      "Do you remember people who cared for animals?",
+      "What simple, comforting drinks did you enjoy?"
+    ],
+    "prep_time": "2 minutes",
+    "difficulty": "Easy"
   }
 ]

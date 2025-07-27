@@ -74,7 +74,6 @@ class DashboardSynthesizer:
                     },
                     "recipe": {
                         "name": recipe_content.get("name", ""),
-                        "description": recipe_content.get("description", ""),
                         "ingredients": recipe_content.get("ingredients", []),
                         "instructions": recipe_content.get("instructions", []),
                         "conversation_starters": recipe_content.get("conversation_starters", [])

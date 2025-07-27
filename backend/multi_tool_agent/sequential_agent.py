@@ -250,10 +250,16 @@ class SequentialAgent:
         enhanced_profile["cultural_heritage"] = cultural_heritage
         enhanced_profile["heritage"] = cultural_heritage
         
-        # Ensure patient_info has complete heritage info
+        # Ensure patient_info has complete heritage info with all possible field names
         if "patient_info" in enhanced_profile:
             enhanced_profile["patient_info"]["heritage"] = cultural_heritage
             enhanced_profile["patient_info"]["cultural_background"] = cultural_heritage
+            # Keep the original field name too
+            enhanced_profile["patient_info"]["cultural_heritage"] = cultural_heritage
+        
+        # CRITICAL: Add debug logging to track heritage flow
+        logger.info(f"✅ Enhanced profile created with heritage: '{cultural_heritage}'")
+        logger.info(f"   Heritage available in: patient_info.cultural_heritage, patient_info.heritage, heritage, cultural_heritage")
         
         # Add photo analysis from Agent 2
         enhanced_profile["photo_analysis"] = agent2_output.get("photo_analysis", {})
@@ -268,8 +274,6 @@ class SequentialAgent:
             "next_agents": ["4A", "4B", "4C"],
             "ready_for_content": True
         }
-        
-        logger.info(f"✅ Enhanced profile created with heritage: {cultural_heritage}")
         
         return enhanced_profile
     
@@ -310,18 +314,33 @@ class SequentialAgent:
         music_data = agent4a_output.get("music_content", {})
         recipe_data = agent4b_output.get("recipe_content", {})
         
-        # FIXED: Map photo content fields correctly
+        # FIXED: Map photo content fields correctly with theme filename priority
         agent4c_photo_data = agent4c_output.get("photo_content", {})
+        
+        # CRITICAL FIX: Ensure theme photo filename is preserved for UI
+        theme_photo_filename = theme_info.get("photo_filename", "")
+        agent_photo_filename = agent4c_photo_data.get("image_name", agent4c_photo_data.get("filename", ""))
+        
+        # Priority: Theme photo filename (for UI consistency) > Agent photo filename
+        correct_filename = theme_photo_filename if theme_photo_filename else agent_photo_filename
+        
         photo_data = {
-            "filename": agent4c_photo_data.get("image_name", agent4c_photo_data.get("filename", "")),  # image_name OR filename
+            "filename": correct_filename,  # FIXED: Use correct theme-based filename
             "description": agent4c_photo_data.get("description", ""),
             "cultural_context": agent4c_photo_data.get("cultural_context", agent4c_photo_data.get("heritage_connection", "")),
             "conversation_starters": agent4c_photo_data.get("conversation_starters", [])
         }
         
-        # If photo_data is still empty, try to get theme photo
+        # Debug logging for photo filename
+        logger.info(f"📷 Photo filename mapping:")
+        logger.info(f"   Theme photo: {theme_photo_filename}")
+        logger.info(f"   Agent photo: {agent_photo_filename}")
+        logger.info(f"   Final photo: {correct_filename}")
+        
+        # Final fallback if still empty
         if not photo_data["filename"]:
-            photo_data["filename"] = theme_info.get("photo_filename", "")
+            photo_data["filename"] = f"{daily_theme.lower().replace(' ', '_')}.png"
+            logger.warning(f"⚠️ Using theme-based fallback filename: {photo_data['filename']}")
         
         # FIXED: Extract and convert nostalgia news data structure
         agent5_nostalgia_raw = agent5_output.get("nostalgia_news", {})
@@ -502,29 +521,39 @@ class SequentialAgent:
         }
     
     def _create_fallback_photo_description(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback photo description"""
+        """Create fallback photo description - FIXED to respect theme filename"""
         
         theme_info = agent1_output.get("theme_info", {})
         theme_name = theme_info.get("name", "Memory")
-        photo_filename = theme_info.get("photo_filename", "default.png")
+        theme_id = theme_info.get("id", "memory_lane")
+        
+        # CRITICAL FIX: Use theme-based photo filename, not hardcoded "default.png"
+        photo_filename = theme_info.get("photo_filename", f"{theme_id.lower()}.png")
+        
+        logger.info(f"🔄 Creating fallback photo description for theme: {theme_name}")
+        logger.info(f"📷 Using photo filename: {photo_filename}")
         
         return {
             "photo_content": {
-                "image_name": photo_filename,
+                "image_name": photo_filename,  # FIXED: Use correct theme filename
+                "filename": photo_filename,    # FIXED: Add both field names for compatibility
                 "theme": theme_name,
                 "description": f"A special moment celebrating {theme_name.lower()}",
                 "heritage_connection": "Universal human experiences",
+                "cultural_context": "Enhanced for cultural relevance",
                 "era_context": "Timeless memories",
                 "conversation_starters": [
                     "What does this photo remind you of?",
-                    "Share a story from the good old days"
+                    "Share a story from the good old days",
+                    f"Tell me about a special {theme_name.lower()} memory"
                 ]
             },
             "metadata": {
                 "heritage_match": False,
                 "theme_match": True,
                 "selection_method": "emergency_fallback",
-                "agent": "4C_fallback"
+                "agent": "4C_fallback",
+                "filename_source": "theme_based"
             }
         }
     
