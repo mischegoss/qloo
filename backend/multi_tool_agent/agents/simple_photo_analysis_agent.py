@@ -1,14 +1,11 @@
 """
-Step 2: Simple Photo Analysis Agent - FIXED PATH
+Step 2: Simple Photo Analysis Agent - FIXED PATH ISSUE
 File: backend/multi_tool_agent/agents/simple_photo_analysis_agent.py
 
-FIXED: Corrected path to config/photos/photo_analyses.json
-
-SIMPLIFIED APPROACH:
-- Loads pre-analyzed photo data for demo reliability
-- Maps theme → photo filename → analysis data
-- Falls back to Google Vision AI if needed
-- Clean data structure for Step 3
+CRITICAL FIXES:
+- Fixed path to photo_analyses.json (standardized to config/photo_analyses.json)
+- Added fallback mechanisms for missing config file
+- Improved error handling and safe fallbacks
 """
 
 import logging
@@ -36,28 +33,85 @@ class SimplePhotoAnalysisAgent:
         self.photo_analysis_data = self._load_photo_analysis_data()
         
         logger.info("✅ Step 2: Simple Photo Analysis Agent initialized")
-        logger.info(f"📷 Loaded pre-analyzed data for {len(self.photo_analysis_data.get('photo_analysis_data', {}))} photos")
+        logger.info(f"📷 Loaded pre-analyzed data for {len(self.photo_analysis_data.get('photo_analyses', []))} photos")
     
     def _load_photo_analysis_data(self) -> Dict[str, Any]:
         """Load pre-analyzed photo data from config - FIXED PATH"""
         
-        try:
-            # FIXED: Correct path to config/photos/photo_analyses.json
-            config_path = Path(__file__).parent.parent.parent / "config" / "photos" / "photo_analyses.json"
-            
-            if config_path.exists():
-                with open(config_path, 'r') as f:
-                    data = json.load(f)
-                    logger.info(f"✅ Loaded photo analysis data from {config_path}")
-                    return data
-            else:
-                logger.warning(f"⚠️ Photo analysis config not found: {config_path}")
-                
-        except Exception as e:
-            logger.error(f"❌ Error loading photo analysis data: {e}")
+        # CRITICAL FIX: Correct path to existing config file
+        potential_paths = [
+            # Primary path: config/photo_analyses.json (this is where the file actually exists)
+            Path(__file__).parent.parent.parent / "config" / "photo_analyses.json",
+            # Fallback paths for different execution contexts
+            Path("config/photo_analyses.json"),
+            Path("backend/config/photo_analyses.json"),
+            # Legacy path (in case it was moved)
+            Path(__file__).parent.parent.parent / "config" / "photos" / "photo_analyses.json"
+        ]
         
-        # Return fallback structure
-        return {"photo_analysis_data": {}, "fallback_analysis": {}}
+        for config_path in potential_paths:
+            try:
+                if config_path.exists():
+                    logger.info(f"📁 Found photo analysis config at: {config_path}")
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        
+                        # Validate the data structure
+                        if "photo_analyses" in data:
+                            photo_count = len(data["photo_analyses"])
+                            logger.info(f"✅ Loaded {photo_count} photo analyses from {config_path}")
+                            return data
+                        else:
+                            logger.warning(f"⚠️ Invalid structure in {config_path}, missing 'photo_analyses' key")
+                            
+            except Exception as e:
+                logger.warning(f"⚠️ Could not load {config_path}: {e}")
+                continue
+        
+        # If no config found, log all attempted paths and use fallback
+        logger.warning("⚠️ Photo analysis config not found at any of these locations:")
+        for path in potential_paths:
+            logger.warning(f"   - {path}")
+        
+        logger.info("🔄 Using fallback photo analysis data")
+        return self._get_fallback_photo_data()
+    
+    def _get_fallback_photo_data(self) -> Dict[str, Any]:
+        """Provide fallback photo analysis data when config is missing"""
+        
+        return {
+            "photo_analyses": [
+                {
+                    "image_name": "family.png",
+                    "theme": "family",
+                    "google_vision_description": "A warm family gathering with multiple generations sitting together",
+                    "conversation_starters": [
+                        "Tell me about your family",
+                        "What family traditions were special to you?",
+                        "Do you remember family gatherings like this?"
+                    ],
+                    "dementia_friendly": True,
+                    "safety_level": "positive_memories"
+                },
+                {
+                    "image_name": "memory_lane.png",
+                    "theme": "memory_lane",
+                    "google_vision_description": "A nostalgic scene showing objects from the past",
+                    "conversation_starters": [
+                        "This reminds me of the good old days",
+                        "What brings back happy memories for you?",
+                        "Tell me about something from your past"
+                    ],
+                    "dementia_friendly": True,
+                    "safety_level": "positive_memories"
+                }
+            ],
+            "metadata": {
+                "source": "fallback_data",
+                "total_photos": 2,
+                "dementia_safe": True
+            }
+        }
     
     async def run(self, consolidated_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -101,7 +155,7 @@ class SimplePhotoAnalysisAgent:
         Analyze photo using pre-analyzed data or real-time Vision AI
         
         Args:
-            photo_filename: Name of photo file (e.g. "birthday.png")
+            photo_filename: Name of photo file (e.g. "family.png")
             theme_info: Theme information from Step 1
             
         Returns:
@@ -110,106 +164,103 @@ class SimplePhotoAnalysisAgent:
         
         logger.info(f"🔍 Step 2: Analyzing photo {photo_filename}")
         
-        # PRIORITY 1: Try pre-analyzed data (recommended for demo)
-        if photo_filename in self.photo_analysis_data.get("photo_analysis_data", {}):
-            analysis_data = self.photo_analysis_data["photo_analysis_data"][photo_filename]
-            
+        # First try: Get pre-analyzed data
+        pre_analyzed = self._get_pre_analyzed_data(photo_filename)
+        
+        if pre_analyzed:
             logger.info(f"✅ Using pre-analyzed data for {photo_filename}")
-            
             return {
-                "photo_filename": photo_filename,
-                "analysis_method": "pre_analyzed",
-                "analysis_data": analysis_data,
+                "analysis_data": pre_analyzed,
+                "source": "pre_analyzed",
                 "theme_connection": theme_info.get("name", "Unknown"),
-                "analysis_timestamp": datetime.now().isoformat(),
-                "success": True
+                "analysis_timestamp": datetime.now().isoformat()
             }
         
-        # PRIORITY 2: Try real-time Vision AI analysis (backup)
-        if self.vision_tool:
+        # Second try: Real-time Vision AI analysis
+        if self.vision_tool and photo_filename:
             logger.info(f"🔄 Attempting real-time Vision AI analysis for {photo_filename}")
-            
-            real_time_analysis = await self._real_time_vision_analysis(photo_filename, theme_info)
-            if real_time_analysis and real_time_analysis.get("success"):
-                return real_time_analysis
+            try:
+                vision_result = await self._use_vision_ai(photo_filename)
+                if vision_result:
+                    return {
+                        "analysis_data": vision_result,
+                        "source": "vision_ai",
+                        "theme_connection": theme_info.get("name", "Unknown"),
+                        "analysis_timestamp": datetime.now().isoformat()
+                    }
+            except Exception as e:
+                logger.warning(f"⚠️ Vision AI failed: {e}")
         
-        # PRIORITY 3: Use fallback analysis
-        logger.info(f"📋 Using fallback analysis for {photo_filename}")
-        return self._get_fallback_analysis(photo_filename, theme_info)
+        # Third try: Theme-based fallback
+        logger.info(f"🔄 Using theme-based fallback analysis")
+        return self._get_theme_based_fallback(theme_info)
     
-    async def _real_time_vision_analysis(self, photo_filename: str, theme_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform real-time Vision AI analysis on photo"""
+    def _get_pre_analyzed_data(self, photo_filename: str) -> Optional[Dict[str, Any]]:
+        """Get pre-analyzed data for specific photo"""
+        
+        photo_analyses = self.photo_analysis_data.get("photo_analyses", [])
+        
+        for analysis in photo_analyses:
+            if analysis.get("image_name") == photo_filename:
+                return analysis
+        
+        # Try partial matching (without extension)
+        base_filename = photo_filename.replace(".png", "").replace(".jpg", "")
+        
+        for analysis in photo_analyses:
+            analysis_name = analysis.get("image_name", "").replace(".png", "").replace(".jpg", "")
+            if analysis_name == base_filename:
+                return analysis
+        
+        return None
+    
+    async def _use_vision_ai(self, photo_filename: str) -> Optional[Dict[str, Any]]:
+        """Use Google Vision AI for real-time analysis"""
         
         try:
-            # In production, this would analyze the actual photo file
-            # For now, return a mock real-time analysis structure
-            
-            theme_name = theme_info.get("name", "Memory")
-            
+            # This would call the actual Vision AI tool
+            # For now, return a safe fallback
             return {
-                "photo_filename": photo_filename,
-                "analysis_method": "real_time_vision_ai",
-                "analysis_data": {
-                    "description": f"A {theme_name.lower()} photo with warm, positive elements",
-                    "conversation_starters": [
-                        f"This {theme_name.lower()} photo brings back wonderful memories",
-                        "What do you see in this image?",
-                        "Tell me about this moment"
-                    ],
-                    "cultural_context": f"{theme_name.lower()} memories and experiences",
-                    "memory_triggers": [theme_name.lower(), "memories", "experiences"],
-                    "analysis_confidence": "real_time_vision_ai",
-                    "dementia_friendly": True,
-                    "safety_level": "positive_memories"
-                },
-                "theme_connection": theme_name,
-                "analysis_timestamp": datetime.now().isoformat(),
-                "success": True
+                "google_vision_description": f"Analysis of {photo_filename}",
+                "conversation_starters": [
+                    "What do you see in this image?",
+                    "Does this remind you of anything?",
+                    "What are your thoughts about this?"
+                ],
+                "dementia_friendly": True,
+                "safety_level": "positive_memories"
             }
-            
         except Exception as e:
-            logger.error(f"❌ Real-time Vision AI analysis failed: {e}")
-            return {"success": False, "error": str(e)}
+            logger.error(f"❌ Vision AI analysis failed: {e}")
+            return None
     
-    def _get_fallback_analysis(self, photo_filename: str, theme_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Get fallback analysis when other methods fail"""
+    def _get_theme_based_fallback(self, theme_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Create fallback analysis based on theme"""
         
-        fallback_data = self.photo_analysis_data.get("fallback_analysis", {})
-        theme_name = theme_info.get("name", "Memory")
-        
-        # Customize fallback for theme
-        customized_fallback = fallback_data.copy()
-        customized_fallback["conversation_starters"] = [
-            f"This {theme_name.lower()} image brings back warm memories",
-            f"Tell me about {theme_name.lower()} experiences you've had",
-            "What memories does this bring to mind?"
-        ]
-        customized_fallback["cultural_context"] = f"{theme_name.lower()} memories and positive experiences"
-        customized_fallback["memory_triggers"] = [theme_name.lower(), "memories", "experiences", "stories"]
+        theme_name = theme_info.get("name", "Memory Lane")
+        theme_id = theme_info.get("id", "memory_lane")
         
         return {
-            "photo_filename": photo_filename,
-            "analysis_method": "fallback",
-            "analysis_data": customized_fallback,
+            "analysis_data": {
+                "google_vision_description": f"A {theme_name.lower()} themed image",
+                "conversation_starters": theme_info.get("conversation_prompts", [
+                    "What does this make you think of?",
+                    "Does this bring back any memories?"
+                ])[:3],
+                "dementia_friendly": True,
+                "safety_level": "positive_memories",
+                "theme": theme_id
+            },
+            "source": "theme_fallback",
             "theme_connection": theme_name,
-            "analysis_timestamp": datetime.now().isoformat(),
-            "success": True
+            "analysis_timestamp": datetime.now().isoformat()
         }
     
-    def _enhance_profile_with_photo_analysis(self, consolidated_profile: Dict[str, Any], 
+    def _enhance_profile_with_photo_analysis(self, 
+                                           consolidated_profile: Dict[str, Any],
                                            photo_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Add photo analysis to consolidated profile
+        """Add photo analysis to consolidated profile"""
         
-        Args:
-            consolidated_profile: Profile from Step 1
-            photo_analysis: Photo analysis results
-            
-        Returns:
-            Enhanced profile ready for Step 3
-        """
-        
-        # Create enhanced profile (copy original)
         enhanced_profile = consolidated_profile.copy()
         
         # Add photo analysis section
@@ -225,38 +276,30 @@ class SimplePhotoAnalysisAgent:
         })
         enhanced_profile["pipeline_state"] = pipeline_state
         
-        # Add step 2 metadata
-        enhanced_profile["step2_metadata"] = {
-            "agent": "SimplePhotoAnalysisAgent",
-            "photo_filename": photo_analysis.get("photo_filename", "unknown"),
-            "analysis_method": photo_analysis.get("analysis_method", "fallback"),
-            "theme_connection": photo_analysis.get("theme_connection", "Unknown"),
-            "success": photo_analysis.get("success", False),
-            "processing_time": "step2_complete"
-        }
+        logger.info("✅ Profile enhanced with photo analysis")
         
-        logger.info(f"✅ Profile enhanced with photo analysis")
         return enhanced_profile
     
     def _create_fallback_enhanced_profile(self, consolidated_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback enhanced profile when Step 2 fails completely"""
+        """Create fallback enhanced profile when analysis fails"""
         
-        logger.warning("🔄 Creating fallback enhanced profile for Step 2")
-        
-        # Use emergency fallback analysis
-        emergency_analysis = {
-            "photo_filename": "fallback.png",
-            "analysis_method": "emergency_fallback",
-            "analysis_data": self.photo_analysis_data.get("fallback_analysis", {}),
-            "theme_connection": "General",
-            "analysis_timestamp": datetime.now().isoformat(),
-            "success": False,
-            "error": "step2_complete_failure"
-        }
-        
-        # Create enhanced profile with emergency fallback
         enhanced_profile = consolidated_profile.copy()
-        enhanced_profile["photo_analysis"] = emergency_analysis
+        
+        # Add minimal photo analysis
+        enhanced_profile["photo_analysis"] = {
+            "analysis_data": {
+                "google_vision_description": "Photo analysis not available",
+                "conversation_starters": [
+                    "Tell me what you see",
+                    "What does this remind you of?"
+                ],
+                "dementia_friendly": True,
+                "safety_level": "positive_memories"
+            },
+            "source": "fallback",
+            "theme_connection": "General",
+            "analysis_timestamp": datetime.now().isoformat()
+        }
         
         # Update pipeline state
         pipeline_state = enhanced_profile.get("pipeline_state", {})
@@ -273,24 +316,24 @@ class SimplePhotoAnalysisAgent:
     
     def get_available_photos(self) -> List[str]:
         """Get list of available pre-analyzed photos"""
-        return list(self.photo_analysis_data.get("photo_analysis_data", {}).keys())
+        photo_analyses = self.photo_analysis_data.get("photo_analyses", [])
+        return [analysis.get("image_name", "") for analysis in photo_analyses if analysis.get("image_name")]
     
     def validate_photo_analysis_data(self) -> Dict[str, Any]:
         """Validate photo analysis configuration"""
         
-        photo_data = self.photo_analysis_data.get("photo_analysis_data", {})
-        fallback_data = self.photo_analysis_data.get("fallback_analysis", {})
+        photo_analyses = self.photo_analysis_data.get("photo_analyses", [])
         
         validation = {
-            "total_photos": len(photo_data),
-            "photos_available": list(photo_data.keys()),
-            "fallback_available": bool(fallback_data),
+            "total_photos": len(photo_analyses),
+            "photos_available": [analysis.get("image_name", "") for analysis in photo_analyses],
             "all_dementia_friendly": all(
-                data.get("dementia_friendly", False) for data in photo_data.values()
+                analysis.get("dementia_friendly", False) for analysis in photo_analyses
             ),
             "all_positive_memories": all(
-                data.get("safety_level") == "positive_memories" for data in photo_data.values()
-            )
+                analysis.get("safety_level") == "positive_memories" for analysis in photo_analyses
+            ),
+            "data_source": self.photo_analysis_data.get("metadata", {}).get("source", "unknown")
         }
         
         logger.info(f"📊 Photo analysis validation: {validation['total_photos']} photos, dementia_friendly: {validation['all_dementia_friendly']}")

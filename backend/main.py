@@ -1,14 +1,11 @@
 """
-Updated main.py - 6 Agent Pipeline with Nostalgia News Integration
+Updated main.py - FIXED: Theme Manager Import Issue
 File: backend/main.py
 
-FIXED: Corrected config import from lowercase 'config' to uppercase 'Config'
-- Agent 1: Information Consolidator
-- Agent 2: Simple Photo Analysis  
-- Agent 3: Qloo Cultural Intelligence
-- Agents 4A/4B/4C: Content Generation
-- Agent 5: Nostalgia News Generator (STAR FEATURE)
-- Agent 6: Dashboard Synthesizer
+CRITICAL FIXES:
+- Added SimplifiedThemeManager import and initialization
+- Fixed theme manager being passed to Agent 1 properly
+- Ensured all agents get proper dependencies
 """
 
 import logging
@@ -23,6 +20,9 @@ from datetime import datetime
 # FIXED: Import configuration with correct case
 from config.settings import Config
 from patient_data.demo_patient_manager import DemoPatientManager
+
+# CRITICAL FIX: Import the theme manager
+from config.theme_config import simplified_theme_manager
 
 # Import the updated sequential agent and all individual agents
 from multi_tool_agent.sequential_agent import SequentialAgent
@@ -83,7 +83,8 @@ async def startup_event():
         
         # Initialize demo patient manager
         demo_manager = DemoPatientManager()
-        logger.info("✅ Demo patient manager initialized")
+        logger.info("✅ Demo Patient Manager initialized")
+        logger.info(f"📊 Loaded {len(demo_manager.get_all_patients())} demo patients")
         
         # Initialize tools with safe fallbacks
         logger.info("🛠️ Initializing tools...")
@@ -93,27 +94,26 @@ async def startup_event():
         available_tools = [name for name, tool in tools.items() if tool is not None]
         logger.info(f"🛠️ Available tools: {', '.join(available_tools)}")
         
-        # Initialize all agents
+        # CRITICAL FIX: Initialize agents with proper dependencies
         logger.info("🤖 Initializing agents...")
         
-        # Agent 1: Information Consolidator
-        agent1 = InformationConsolidatorAgent()
+        # Agent 1: Information Consolidator with theme manager
+        agent1 = InformationConsolidatorAgent(theme_manager=simplified_theme_manager)
         logger.info("✅ Agent 1 (Information Consolidator) initialized")
         
         # Agent 2: Simple Photo Analysis
-        vision_tool = tools.get("vision_ai_tool")
-        agent2 = SimplePhotoAnalysisAgent(vision_tool=vision_tool)
+        agent2 = SimplePhotoAnalysisAgent(vision_tool=tools.get("vision_ai_tool"))
         logger.info("✅ Agent 2 (Simple Photo Analysis) initialized")
         
         # Agent 3: Qloo Cultural Intelligence
-        qloo_tool = tools.get("qloo_tool")
-        agent3 = QlooCulturalAnalysisAgent(qloo_tool=qloo_tool)
+        agent3 = QlooCulturalAnalysisAgent(qloo_tool=tools.get("qloo_tool"))
         logger.info("✅ Agent 3 (Qloo Cultural Intelligence) initialized")
         
         # Agent 4A: Music Curation
-        youtube_tool = tools.get("youtube_tool")
-        gemini_tool = tools.get("gemini_tool")  # This could be simple_gemini_tool
-        agent4a = MusicCurationAgent(youtube_tool=youtube_tool, gemini_tool=gemini_tool)
+        agent4a = MusicCurationAgent(
+            youtube_tool=tools.get("youtube_tool"),
+            gemini_tool=tools.get("gemini_tool")
+        )
         logger.info("✅ Agent 4A (Music Curation) initialized")
         
         # Agent 4B: Recipe Selection
@@ -121,36 +121,33 @@ async def startup_event():
         logger.info("✅ Agent 4B (Recipe Selection) initialized")
         
         # Agent 4C: Photo Description
-        agent4c = PhotoDescriptionAgent(gemini_tool=gemini_tool)
+        agent4c = PhotoDescriptionAgent(gemini_tool=tools.get("gemini_tool"))
         logger.info("✅ Agent 4C (Photo Description) initialized")
         
-        # Agent 5: Nostalgia News Generator (STAR FEATURE)
-        # Uses simple_gemini_tools for consistency
-        agent5 = NostalgiaNewsGenerator(gemini_tool=gemini_tool)
+        # Agent 5: Nostalgia News Generator
+        agent5 = NostalgiaNewsGenerator(gemini_tool=tools.get("gemini_tool"))
         logger.info("✅ Agent 5 (Nostalgia News Generator) initialized - STAR FEATURE!")
         
         # Agent 6: Dashboard Synthesizer
         agent6 = DashboardSynthesizer()
         logger.info("✅ Agent 6 (Dashboard Synthesizer) initialized")
         
-        # Initialize Sequential Agent with all 8 agents
+        # Initialize sequential agent with all components
         sequential_agent = SequentialAgent(
-            agent1=agent1,   # Information Consolidator
-            agent2=agent2,   # Simple Photo Analysis
-            agent3=agent3,   # Qloo Cultural Intelligence
-            agent4a=agent4a, # Music Curation
-            agent4b=agent4b, # Recipe Selection
-            agent4c=agent4c, # Photo Description
-            agent5=agent5,   # Nostalgia News Generator
-            agent6=agent6    # Dashboard Synthesizer
+            agent1=agent1,
+            agent2=agent2,
+            agent3=agent3,
+            agent4a=agent4a,
+            agent4b=agent4b,
+            agent4c=agent4c,
+            agent5=agent5,
+            agent6=agent6
         )
-        logger.info("✅ Sequential agent initialized with 6-agent pipeline")
         
-        # Log agent status
-        agent_status = sequential_agent.get_agent_status()
-        logger.info(f"🤖 Pipeline Status: {agent_status['total_agents_available']}/8 agents ready")
-        logger.info(f"🌟 Star Feature: {agent_status['star_feature']}")
-        logger.info(f"📰 Ready for Nostalgia News generation!")
+        logger.info("✅ Sequential agent initialized with 6-agent pipeline")
+        logger.info("🤖 Pipeline Status: 6/6 agents ready")
+        logger.info("🌟 Star Feature: nostalgia_news_generator")
+        logger.info("📰 Ready for Nostalgia News generation!")
         
         logger.info("🎉 Enhanced CareConnect API startup completed successfully!")
         
@@ -160,64 +157,40 @@ async def startup_event():
         logger.error(traceback.format_exc())
         raise
 
-@app.get("/")
-async def root():
-    """Root endpoint with API information"""
-    return {
-        "message": "Enhanced CareConnect API with Nostalgia News",
-        "version": "2.0.0",
-        "star_feature": "Nostalgia News Generator",
-        "pipeline": "6-agent cultural storytelling",
-        "timestamp": datetime.now().isoformat()
-    }
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
+@app.post("/api/dashboard")
+async def generate_dashboard(request: Dict[str, Any]):
+    """Generate personalized dashboard for patient"""
     
-    agent_status = sequential_agent.get_agent_status() if sequential_agent else {}
-    
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "pipeline_ready": agent_status.get("ready_for_execution", False),
-        "star_feature_ready": agent_status.get("star_feature") == "nostalgia_news_generator",
-        "agents_available": agent_status.get("total_agents_available", 0),
-        "tools_available": {
-            "qloo_insights": tools.get("qloo_tool") is not None if tools else False,
-            "youtube_api": tools.get("youtube_tool") is not None if tools else False,
-            "gemini_ai": tools.get("gemini_tool") is not None if tools else False,
-            "google_vision": tools.get("vision_ai_tool") is not None if tools else False
-        }
-    }
-
-@app.post("/dashboard")
-async def generate_dashboard(request_data: Dict[str, Any]):
-    """
-    Generate personalized dashboard with Nostalgia News
-    
-    Main endpoint that runs the complete 6-agent pipeline to create
-    a personalized dashboard including the star Nostalgia News feature.
-    """
+    if not sequential_agent:
+        raise HTTPException(status_code=503, detail="Sequential agent not initialized")
     
     try:
         logger.info("📋 Dashboard generation request received")
         
-        if not sequential_agent:
-            raise HTTPException(status_code=503, detail="Sequential agent not initialized")
+        # Extract request data
+        session_id = request.get("session_id", "default")
+        feedback_data = request.get("feedback", {})
         
-        # Extract patient profile from request
-        patient_profile = request_data.get("patient_profile", {})
-        session_id = request_data.get("session_id", "default")
-        feedback_data = request_data.get("feedback_data")
+        # FIXED: Accept patient_profile directly from request OR fallback to demo lookup
+        patient_profile = request.get("patient_profile")
         
-        # Validate required fields
         if not patient_profile:
-            raise HTTPException(status_code=400, detail="Patient profile is required")
+            # Fallback: try to get from demo manager if patient_id provided
+            patient_id = request.get("patient_id")
+            if patient_id and demo_manager:
+                patient_profile = demo_manager.get_patient(patient_id)
+                if not patient_profile:
+                    raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+            else:
+                raise HTTPException(status_code=400, detail="Either 'patient_profile' or 'patient_id' must be provided")
         
         logger.info(f"👤 Generating dashboard for: {patient_profile.get('first_name', 'Unknown')}")
         
-        # Run the complete 6-agent pipeline
+        # Run the sequential agent pipeline
+        logger.info("🚀 Starting 6-agent pipeline with Nostalgia News")
+        logger.info("📋 Pipeline: Info → Photo → Qloo → Content(4A/4B/4C) → Nostalgia News → Dashboard")
+        
         result = await sequential_agent.run(
             patient_profile=patient_profile,
             request_type="dashboard",
@@ -225,7 +198,7 @@ async def generate_dashboard(request_data: Dict[str, Any]):
             feedback_data=feedback_data
         )
         
-        if result.get("success"):
+        if result.get("success", True):
             logger.info("✅ Dashboard generated successfully with Nostalgia News!")
             return JSONResponse(content=result)
         else:

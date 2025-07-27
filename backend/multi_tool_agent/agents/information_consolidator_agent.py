@@ -1,12 +1,8 @@
 """
-Step 1: Simplified Information Consolidator Agent
+Step 1: Simplified Information Consolidator Agent - FIXED THEME DATA
 File: backend/multi_tool_agent/agents/information_consolidator_agent.py
 
-SIMPLIFIED PIPELINE APPROACH:
-- Get basic profile information from UI
-- Handle simple feedback (likes/dislikes)
-- Pick theme from 10 themes in JSON
-- Create clean consolidated profile for next step
+CRITICAL FIX: Now properly includes photo_filename in theme_info for Agent 2
 """
 
 import logging
@@ -57,19 +53,19 @@ class InformationConsolidatorAgent:
             # Handle simple feedback mechanism
             feedback_summary = self._process_feedback(feedback_data)
             
-            # Select theme for the session
-            selected_theme = self._select_theme(session_id)
+            # FIXED: Get complete theme data including photo_filename
+            theme_data = self._select_theme_with_photo(session_id)
             
-            # Create consolidated profile
+            # Create consolidated profile with proper structure for Agent 2
             consolidated_profile = {
                 # Basic patient information
                 "patient_info": basic_info,
                 
-                # Theme for this session
-                "selected_theme": selected_theme,
+                # FIXED: Include photo_filename in theme_info for Agent 2
+                "theme_info": theme_data,
                 
                 # Simple feedback tracking
-                "feedback": feedback_summary,
+                "feedback_info": feedback_summary,
                 
                 # Session metadata
                 "session_metadata": {
@@ -89,7 +85,7 @@ class InformationConsolidatorAgent:
             
             logger.info(f"✅ Step 1: Profile consolidated successfully")
             logger.info(f"   Patient: {basic_info.get('first_name', 'Unknown')}")
-            logger.info(f"   Theme: {selected_theme.get('name', 'Unknown')}")
+            logger.info(f"   Theme: {theme_data.get('name', 'Unknown')}")
             logger.info(f"   Feedback: {len(feedback_summary.get('likes', []))} likes, {len(feedback_summary.get('dislikes', []))} dislikes")
             
             return consolidated_profile
@@ -119,60 +115,49 @@ class InformationConsolidatorAgent:
             else:
                 age_group = "adult"
         
-        basic_info = {
+        logger.info(f"📝 Basic profile: {first_name}, age {current_age or 'unknown'}, {cultural_heritage}")
+        
+        return {
             "first_name": first_name,
+            "last_name": patient_profile.get("last_name", ""),
             "birth_year": birth_year,
             "current_age": current_age,
             "age_group": age_group,
             "cultural_heritage": cultural_heritage,
-            
-            # Additional context
-            "location": patient_profile.get("city", "") + ", " + patient_profile.get("state", ""),
-            "additional_context": patient_profile.get("additional_context", ""),
-            
-            # Profile completeness
-            "profile_complete": bool(first_name and birth_year and cultural_heritage)
+            "city": patient_profile.get("city", ""),
+            "state": patient_profile.get("state", ""),
+            "interests": patient_profile.get("interests", []),
+            "medical_conditions": patient_profile.get("medical_conditions", []),
+            "profile_complete": bool(first_name and cultural_heritage)
         }
-        
-        logger.info(f"📝 Basic profile: {first_name}, age {current_age}, {cultural_heritage}")
-        return basic_info
     
     def _process_feedback(self, feedback_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process simple feedback mechanism (likes/dislikes)"""
+        """Process and clean feedback data"""
         
         if not feedback_data:
-            return {
-                "likes": [],
-                "dislikes": [],
-                "total_feedback": 0,
-                "feedback_available": False
-            }
+            feedback_data = {}
         
-        # Extract likes and dislikes
         likes = feedback_data.get("likes", [])
         dislikes = feedback_data.get("dislikes", [])
         
-        # Ensure they're lists
-        if not isinstance(likes, list):
-            likes = []
-        if not isinstance(dislikes, list):
-            dislikes = []
+        # Extract preferred content types
+        liked_types = self._extract_liked_types(likes)
+        avoided_types = self._extract_avoided_types(dislikes)
         
         feedback_summary = {
             "likes": likes,
             "dislikes": dislikes,
+            "liked_types": liked_types,
+            "avoided_types": avoided_types,
             "total_feedback": len(likes) + len(dislikes),
-            "feedback_available": len(likes) + len(dislikes) > 0,
-            
-            # Simple feedback insights
-            "preferred_types": self._extract_preferred_types(likes),
-            "avoided_types": self._extract_avoided_types(dislikes)
+            "feedback_available": len(likes) > 0 or len(dislikes) > 0
         }
         
         logger.info(f"🔄 Feedback processed: {len(likes)} likes, {len(dislikes)} dislikes")
+        
         return feedback_summary
     
-    def _extract_preferred_types(self, likes: List[Dict[str, Any]]) -> List[str]:
+    def _extract_liked_types(self, likes: List[Dict[str, Any]]) -> List[str]:
         """Extract content types from likes"""
         types = []
         for like in likes:
@@ -190,23 +175,30 @@ class InformationConsolidatorAgent:
                 types.append(content_type)
         return types
     
-    def _select_theme(self, session_id: Optional[str] = None) -> Dict[str, Any]:
-        """Select theme using theme manager"""
+    def _select_theme_with_photo(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        CRITICAL FIX: Select theme AND extract photo_filename for Agent 2
+        """
         
         try:
             if self.theme_manager:
-                # Use theme manager to get daily theme
+                # Get complete theme data from theme manager
                 theme_data = self.theme_manager.get_daily_theme(session_id)
                 selected_theme = theme_data.get("theme_of_the_day", {})
+                photo_filename = theme_data.get("photo_filename", "")
                 
-                logger.info(f"🎯 Theme selected: {selected_theme.get('name', 'Unknown')}")
+                theme_name = selected_theme.get("name", "Unknown")
+                logger.info(f"🎯 Theme selected: {theme_name}")
                 
+                # CRITICAL FIX: Include photo_filename in the returned data
                 return {
                     "id": selected_theme.get("id", "general"),
-                    "name": selected_theme.get("name", "Memory Lane"),
+                    "name": theme_name,
                     "description": selected_theme.get("description", "A time for remembering"),
                     "conversation_prompts": selected_theme.get("conversation_prompts", []),
-                    "source": "theme_manager"
+                    "photo_filename": photo_filename,  # FIXED: Now included for Agent 2
+                    "source": "theme_manager",
+                    "metadata": theme_data.get("selection_metadata", {})
                 }
             else:
                 logger.warning("⚠️ No theme manager available, using fallback")
@@ -227,6 +219,7 @@ class InformationConsolidatorAgent:
                 "What's something that always makes you smile?",
                 "Share a story from the good old days"
             ],
+            "photo_filename": "memory_lane.png",  # FIXED: Include fallback photo
             "source": "fallback"
         }
     
@@ -244,8 +237,8 @@ class InformationConsolidatorAgent:
                 "age_group": "senior",
                 "profile_complete": False
             },
-            "selected_theme": self._get_fallback_theme(),
-            "feedback": {
+            "theme_info": self._get_fallback_theme(),
+            "feedback_info": {
                 "likes": [],
                 "dislikes": [],
                 "total_feedback": 0,

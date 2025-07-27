@@ -13,7 +13,7 @@ import json
 import os
 import random
 from datetime import date
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import logging
 from pathlib import Path
 
