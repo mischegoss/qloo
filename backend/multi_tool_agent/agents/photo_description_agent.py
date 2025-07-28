@@ -1,14 +1,11 @@
 """
-Agent 4C: Cultural Photo Description Agent - UPDATED FOR ANONYMIZED PROFILES
+Agent 4C: Cultural Photo Description Agent - PII REMOVED, SIMPLIFIED
 File: backend/multi_tool_agent/agents/photo_description_agent.py
 
-CRITICAL UPDATES FOR PII COMPLIANCE:
-- Removed all personal name usage and references
-- Works with anonymized profile data (cultural_heritage, age_group)
-- Updated Gemini tool calls to use new PII-compliant method signature
-- All logging now PII-free
-- Maintains dementia-friendly photo descriptions
-- Fixed JSON file handling and theme matching logic
+FIXES:
+- Removed all PII references (birth_year, personal names)
+- Fixed Gemini method call to match working signature
+- Simplified without changing core logic
 """
 
 import asyncio
@@ -23,14 +20,9 @@ class PhotoDescriptionAgent:
     """
     Agent 4C: PII-Compliant Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
     
-    UPDATED FEATURES:
-    - Fixed JSON file path (photo_analyses.json)
-    - Fixed JSON structure handling (array not dict)
-    - Fixed theme-based photo selection
-    - Fixed Gemini response handling
-    - Improved fallback mechanisms
-    - Works with anonymized profiles only (no PII)
-    - Generates simple, warm photo descriptions for dementia care
+    FIXED:
+    - Fixed Gemini method signature
+    - Simplified method calls
     """
     
     def __init__(self, gemini_tool=None):
@@ -111,13 +103,6 @@ class PhotoDescriptionAgent:
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
         Select and culturally enhance a photo based on anonymized patient profile and theme.
-        
-        Args:
-            enhanced_profile: Profile from previous agents containing patient_info, theme_info, qloo_intelligence
-            
-        Returns:
-            Dict containing selected photo with culturally-enhanced conversation starters
-            AND dementia-friendly description (PII-compliant)
         """
         
         logger.info("📷 Agent 4C: Starting PII-compliant culturally-aware photo description")
@@ -128,14 +113,13 @@ class PhotoDescriptionAgent:
             theme_info = enhanced_profile.get("theme_info", {})
             qloo_intelligence = enhanced_profile.get("qloo_intelligence", {})
             
-            # FIXED: Extract only anonymized data (no personal names)
+            # FIXED: Extract only anonymized data (no PII)
             cultural_heritage = patient_info.get("cultural_heritage", "American")
             age_group = patient_info.get("age_group", "senior")
-            birth_year = patient_info.get("birth_year", 1945)
             theme_id = theme_info.get("id", "family")
             theme_name = theme_info.get("name", "Family")
             
-            # FIXED: Log only anonymized data (no personal names)
+            # FIXED: Log only anonymized data (no PII)
             logger.info(f"🎯 Selecting photo - Theme: {theme_name}, Heritage: {cultural_heritage}, Age Group: {age_group}")
             
             # Step 1: Find photo that matches today's theme
@@ -185,10 +169,9 @@ class PhotoDescriptionAgent:
                                            theme_info: Dict[str, Any], qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
         """Use Gemini AI to enhance photo conversation with cultural context AND generate PII-compliant dementia-friendly description"""
         
-        # FIXED: Extract only anonymized data
+        # FIXED: Extract only anonymized data (no PII)
         cultural_heritage = patient_info.get("cultural_heritage", "American")
         age_group = patient_info.get("age_group", "senior")
-        birth_year = patient_info.get("birth_year", 1945)
         
         # Get original conversation starters and description
         original_starters = photo_data.get("conversation_starters", [])
@@ -212,14 +195,14 @@ class PhotoDescriptionAgent:
             # Step 1: Generate PII-compliant dementia-friendly photo description using Gemini
             logger.info("🤖 Generating PII-compliant dementia-friendly photo description...")
             
-            # FIXED: Use updated method signature without patient_name (PII-compliant)
+            # FIXED: Use simplified method signature (only 2 parameters)
             dementia_friendly_description = await self.gemini_tool.generate_dementia_friendly_description(
-                original_description, cultural_heritage, age_group
+                original_description, cultural_heritage
             )
             
             # Step 2: Create culturally-aware prompt for conversation starters (PII-compliant)
             cultural_prompt = self._create_cultural_enhancement_prompt(
-                cultural_heritage, original_description, original_starters, qloo_artists, birth_year, age_group
+                cultural_heritage, original_description, original_starters, qloo_artists, age_group
             )
             
             # Step 3: Get enhanced conversation starters from Gemini
@@ -312,17 +295,14 @@ class PhotoDescriptionAgent:
     
     def _create_cultural_enhancement_prompt(self, cultural_heritage: str, visual_description: str, 
                                           original_starters: List[str], qloo_artists: List[str], 
-                                          birth_year: int, age_group: str) -> str:
-        """Create culturally-sensitive prompt for Gemini with PII compliance"""
-        
-        age_context = f"born in {birth_year}" if birth_year else age_group
+                                          age_group: str) -> str:
+        """Create culturally-sensitive prompt for Gemini with PII compliance - SIMPLIFIED"""
         
         prompt = f"""
         You are helping create conversation starters for a dementia care patient.
         
         ANONYMIZED Patient Background (NO PERSONAL INFORMATION):
         - Cultural Heritage: {cultural_heritage}
-        - Age context: {age_context}
         - Age group: {age_group}
         - Cultural artists they might know: {', '.join(qloo_artists[:3]) if qloo_artists else 'None available'}
         

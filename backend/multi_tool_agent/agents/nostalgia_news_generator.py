@@ -107,7 +107,6 @@ class NostalgiaNewsGenerator:
                 "theme_id": theme_info.get("id", "travel"),
                 "theme_name": theme_info.get("name", "Travel"),
                 "current_date": datetime.now().strftime("%B %d"),
-                "birth_year": patient_info.get("birth_year", 1945),
                 "interests": patient_info.get("interests", [])
             }
         except Exception as e:
@@ -119,7 +118,6 @@ class NostalgiaNewsGenerator:
                 "theme_id": "travel", 
                 "theme_name": "Travel",
                 "current_date": datetime.now().strftime("%B %d"),
-                "birth_year": 1945,
                 "interests": []
             }
     

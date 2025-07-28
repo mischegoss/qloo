@@ -14,7 +14,7 @@ CRITICAL UPDATES FOR PII COMPLIANCE:
 import logging
 import json
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

@@ -1,9 +1,10 @@
 """
-Step 1: Clean Profile Structure Definition
+Step 1: Clean Profile Structure Definition (Anonymized)
 File: backend/utils/profile_structure.py
 
 CLEAN PIPELINE DATA STRUCTURE:
-- Standardized profile format for all pipeline steps
+- Anonymized profile format matching frontend data flow
+- No PII transmission to backend
 - Clear data contracts between steps
 - Type hints and validation
 - Easy to extend and debug
@@ -14,16 +15,32 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 
 @dataclass
-class PatientInfo:
-    """Basic patient information"""
-    first_name: str
+class AnonymizedPatientInfo:
+    """Anonymized patient information - NO PII"""
     birth_year: Optional[int] = None
     current_age: Optional[int] = None
-    age_group: str = "senior"
+    age_group: str = "senior"  # senior, oldest_senior, adult
     cultural_heritage: str = "American"
-    location: str = ""
-    additional_context: str = ""
+    interests: List[str] = None
     profile_complete: bool = False
+    
+    def __post_init__(self):
+        """Calculate derived fields and set defaults"""
+        if self.interests is None:
+            self.interests = ["music", "family", "cooking"]
+        
+        # Calculate current_age from birth_year if available
+        if self.birth_year and not self.current_age:
+            self.current_age = datetime.now().year - self.birth_year
+        
+        # Ensure age_group matches current_age
+        if self.current_age:
+            if self.current_age >= 80:
+                self.age_group = "oldest_senior"
+            elif self.current_age >= 65:
+                self.age_group = "senior"
+            else:
+                self.age_group = "adult"
 
 @dataclass
 class ThemeInfo:
@@ -45,6 +62,17 @@ class FeedbackInfo:
     preferred_types: List[str] = None
     avoided_types: List[str] = None
     engagement_level: str = "new_user"
+    
+    def __post_init__(self):
+        """Set defaults and calculate derived fields"""
+        if self.preferred_types is None:
+            self.preferred_types = []
+        if self.avoided_types is None:
+            self.avoided_types = []
+        
+        # Recalculate total_feedback
+        self.total_feedback = len(self.likes) + len(self.dislikes)
+        self.feedback_available = self.total_feedback > 0
 
 @dataclass
 class SessionMetadata:
@@ -62,45 +90,83 @@ class PipelineState:
     profile_ready: bool
     fallback_used: bool = False
     errors: List[str] = None
+    
+    def __post_init__(self):
+        """Set defaults"""
+        if self.errors is None:
+            self.errors = []
 
 class ProfileStructure:
     """
-    Clean Profile Structure for Pipeline Steps
+    Clean Profile Structure for Pipeline Steps (Anonymized)
     
     PURPOSE:
-    - Standardized data format between all pipeline steps
-    - Type-safe profile management
+    - Anonymized data format matching frontend transmission
+    - Type-safe profile management with no PII
     - Easy validation and debugging
-    - Clear data contracts
+    - Clear data contracts between agents
     """
     
     def __init__(self):
         self.version = "1.0"
         
-    def create_step1_profile(self,
-                            patient_info: PatientInfo,
-                            theme_info: ThemeInfo,
-                            feedback_info: FeedbackInfo,
-                            session_metadata: SessionMetadata) -> Dict[str, Any]:
+    def create_from_frontend_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Create Step 1 profile structure
+        Create Step 1 profile from frontend request
         
         Args:
-            patient_info: Basic patient information
-            theme_info: Selected theme
-            feedback_info: Feedback summary
-            session_metadata: Session tracking
+            request_data: Request from frontend API call
             
         Returns:
-            Clean profile for Step 2
+            Clean anonymized profile for Step 2
         """
         
+        # Extract anonymized patient profile from frontend
+        patient_profile = request_data.get("patient_profile", {})
+        
+        # Create anonymized patient info (NO PII)
+        patient_info = AnonymizedPatientInfo(
+            birth_year=patient_profile.get("birth_year"),
+            age_group=patient_profile.get("age_group", "senior"),
+            cultural_heritage=patient_profile.get("cultural_heritage", "American"),
+            interests=patient_profile.get("interests", ["music", "family", "cooking"]),
+            profile_complete=patient_profile.get("profile_complete", False)
+        )
+        
+        # Create theme info (will be populated by theme selection logic)
+        theme_info = ThemeInfo(
+            id="default_theme",
+            name="Memory Lane",
+            description="A journey through cherished memories and familiar experiences",
+            conversation_prompts=[
+                "What brings back your happiest memories?",
+                "Tell me about a special tradition from your past.",
+                "What music always makes you smile?"
+            ],
+            photo_filename="travel.png"
+        )
+        
+        # Create feedback info from request
+        feedback_data = request_data.get("feedback_data", {"likes": [], "dislikes": []})
+        feedback_info = FeedbackInfo(
+            likes=feedback_data.get("likes", []),
+            dislikes=feedback_data.get("dislikes", [])
+        )
+        
+        # Create session metadata
+        session_metadata = SessionMetadata(
+            session_id=request_data.get("session_id", f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
+            request_type="dashboard",
+            timestamp=datetime.now().isoformat(),
+            step="information_consolidation"
+        )
+        
+        # Create pipeline state
         pipeline_state = PipelineState(
             current_step=1,
             next_step="photo_analysis",
             profile_ready=True,
-            fallback_used=False,
-            errors=[]
+            fallback_used=False
         )
         
         profile = {
@@ -114,17 +180,20 @@ class ProfileStructure:
             # Step-specific data (will be added by subsequent steps)
             "photo_analysis": {},  # Added by Step 2
             "qloo_intelligence": {},  # Added by Step 3
-            "content_curation": {},  # Added by Step 4
-            "youtube_content": {},  # Added by Step 5
-            "recipe_content": {},  # Added by Step 6
-            "dashboard_content": {}  # Added by Step 7
+            "content_generation": {  # Added by Step 4 (4A/B/C)
+                "music": {},
+                "recipe": {},
+                "photo_description": {}
+            },
+            "nostalgia_news": {},  # Added by Step 5
+            "dashboard_synthesis": {}  # Added by Step 6
         }
         
         return profile
     
-    def validate_step1_profile(self, profile: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_anonymized_profile(self, profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Validate Step 1 profile structure
+        Validate anonymized profile structure (NO PII CHECK)
         
         Args:
             profile: Profile to validate
@@ -137,7 +206,8 @@ class ProfileStructure:
             "valid": True,
             "errors": [],
             "warnings": [],
-            "completeness": {}
+            "completeness": {},
+            "anonymization_verified": True
         }
         
         # Check required sections
@@ -151,13 +221,22 @@ class ProfileStructure:
                 validation["errors"].append(f"Missing required section: {section}")
                 validation["valid"] = False
         
-        # Check patient info completeness
+        # Check anonymized patient info completeness
         patient_info = profile.get("patient_info", {})
-        patient_required = ["first_name", "cultural_heritage"]
         
-        for field in patient_required:
+        # CRITICAL: Verify NO PII is present
+        pii_fields = ["first_name", "last_name", "name", "city", "state", "address", "phone", "email"]
+        for pii_field in pii_fields:
+            if pii_field in patient_info:
+                validation["errors"].append(f"PII DETECTED: {pii_field} must not be present in backend")
+                validation["valid"] = False
+                validation["anonymization_verified"] = False
+        
+        # Check required anonymized fields
+        anonymized_required = ["cultural_heritage", "age_group", "interests"]
+        for field in anonymized_required:
             if not patient_info.get(field):
-                validation["warnings"].append(f"Missing patient field: {field}")
+                validation["warnings"].append(f"Missing anonymized field: {field}")
         
         # Check theme info
         theme_info = profile.get("theme_info", {})
@@ -170,28 +249,31 @@ class ProfileStructure:
         
         # Calculate completeness
         validation["completeness"] = {
-            "patient_complete": patient_info.get("profile_complete", False),
+            "patient_anonymized": validation["anonymization_verified"],
+            "profile_complete": patient_info.get("profile_complete", False),
             "theme_selected": bool(theme_info.get("name")),
             "feedback_available": profile.get("feedback_info", {}).get("feedback_available", False),
-            "ready_for_step2": validation["valid"]
+            "ready_for_step2": validation["valid"] and validation["anonymization_verified"]
         }
         
         return validation
     
-    def get_patient_summary(self, profile: Dict[str, Any]) -> str:
-        """Get human-readable patient summary"""
+    def get_anonymized_summary(self, profile: Dict[str, Any]) -> str:
+        """Get human-readable anonymized summary (NO PII)"""
         
         patient_info = profile.get("patient_info", {})
         theme_info = profile.get("theme_info", {})
         feedback_info = profile.get("feedback_info", {})
         
-        name = patient_info.get("first_name", "Unknown")
-        age = patient_info.get("current_age", "Unknown")
-        heritage = patient_info.get("cultural_heritage", "Unknown")
-        theme = theme_info.get("name", "Unknown")
+        age_group = patient_info.get("age_group", "unknown")
+        heritage = patient_info.get("cultural_heritage", "unknown")
+        interests = patient_info.get("interests", [])
+        theme = theme_info.get("name", "unknown")
         feedback_count = feedback_info.get("total_feedback", 0)
         
-        return f"{name} (age {age}, {heritage}) - Theme: {theme}, Feedback: {feedback_count} items"
+        interests_str = ", ".join(interests[:3]) if interests else "none"
+        
+        return f"Patient: {age_group} ({heritage}) - Interests: {interests_str} - Theme: {theme}, Feedback: {feedback_count} items"
     
     def get_step_summary(self, profile: Dict[str, Any]) -> str:
         """Get pipeline step summary"""
@@ -200,20 +282,23 @@ class ProfileStructure:
         current_step = pipeline_state.get("current_step", 0)
         next_step = pipeline_state.get("next_step", "unknown")
         ready = pipeline_state.get("profile_ready", False)
+        fallback = pipeline_state.get("fallback_used", False)
         
-        return f"Step {current_step} → {next_step} (Ready: {ready})"
+        status = "FALLBACK" if fallback else "READY" if ready else "NOT READY"
+        
+        return f"Step {current_step} → {next_step} ({status})"
     
     def extract_for_next_step(self, profile: Dict[str, Any], 
                              next_step: str) -> Dict[str, Any]:
         """
-        Extract relevant data for next pipeline step
+        Extract relevant anonymized data for next pipeline step
         
         Args:
             profile: Current profile
             next_step: Name of next step
             
         Returns:
-            Relevant data for next step
+            Relevant anonymized data for next step
         """
         
         if next_step == "photo_analysis":
@@ -224,7 +309,7 @@ class ProfileStructure:
                 "pipeline_state": profile.get("pipeline_state", {})
             }
         
-        # For other steps, return full profile
+        # For other steps, return full anonymized profile
         return profile
     
     def add_step_data(self, profile: Dict[str, Any], 
@@ -248,10 +333,9 @@ class ProfileStructure:
         step_mapping = {
             "photo_analysis": 2,
             "qloo_intelligence": 3,
-            "content_curation": 4,
-            "youtube_content": 5,
-            "recipe_content": 6,
-            "dashboard_content": 7
+            "content_generation": 4,
+            "nostalgia_news": 5,
+            "dashboard_synthesis": 6
         }
         
         if step_name in step_mapping:
@@ -259,8 +343,8 @@ class ProfileStructure:
             pipeline_state["current_step"] = step_mapping[step_name]
             
             # Determine next step
-            step_order = ["photo_analysis", "qloo_intelligence", "content_curation", 
-                         "youtube_content", "recipe_content", "dashboard_content"]
+            step_order = ["photo_analysis", "qloo_intelligence", "content_generation", 
+                         "nostalgia_news", "dashboard_synthesis"]
             
             current_index = step_order.index(step_name) if step_name in step_order else -1
             if current_index >= 0 and current_index < len(step_order) - 1:
@@ -273,19 +357,20 @@ class ProfileStructure:
 # Global instance
 profile_structure = ProfileStructure()
 
-# Convenience functions
-def create_patient_info(first_name: str, birth_year: int = None, 
-                       cultural_heritage: str = "American", **kwargs) -> PatientInfo:
-    """Create PatientInfo instance with defaults"""
-    current_age = (datetime.now().year - birth_year) if birth_year else None
-    age_group = "senior" if current_age and current_age >= 65 else "adult"
+# Convenience functions for anonymized data
+def create_anonymized_patient_info(birth_year: int = None, 
+                                  cultural_heritage: str = "American",
+                                  interests: List[str] = None,
+                                  **kwargs) -> AnonymizedPatientInfo:
+    """Create AnonymizedPatientInfo instance with defaults (NO PII)"""
     
-    return PatientInfo(
-        first_name=first_name,
+    if interests is None:
+        interests = ["music", "family", "cooking"]
+    
+    return AnonymizedPatientInfo(
         birth_year=birth_year,
-        current_age=current_age,
-        age_group=age_group,
         cultural_heritage=cultural_heritage,
+        interests=interests,
         **kwargs
     )
 
@@ -309,15 +394,17 @@ def create_feedback_info(likes: List[Dict] = None, dislikes: List[Dict] = None,
     return FeedbackInfo(
         likes=likes,
         dislikes=dislikes,
-        total_feedback=len(likes) + len(dislikes),
-        feedback_available=len(likes) + len(dislikes) > 0,
         **kwargs
     )
 
-def create_session_metadata(session_id: str = "default", 
+def create_session_metadata(session_id: str = None, 
                            request_type: str = "dashboard",
                            step: str = "information_consolidation") -> SessionMetadata:
     """Create SessionMetadata instance"""
+    
+    if session_id is None:
+        session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    
     return SessionMetadata(
         session_id=session_id,
         request_type=request_type,
@@ -325,9 +412,33 @@ def create_session_metadata(session_id: str = "default",
         step=step
     )
 
+# Safe fallback functions
+def safe_get_patient_heritage(profile: Dict[str, Any]) -> str:
+    """Safely get patient heritage with fallback"""
+    try:
+        return profile.get("patient_info", {}).get("cultural_heritage", "American")
+    except:
+        return "American"
+
+def safe_get_patient_age_group(profile: Dict[str, Any]) -> str:
+    """Safely get patient age group with fallback"""
+    try:
+        return profile.get("patient_info", {}).get("age_group", "senior")
+    except:
+        return "senior"
+
+def safe_get_patient_interests(profile: Dict[str, Any]) -> List[str]:
+    """Safely get patient interests with fallback"""
+    try:
+        interests = profile.get("patient_info", {}).get("interests", [])
+        return interests if interests else ["music", "family", "cooking"]
+    except:
+        return ["music", "family", "cooking"]
+
 # Export
 __all__ = [
     "ProfileStructure", "profile_structure",
-    "PatientInfo", "ThemeInfo", "FeedbackInfo", "SessionMetadata", "PipelineState",
-    "create_patient_info", "create_theme_info", "create_feedback_info", "create_session_metadata"
+    "AnonymizedPatientInfo", "ThemeInfo", "FeedbackInfo", "SessionMetadata", "PipelineState",
+    "create_anonymized_patient_info", "create_theme_info", "create_feedback_info", "create_session_metadata",
+    "safe_get_patient_heritage", "safe_get_patient_age_group", "safe_get_patient_interests"
 ]

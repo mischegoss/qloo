@@ -276,9 +276,6 @@ const apiService = {
 
     // Extract only essential, non-PII data needed by agents
     const anonymizedProfile = {
-      // REMOVED: first_name, last_name, name (PII)
-      // REMOVED: city, state (not used by agents)
-      birth_year: sourceProfile.birth_year || 1942,
       age_group: calculateAgeGroup(sourceProfile.birth_year),
       cultural_heritage: sourceProfile.cultural_heritage || 'American',
       interests: sourceProfile.interests || ['music', 'family', 'cooking'],
@@ -336,7 +333,6 @@ const apiService = {
     // Return default profile with UI display name
     return {
       first_name: 'Guest',
-      last_name: '',
       name: 'Guest',
       birth_year: 1942,
       cultural_heritage: 'Italian-American',

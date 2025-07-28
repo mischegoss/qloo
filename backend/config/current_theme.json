@@ -1,21 +1,21 @@
 {
-  "theme_id": "food",
-  "theme_name": "Food",
-  "theme_description": "Favorite foods and cooking memories",
-  "photo_filename": "food.png",
+  "theme_id": "family",
+  "theme_name": "Family",
+  "theme_description": "Cherishing family bonds and togetherness",
+  "photo_filename": "family.png",
   "conversation_prompts": [
-    "What was your favorite food growing up?",
-    "Did you enjoy cooking or baking?",
-    "What foods remind you of home?",
-    "Tell me about a special meal you remember"
+    "Tell me about your family",
+    "What family traditions were special to you?",
+    "Who in your family made you laugh the most?",
+    "What did your family do together on weekends?"
   ],
-  "timestamp": "2025-07-27T23:52:37.215903",
-  "session_id": "test_session_456",
+  "timestamp": "2025-07-28T18:54:34.128171",
+  "session_id": "test_session_003",
   "written_by": "information_consolidator_agent",
   "selection_metadata": {
-    "date": "2025-07-27T23:52:37.215785",
-    "theme_index": 3,
-    "next_theme_index": 4,
+    "date": "2025-07-28T18:54:34.128122",
+    "theme_index": 1,
+    "next_theme_index": 2,
     "total_themes_available": 9,
     "selection_method": "true_rotation",
     "refresh_enabled": true

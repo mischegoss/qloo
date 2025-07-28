@@ -8,6 +8,7 @@ CRITICAL FIXES FOR PII COMPLIANCE:
 - Removed all PII references in fallbacks and data flow
 - Added anonymized profile validation
 - Maintains full functionality with privacy compliance
+- FIXED: Removed age calculation method that was causing AttributeError
 """
 
 import logging
@@ -329,14 +330,13 @@ class SequentialAgent:
         # Extract anonymized patient info from Agent 1
         agent1_patient_info = agent1_output.get("patient_info", {})
         
-        # FIXED: Map anonymized fields correctly (no PII)
+        # FIXED: Create mapped patient info without age calculation - use age_group only
         mapped_patient_info = {
             # REMOVED: "name" field (PII) - use generic identifier
             "display_name": "Friend",  # Generic, non-identifying name for UI
             "cultural_heritage": agent1_patient_info.get("cultural_heritage", "American"),
-            "age": self._calculate_age_from_anonymized_profile(agent1_patient_info),
-            "birth_year": agent1_patient_info.get("birth_year"),
             "age_group": agent1_patient_info.get("age_group", "senior")
+            # REMOVED: "age" field calculation that was causing the error
         }
         
         # Extract theme info and map correctly
@@ -381,7 +381,7 @@ class SequentialAgent:
         
         # Create the final enhanced profile with correct structure - PII COMPLIANT
         final_profile = {
-            # FIXED: Use mapped patient_info with anonymized fields only
+            # FIXED: Use mapped patient_info with anonymized fields only (no age field)
             "patient_info": mapped_patient_info,
             
             # Theme information
@@ -419,7 +419,7 @@ class SequentialAgent:
             "recipe_content": {},
             "photo_content": {"filename": "", "description": "", "conversation_starters": []},
             "nostalgia_news": self._create_empty_nostalgia_sections(),
-            "patient_info": {"display_name": "Friend", "cultural_heritage": "American", "age": 0, "age_group": "senior"},
+            "patient_info": {"display_name": "Friend", "cultural_heritage": "American", "age_group": "senior"},
             "qloo_intelligence": {}
         }
         
@@ -439,28 +439,7 @@ class SequentialAgent:
         logger.info(f"   News: {nostalgia_data.get('title', 'N/A')}")
         
         return final_profile
-    
-    def _calculate_age_from_anonymized_profile(self, patient_info: Dict[str, Any]) -> int:
-        """
-        Calculate age from anonymized profile data safely
-        """
-        
-        birth_year = patient_info.get("birth_year")
-        if birth_year and isinstance(birth_year, int):
-            current_year = datetime.now().year
-            calculated_age = current_year - birth_year
-            if 0 <= calculated_age <= 120:  # Reasonable age range
-                return calculated_age
-        
-        # Fallback: estimate age from age_group
-        age_group = patient_info.get("age_group", "senior")
-        age_estimates = {
-            "adult": 50,
-            "senior": 75,
-            "oldest_senior": 85
-        }
-        
-        return age_estimates.get(age_group, 75)
+
     
     def _create_empty_nostalgia_sections(self) -> Dict[str, Any]:
         """Create empty nostalgia news with sections structure - PII COMPLIANT"""

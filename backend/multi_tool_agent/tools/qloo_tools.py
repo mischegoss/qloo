@@ -1,7 +1,12 @@
 """
-Qloo Tools - Fixed Timeouts Version
+Qloo Tools - PII-Compliant Version with Fixed Timeouts
 File: backend/multi_tool_agent/tools/qloo_tools.py
 
+PII COMPLIANCE: 
+- Only uses anonymized cultural_heritage and age_group data
+- No personal information (names, locations, addresses) processed
+- All API calls use only demographic and cultural signals
+- Safe fallbacks ensure no PII exposure
 TIMEOUT FIX: Increased from 15 seconds to 60 seconds for all Qloo API calls
 """
 
@@ -18,8 +23,9 @@ logger = logging.getLogger(__name__)
 
 class QlooInsightsAPI:
     """
-    Complete Qloo API tool with increased timeouts.
+    Complete Qloo API tool with increased timeouts and PII compliance.
     Focus: Heritage-based classical music + simple cuisine places.
+    PRIVACY: Only processes anonymized cultural_heritage and age_group data.
     """
     
     def __init__(self, api_key: str, base_url: str = "https://hackathon.api.qloo.com"):
@@ -29,30 +35,38 @@ class QlooInsightsAPI:
             "x-api-key": api_key,
             "Content-Type": "application/json"
         }
-        logger.info("✅ Qloo API initialized with FIXED methods for Agent 3 compatibility")
+        logger.info("✅ PII-Compliant Qloo API initialized with FIXED methods for Agent 3 compatibility")
     
     async def get_safe_classical_music(self, 
                                      cultural_heritage: str,
                                      age_group: str = "55_and_older",
+                                     gender: Optional[str] = None,
                                      take: int = 10) -> Dict[str, Any]:
         """
         Get classical music based on cultural heritage.
+        PII-COMPLIANT: Only uses cultural_heritage (anonymized) and age_group data.
         Simplified: Just uses heritage → classical tag mapping.
         """
         
         music_tag = self._get_heritage_music_tag(cultural_heritage)
-        logger.info(f"🎼 Getting classical music for {cultural_heritage} → tag: {music_tag}")
+        logger.info(f"🎼 Getting classical music for {cultural_heritage} → tag: {music_tag} (PII-compliant)")
         
         if not httpx:
-            logger.warning("⚠️ httpx not available, using fallback")
+            logger.warning("⚠️ httpx not available, using PII-compliant fallback")
             return self._get_classical_fallback(cultural_heritage)
         
         try:
+            # PII-COMPLIANT PARAMETERS: Only cultural tags and age demographics
             params = {
                 "filter.type": "urn:entity:artist",
                 "signal.interests.tags": music_tag,
+                "signal.demographics.age": age_group,
                 "take": take
             }
+            
+            # Add gender demographic if provided (still PII-compliant)
+            if gender:
+                params["signal.demographics.gender"] = gender
             
             # TIMEOUT FIX: Increased from 15.0 to 60.0 seconds
             async with httpx.AsyncClient(timeout=60.0) as client:
@@ -68,13 +82,14 @@ class QlooInsightsAPI:
                     data = response.json()
                     entities = data.get("results", [])
                     
-                    logger.info(f"✅ Safe classical music: {len(entities)} results")
+                    logger.info(f"✅ PII-compliant safe classical music: {len(entities)} results")
                     return {
                         "success": True,
                         "entities": entities,
                         "entity_count": len(entities),
                         "content_type": "classical_music",
-                        "heritage": cultural_heritage
+                        "heritage": cultural_heritage,
+                        "pii_compliant": True
                     }
                 else:
                     logger.error(f"❌ Qloo safe music error: {response.status_code}")
@@ -92,18 +107,21 @@ class QlooInsightsAPI:
         """
         CRITICAL FIX: The missing method that Agent 3 expects.
         Get insights using simple tags.
+        PII-COMPLIANT: Only uses cultural tags and age demographics - no personal info.
         """
         
-        logger.info(f"🎯 Tag-based insights: {tag} for {entity_type}")
+        logger.info(f"🎯 PII-compliant tag-based insights: {tag} for {entity_type}")
         
         if not httpx:
-            logger.warning("⚠️ httpx not available, using fallback")
+            logger.warning("⚠️ httpx not available, using PII-compliant fallback")
             return self._get_tag_fallback(entity_type, tag)
         
         try:
+            # PII-COMPLIANT PARAMETERS: Only cultural tags and demographics
             params = {
                 "filter.type": entity_type,
                 "signal.interests.tags": tag,
+                "signal.demographics.age": age_demographic,
                 "take": take
             }
             
@@ -121,14 +139,15 @@ class QlooInsightsAPI:
                     data = response.json()
                     entities = data.get("results", [])
                     
-                    logger.info(f"✅ Tag insights success: {len(entities)} results")
+                    logger.info(f"✅ PII-compliant tag insights success: {len(entities)} results")
                     return {
                         "success": True,
                         "entities": entities,
                         "entity_count": len(entities),
                         "tag": tag,
                         "entity_type": entity_type,
-                        "content_type": f"{entity_type}_{tag}"
+                        "content_type": f"{entity_type}_{tag}",
+                        "pii_compliant": True
                     }
                 else:
                     logger.error(f"❌ Tag insights error: {response.status_code}")
@@ -138,64 +157,70 @@ class QlooInsightsAPI:
             logger.error(f"❌ Tag insights exception: {e}")
             return self._get_tag_fallback(entity_type, tag)
     
-    async def make_cultural_calls(self, cultural_heritage: str) -> Dict[str, Any]:
+    async def make_cultural_calls(self, cultural_heritage: str, age_group: str = "55_and_older") -> Dict[str, Any]:
         """
         Make both cultural calls (artists + places) for Agent 3.
+        PII-COMPLIANT: Only uses anonymized cultural_heritage and age_group data.
         Core method that Agent 3 relies on.
         """
         
-        logger.info(f"🎯 Making cultural calls for: {cultural_heritage}")
+        logger.info(f"🎯 Making PII-compliant cultural calls for: {cultural_heritage} (age group: {age_group})")
         
         results = {
             "cultural_recommendations": {},
             "successful_calls": 0,
             "total_results": 0,
-            "heritage": cultural_heritage
+            "heritage": cultural_heritage,
+            "age_group": age_group,
+            "pii_compliant": True
         }
         
-        # Get classical music artists
+        # Get classical music artists (PII-compliant)
         try:
-            artists_result = await self.get_safe_classical_music(cultural_heritage, take=10)
+            artists_result = await self.get_safe_classical_music(cultural_heritage, age_group=age_group, take=10)
             if artists_result.get("success"):
                 results["cultural_recommendations"]["artists"] = artists_result
                 results["successful_calls"] += 1
                 results["total_results"] += artists_result.get("entity_count", 0)
-                logger.info(f"✅ Artists call: {artists_result.get('entity_count')} results")
+                logger.info(f"✅ PII-compliant artists call: {artists_result.get('entity_count')} results")
             else:
-                logger.warning("⚠️ Artists call failed, using fallback")
+                logger.warning("⚠️ Artists call failed, using PII-compliant fallback")
         except Exception as e:
             logger.error(f"❌ Artists call exception: {e}")
-            # Add fallback
+            # Add PII-compliant fallback
             fallback_artists = self._get_classical_fallback(cultural_heritage)
             results["cultural_recommendations"]["artists"] = fallback_artists
         
-        # Get cuisine places
+        # Get cuisine places (PII-compliant)
         try:
             cuisine_tag = self._get_heritage_cuisine_tag(cultural_heritage)
-            places_result = await self.get_tag_based_insights("urn:entity:place", cuisine_tag, take=10)
+            places_result = await self.get_tag_based_insights("urn:entity:place", cuisine_tag, age_demographic=age_group, take=10)
             if places_result.get("success"):
                 results["cultural_recommendations"]["places"] = places_result
                 results["successful_calls"] += 1
                 results["total_results"] += places_result.get("entity_count", 0)
-                logger.info(f"✅ Places call: {places_result.get('entity_count')} results")
+                logger.info(f"✅ PII-compliant places call: {places_result.get('entity_count')} results")
             else:
-                logger.warning("⚠️ Places call failed, using fallback")
+                logger.warning("⚠️ Places call failed, using PII-compliant fallback")
         except Exception as e:
             logger.error(f"❌ Places call exception: {e}")
-            # Add fallback
+            # Add PII-compliant fallback
             cuisine_tag = self._get_heritage_cuisine_tag(cultural_heritage)
             fallback_places = self._get_cuisine_fallback(cuisine_tag)
             results["cultural_recommendations"]["places"] = fallback_places
         
-        logger.info(f"🎯 Cultural calls completed: {results['successful_calls']}/2 successful")
+        logger.info(f"🎯 PII-compliant cultural calls completed: {results['successful_calls']}/2 successful")
         return results
     
     def _get_heritage_music_tag(self, cultural_heritage: str) -> str:
-        """Map cultural heritage to music tag"""
+        """
+        Map cultural heritage to music tag.
+        PII-COMPLIANT: Only processes cultural heritage (anonymized field).
+        """
         
         heritage_lower = cultural_heritage.lower()
         
-        # Heritage-based mappings for classical music
+        # Heritage-based mappings for classical music (PII-compliant)
         if any(term in heritage_lower for term in ["italian", "italy"]):
             return "classical"
         elif any(term in heritage_lower for term in ["german", "germany", "austrian", "austria"]):
@@ -216,7 +241,10 @@ class QlooInsightsAPI:
             return "classical"  # Default to classical for seniors
     
     def _get_heritage_cuisine_tag(self, cultural_heritage: str) -> str:
-        """Map cultural heritage to cuisine tag"""
+        """
+        Map cultural heritage to cuisine tag.
+        PII-COMPLIANT: Only processes cultural heritage (anonymized field).
+        """
         
         heritage_lower = cultural_heritage.lower()
         
@@ -244,7 +272,10 @@ class QlooInsightsAPI:
             return "american"  # Default fallback
     
     def _get_classical_fallback(self, cultural_heritage: str) -> Dict[str, Any]:
-        """Fallback classical music results"""
+        """
+        Fallback classical music results.
+        PII-COMPLIANT: Only uses cultural heritage (anonymized), no personal info.
+        """
         
         heritage_lower = cultural_heritage.lower()
         
@@ -280,11 +311,15 @@ class QlooInsightsAPI:
             "entity_count": len(fallback_artists),
             "content_type": "classical_music_fallback",
             "heritage": cultural_heritage,
-            "method": "fallback"
+            "method": "fallback",
+            "pii_compliant": True
         }
     
     def _get_cuisine_fallback(self, cuisine_tag: str) -> Dict[str, Any]:
-        """Fallback cuisine places results"""
+        """
+        Fallback cuisine places results.
+        PII-COMPLIANT: Only uses cuisine tag (cultural, not personal).
+        """
         
         fallback_places = [
             {"name": f"Traditional {cuisine_tag.title()} Restaurant", "type": "Restaurant"},
@@ -299,11 +334,15 @@ class QlooInsightsAPI:
             "tag": cuisine_tag,
             "entity_type": "urn:entity:place",
             "content_type": f"cuisine_{cuisine_tag}_fallback",
-            "method": "fallback"
+            "method": "fallback",
+            "pii_compliant": True
         }
     
     def _get_tag_fallback(self, entity_type: str, tag: str) -> Dict[str, Any]:
-        """General fallback for tag-based calls"""
+        """
+        General fallback for tag-based calls.
+        PII-COMPLIANT: Only uses tags (cultural, not personal).
+        """
         
         if entity_type == "urn:entity:place":
             return self._get_cuisine_fallback(tag)
@@ -321,14 +360,20 @@ class QlooInsightsAPI:
                 "tag": tag,
                 "entity_type": entity_type,
                 "content_type": f"{entity_type}_{tag}_fallback",
-                "method": "fallback"
+                "method": "fallback",
+                "pii_compliant": True
             }
     
     async def test_connection(self) -> bool:
-        """Test Qloo API connection with increased timeout"""
+        """
+        Test Qloo API connection with increased timeout.
+        PII-COMPLIANT: Uses only generic test data.
+        """
         try:
             test_result = await self.get_safe_classical_music("universal", take=1)
-            return test_result.get("success", False)
+            is_connected = test_result.get("success", False)
+            logger.info(f"🔗 PII-compliant Qloo connection test: {'✅ Connected' if is_connected else '❌ Failed'}")
+            return is_connected
         except Exception as e:
             logger.error(f"Qloo connection test failed: {e}")
             return False
