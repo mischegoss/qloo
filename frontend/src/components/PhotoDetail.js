@@ -1,33 +1,136 @@
 import React from 'react'
+import FeedbackButtons from './FeedbackButtons'
+
+// Import all images for safety
+import birthdayImage from '../static/images/birthday.png'
+import clothingImage from '../static/images/clothing.png'
+import familyImage from '../static/images/family.png'
+import foodImage from '../static/images/food.png'
+import holidaysImage from '../static/images/holidays.png'
+import musicImage from '../static/images/music.png'
+import petsImage from '../static/images/pets.png'
+import schoolImage from '../static/images/school.png'
+import seasonsImage from '../static/images/seasons.png'
+import travelImage from '../static/images/travel.png'
+import weatherImage from '../static/images/weather.png'
 
 const PhotoDetail = ({ data, onBack, onFeedback }) => {
   const photoData = data || {}
 
-  const handleLike = () => {
-    if (onFeedback) {
-      onFeedback('like', photoData.description || photoData.filename, 'photo')
+  // FIXED: More comprehensive image mapping with better fallback logic
+  const imageMap = {
+    // With .png extension
+    'birthday.png': birthdayImage,
+    'clothing.png': clothingImage,
+    'family.png': familyImage,
+    'food.png': foodImage,
+    'holidays.png': holidaysImage,
+    'music.png': musicImage,
+    'pets.png': petsImage,
+    'school.png': schoolImage,
+    'seasons.png': seasonsImage,
+    'travel.png': travelImage,
+    'weather.png': weatherImage,
+    // Without .png extension
+    birthday: birthdayImage,
+    clothing: clothingImage,
+    family: familyImage,
+    food: foodImage,
+    holidays: holidaysImage,
+    music: musicImage,
+    pets: petsImage,
+    school: schoolImage,
+    seasons: seasonsImage,
+    travel: travelImage,
+    weather: weatherImage,
+    // Common variations
+    Family: familyImage,
+    Food: foodImage,
+    Travel: travelImage,
+    Birthday: birthdayImage,
+    Holidays: holidaysImage,
+    Music: musicImage,
+    Pets: petsImage,
+    School: schoolImage,
+    Seasons: seasonsImage,
+    Clothing: clothingImage,
+    Weather: weatherImage,
+  }
+
+  // FIXED: Improved getImage function with better matching logic
+  const getImage = filename => {
+    console.log('🔍 Looking for image with filename:', filename)
+
+    if (!filename) {
+      console.log('⚠️ No filename provided, using fallback')
+      return {
+        src: weatherImage,
+        name: 'Surprise Photo',
+        description:
+          'A beautiful surprise scene with lovely colors and interesting details to explore together.',
+      }
+    }
+
+    // Try multiple variations of the filename
+    const variations = [
+      filename, // exact match: "family.png"
+      filename.toLowerCase(), // lowercase: "family.png"
+      filename.toLowerCase().replace('.png', ''), // no extension: "family"
+      filename.replace('.png', ''), // no extension, original case: "Family"
+      filename.charAt(0).toUpperCase() + filename.slice(1).toLowerCase(), // Title case: "Family"
+    ]
+
+    console.log('🔍 Trying variations:', variations)
+
+    // Try each variation
+    for (const variation of variations) {
+      if (imageMap[variation]) {
+        console.log('✅ Found image for variation:', variation)
+        return {
+          src: imageMap[variation],
+          name:
+            filename.replace('.png', '').charAt(0).toUpperCase() +
+            filename.replace('.png', '').slice(1),
+          description:
+            photoData.description ||
+            'A meaningful photo chosen especially for today.',
+        }
+      }
+    }
+
+    // If no match found, log for debugging
+    console.log('❌ No image found for filename:', filename)
+    console.log('Available image keys:', Object.keys(imageMap))
+
+    // Complete fallback
+    return {
+      src: weatherImage,
+      name: 'Surprise Photo',
+      description:
+        'A beautiful surprise scene with lovely colors and interesting details to explore together.',
     }
   }
 
-  const handleDislike = () => {
-    if (onFeedback) {
-      onFeedback(
-        'dislike',
-        photoData.description || photoData.filename,
-        'photo',
-      )
-    }
-  }
+  const currentImage = getImage(photoData.filename)
 
-  // Get photo icon based on filename
-  const getPhotoIcon = filename => {
-    if (!filename) return '🖼️'
-    if (filename.includes('family')) return '👨‍👩‍👧‍👦'
-    if (filename.includes('music')) return '🎹'
-    if (filename.includes('birthday')) return '🎂'
-    if (filename.includes('beach') || filename.includes('ocean')) return '🏖️'
-    return '📸'
-  }
+  // Generate fallback conversation starters if none provided
+  const getFallbackConversationStarters = () => [
+    'What colors do you see in this picture?',
+    'Does anything in this photo look familiar to you?',
+    'What part of the picture draws your attention?',
+    'How does this picture make you feel?',
+    "Does this remind you of any places you've been?",
+  ]
+
+  // FIXED: Use the correct field from the response object
+  const conversationStarters =
+    photoData.conversation_starters &&
+    photoData.conversation_starters.length > 0
+      ? photoData.conversation_starters
+      : photoData.conversationStarters &&
+        photoData.conversationStarters.length > 0
+      ? photoData.conversationStarters
+      : getFallbackConversationStarters()
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
@@ -66,68 +169,104 @@ const PhotoDetail = ({ data, onBack, onFeedback }) => {
             </div>
 
             {/* Feedback buttons */}
-            <div className='flex space-x-3'>
-              <button
-                onClick={handleLike}
-                className='px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👍</span>
-                <span>Like</span>
-              </button>
-              <button
-                onClick={handleDislike}
-                className='px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👎</span>
-                <span>Dislike</span>
-              </button>
-            </div>
+            <FeedbackButtons
+              onFeedback={onFeedback}
+              itemName={photoData.filename || 'Photo of the Day'}
+              category='photo'
+              size='default'
+            />
           </div>
 
           {/* Photo Display */}
           <div className='mb-8'>
-            <div className='w-full h-80 bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg flex items-center justify-center text-gray-700 border-2 border-gray-200'>
-              <div className='text-center'>
-                <div className='text-6xl mb-4'>
-                  {getPhotoIcon(photoData.filename)}
-                </div>
-                <div className='font-medium text-xl'>
-                  {photoData.filename || 'Loading photo...'}
-                </div>
-              </div>
+            <div className='w-full h-96 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100'>
+              <img
+                src={currentImage.src}
+                alt={currentImage.name}
+                className='w-full h-full object-cover'
+                onError={e => {
+                  console.log('❌ Image failed to load:', currentImage.src)
+                  // Fallback to weather image if the image fails to load
+                  e.target.src = weatherImage
+                }}
+              />
             </div>
+            <p className='text-center mt-4 text-gray-600 text-lg font-medium'>
+              {currentImage.name}
+            </p>
           </div>
 
-          {/* Description */}
+          {/* Dementia-Friendly Instructions */}
           <div className='mb-8'>
             <h4
               className='text-2xl font-medium mb-6'
               style={{ color: '#4A4A4A' }}
             >
-              📖 Description
+              Let's Look at This Photo Together
             </h4>
-            <p
+            <div
               className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
-              style={{ backgroundColor: '#F0F0F0', borderColor: '#A8B5A0' }}
+              style={{ backgroundColor: '#E8F4FD', borderColor: '#8B7CB6' }}
             >
-              {photoData.description || 'Photo description loading...'}
-            </p>
+              <p className='mb-4'>
+                <strong>Take your time looking at this picture.</strong> You can
+                look at it quietly, point to things that interest you, or share
+                any thoughts you'd like.
+              </p>
+              <p className='mb-4'>
+                Notice the colors, shapes, and details. Sometimes pictures can
+                bring back memories or feelings - that's perfectly normal.
+              </p>
+              <p>
+                There's no need to answer questions or explain anything. Just
+                enjoy looking and experiencing whatever comes to mind.
+              </p>
+            </div>
+          </div>
+
+          {/* FIXED: Photo Description Display */}
+          <div className='mb-8'>
+            <h4
+              className='text-2xl font-medium mb-6'
+              style={{ color: '#4A4A4A' }}
+            >
+              Photo Description
+            </h4>
+            <div
+              className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
+              style={{ backgroundColor: '#F8F6FF', borderColor: '#A8B5A0' }}
+            >
+              {/* FIXED: Clean up the description by removing unwanted text */}
+              {photoData.description
+                ? photoData.description
+                    .replace(
+                      /Here's a description a caregiver could read to a senior with dementia[,:]?\s*/gi,
+                      '',
+                    )
+                    .replace(/^["']|["']$/g, '') // Remove quotes at start/end
+                    .replace(/\\\"/g, '"') // Fix escaped quotes
+                    .trim()
+                : currentImage.description}
+            </div>
           </div>
 
           {/* Cultural Context */}
-          {photoData.culturalContext && (
+          {photoData.cultural_context && (
             <div className='mb-8'>
               <h4
                 className='text-2xl font-medium mb-6'
                 style={{ color: '#4A4A4A' }}
               >
-                🏛️ Cultural Context
+                🏛️ About This Photo
               </h4>
               <p
                 className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
                 style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
               >
-                {photoData.culturalContext}
+                {photoData.cultural_context
+                  .replace(/Enhanced for [a-zA-Z-]+ heritage/gi, '')
+                  .trim() ||
+                  'This photo has been selected for its cultural significance and meaningful content.'}
               </p>
             </div>
           )}
@@ -138,28 +277,21 @@ const PhotoDetail = ({ data, onBack, onFeedback }) => {
               className='text-2xl font-medium mb-6'
               style={{ color: '#4A4A4A' }}
             >
-              💬 Conversation Starters
+              💬 Optional Conversation Topics
             </h4>
             <ul className='space-y-4'>
-              {photoData.conversationStarters &&
-              photoData.conversationStarters.length > 0 ? (
-                photoData.conversationStarters.map((starter, index) => (
-                  <li
-                    key={index}
-                    className='text-gray-700 text-lg p-6 rounded-lg border-2'
-                    style={{
-                      backgroundColor: '#F0F0F0',
-                      borderColor: '#A8B5A0',
-                    }}
-                  >
-                    "{starter}"
-                  </li>
-                ))
-              ) : (
-                <li className='text-gray-500 text-lg p-6 rounded-lg border-2 border-dashed border-gray-300'>
-                  Conversation starters loading...
+              {conversationStarters.map((starter, index) => (
+                <li
+                  key={index}
+                  className='text-gray-700 text-lg p-6 rounded-lg border-2'
+                  style={{
+                    backgroundColor: '#F0F0F0',
+                    borderColor: '#A8B5A0',
+                  }}
+                >
+                  "{starter}"
                 </li>
-              )}
+              ))}
             </ul>
           </div>
         </div>

@@ -1,0 +1,24 @@
+{
+  "theme_id": "food",
+  "theme_name": "Food",
+  "theme_description": "Favorite foods and cooking memories",
+  "photo_filename": "food.png",
+  "conversation_prompts": [
+    "What was your favorite food growing up?",
+    "Did you enjoy cooking or baking?",
+    "What foods remind you of home?",
+    "Tell me about a special meal you remember"
+  ],
+  "timestamp": "2025-07-27T23:52:37.215903",
+  "session_id": "test_session_456",
+  "written_by": "information_consolidator_agent",
+  "selection_metadata": {
+    "date": "2025-07-27T23:52:37.215785",
+    "theme_index": 3,
+    "next_theme_index": 4,
+    "total_themes_available": 9,
+    "selection_method": "true_rotation",
+    "refresh_enabled": true
+  },
+  "source": "theme_manager"
+}

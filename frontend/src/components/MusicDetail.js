@@ -1,19 +1,18 @@
 import React from 'react'
+import FeedbackButtons from './FeedbackButtons'
+import dashboardDataStore from '../services/dashboardDataStore'
 
-const MusicDetail = ({ data, onBack, onFeedback }) => {
-  const musicData = data || {}
+const MusicDetail = ({ onBack, onFeedback }) => {
+  // Get music data directly from global store instead of props
+  const musicData = dashboardDataStore.getMusicData()
 
-  const handleLike = () => {
-    if (onFeedback) {
-      onFeedback('like', `${musicData.artist} - ${musicData.title}`, 'music')
-    }
-  }
-
-  const handleDislike = () => {
-    if (onFeedback) {
-      onFeedback('dislike', `${musicData.artist} - ${musicData.title}`, 'music')
-    }
-  }
+  // DEBUG: Log what data the component is actually receiving
+  console.log('🎵 MusicDetail received data from store:', musicData)
+  console.log(
+    '🎵 MusicDetail conversation_starters:',
+    musicData.conversation_starters,
+  )
+  console.log('🎵 MusicDetail fun_fact:', musicData.fun_fact)
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
@@ -52,22 +51,12 @@ const MusicDetail = ({ data, onBack, onFeedback }) => {
             </div>
 
             {/* Feedback buttons */}
-            <div className='flex space-x-3'>
-              <button
-                onClick={handleLike}
-                className='px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👍</span>
-                <span>Like</span>
-              </button>
-              <button
-                onClick={handleDislike}
-                className='px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👎</span>
-                <span>Dislike</span>
-              </button>
-            </div>
+            <FeedbackButtons
+              onFeedback={onFeedback}
+              itemName={`${musicData.artist} - ${musicData.piece_title}`}
+              category='music'
+              size='default'
+            />
           </div>
 
           <div className='mb-8'>
@@ -75,17 +64,17 @@ const MusicDetail = ({ data, onBack, onFeedback }) => {
               {musicData.artist || 'Loading artist...'}
             </h3>
             <p className='text-2xl text-gray-600'>
-              {musicData.title || 'Loading piece...'}
+              {musicData.piece_title || 'Loading piece...'}
             </p>
           </div>
 
           {/* YouTube Video */}
           <div className='mb-8'>
-            {musicData.embedUrl ? (
+            {musicData.youtube_embed ? (
               <iframe
                 width='100%'
                 height='400'
-                src={musicData.embedUrl}
+                src={musicData.youtube_embed}
                 title='YouTube video player'
                 frameBorder='0'
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
@@ -111,9 +100,9 @@ const MusicDetail = ({ data, onBack, onFeedback }) => {
               💬 Conversation Starters
             </h4>
             <ul className='space-y-4'>
-              {musicData.conversationStarters &&
-              musicData.conversationStarters.length > 0 ? (
-                musicData.conversationStarters.map((starter, index) => (
+              {musicData.conversation_starters &&
+              musicData.conversation_starters.length > 0 ? (
+                musicData.conversation_starters.map((starter, index) => (
                   <li
                     key={index}
                     className='text-gray-700 text-lg p-6 rounded-lg border-2'
@@ -134,7 +123,7 @@ const MusicDetail = ({ data, onBack, onFeedback }) => {
           </div>
 
           {/* Fun Fact */}
-          {musicData.funFact && (
+          {musicData.fun_fact && (
             <div
               className='p-6 rounded-lg border-2'
               style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
@@ -146,7 +135,7 @@ const MusicDetail = ({ data, onBack, onFeedback }) => {
                 🎼 Fun Fact
               </h4>
               <p className='text-gray-700 text-lg leading-relaxed'>
-                {musicData.funFact}
+                {musicData.fun_fact}
               </p>
             </div>
           )}

@@ -1,19 +1,17 @@
 import React from 'react'
+import FeedbackButtons from './FeedbackButtons'
+import dashboardDataStore from '../services/dashboardDataStore'
 
-const NostalgiaDetail = ({ data, onBack, onFeedback }) => {
-  const nostalgiaData = data || {}
+const NostalgiaDetail = ({ onBack, onFeedback }) => {
+  // Get nostalgia data directly from global store instead of props
+  const nostalgiaData = dashboardDataStore.getNostalgiaData()
+  const patientInfo = dashboardDataStore.getPatientInfo()
 
-  const handleLike = () => {
-    if (onFeedback) {
-      onFeedback('like', nostalgiaData.headline, 'nostalgia')
-    }
-  }
+  // DEBUG: Log what data the component is actually receiving
+  console.log('📰 NostalgiaDetail received data from store:', nostalgiaData)
 
-  const handleDislike = () => {
-    if (onFeedback) {
-      onFeedback('dislike', nostalgiaData.headline, 'nostalgia')
-    }
-  }
+  // Extract sections from the complex nostalgia structure
+  const sections = nostalgiaData.sections || {}
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
@@ -49,180 +47,180 @@ const NostalgiaDetail = ({ data, onBack, onFeedback }) => {
                 ></div>
                 <div
                   className='w-6 h-6 rounded-full'
-                  style={{ backgroundColor: '#C4916B' }}
-                ></div>
-                <div
-                  className='w-6 h-6 rounded-full'
                   style={{ backgroundColor: '#8B7CB6' }}
                 ></div>
               </div>
               <h2 className='text-4xl font-light' style={{ color: '#4A4A4A' }}>
-                Nostalgia News
+                Today's Nostalgia News
               </h2>
             </div>
 
             {/* Feedback buttons */}
-            <div className='flex space-x-3'>
-              <button
-                onClick={handleLike}
-                className='px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👍</span>
-                <span>Like</span>
-              </button>
-              <button
-                onClick={handleDislike}
-                className='px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👎</span>
-                <span>Dislike</span>
-              </button>
-            </div>
+            <FeedbackButtons
+              onFeedback={onFeedback}
+              itemName={nostalgiaData.title || 'Nostalgia News'}
+              category='nostalgia'
+              size='default'
+            />
           </div>
 
-          {/* Headline */}
           <div className='mb-8'>
-            <h3 className='text-3xl font-medium text-gray-800 mb-4'>
-              {nostalgiaData.headline || 'Loading nostalgia news...'}
+            <h3 className='text-3xl font-medium text-gray-800 mb-2'>
+              {nostalgiaData.title || "Today's Special News"}
             </h3>
+            <p className='text-xl text-gray-600 mb-6'>
+              {nostalgiaData.subtitle ||
+                `Personalized for ${patientInfo.name || 'you'}`}
+            </p>
           </div>
 
-          {/* Main Content */}
-          {nostalgiaData.content && (
-            <div className='mb-8'>
+          <div className='space-y-8'>
+            {/* Memory Spotlight Section */}
+            {sections.memory_spotlight && (
               <div
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
-                style={{ backgroundColor: '#FFF7F0', borderColor: '#D4A574' }}
-              >
-                {nostalgiaData.content}
-              </div>
-            </div>
-          )}
-
-          {/* Memory Spotlight Section */}
-          {nostalgiaData.memorySpotlight && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-4'
-                style={{ color: '#4A4A4A' }}
-              >
-                ✨ {nostalgiaData.memorySpotlight.headline}
-              </h4>
-              <div
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
+                className='p-6 rounded-lg border-2'
                 style={{ backgroundColor: '#F0F0F0', borderColor: '#A8B5A0' }}
               >
-                {nostalgiaData.memorySpotlight.content}
+                <h4
+                  className='text-2xl font-medium mb-4'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  {sections.memory_spotlight.headline || '📚 Memory Spotlight'}
+                </h4>
+                <p className='text-gray-700 text-lg leading-relaxed mb-4'>
+                  {sections.memory_spotlight.content}
+                </p>
+                {sections.memory_spotlight.fun_fact && (
+                  <p className='text-sm text-gray-600 italic'>
+                    💡 {sections.memory_spotlight.fun_fact}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Era Spotlight Section */}
-          {nostalgiaData.eraSpotlight && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-4'
-                style={{ color: '#4A4A4A' }}
-              >
-                🕰️ {nostalgiaData.eraSpotlight.headline}
-              </h4>
+            {/* Era Highlights Section */}
+            {sections.era_highlights && (
               <div
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
+                className='p-6 rounded-lg border-2'
                 style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
               >
-                {nostalgiaData.eraSpotlight.content}
+                <h4
+                  className='text-2xl font-medium mb-4'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  {sections.era_highlights.headline || '🎵 Era Highlights'}
+                </h4>
+                <p className='text-gray-700 text-lg leading-relaxed mb-4'>
+                  {sections.era_highlights.content}
+                </p>
+                {sections.era_highlights.fun_fact && (
+                  <p className='text-sm text-gray-600 italic'>
+                    💡 {sections.era_highlights.fun_fact}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Heritage Traditions Section */}
-          {nostalgiaData.heritageTraditions && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-4'
-                style={{ color: '#4A4A4A' }}
-              >
-                🏛️ {nostalgiaData.heritageTraditions.headline}
-              </h4>
+            {/* Heritage Traditions Section */}
+            {sections.heritage_traditions && (
               <div
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
-                style={{ backgroundColor: '#FDF5E6', borderColor: '#D4A574' }}
+                className='p-6 rounded-lg border-2'
+                style={{ backgroundColor: '#FFF8E7', borderColor: '#D4A574' }}
               >
-                {nostalgiaData.heritageTraditions.content}
+                <h4
+                  className='text-2xl font-medium mb-4'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  {sections.heritage_traditions.headline ||
+                    '🏛️ Heritage Traditions'}
+                </h4>
+                <p className='text-gray-700 text-lg leading-relaxed mb-4'>
+                  {sections.heritage_traditions.content}
+                </p>
+                {sections.heritage_traditions.fun_fact && (
+                  <p className='text-sm text-gray-600 italic'>
+                    💡 {sections.heritage_traditions.fun_fact}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Themes Display */}
-          {nostalgiaData.themes && nostalgiaData.themes.length > 0 && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-4'
-                style={{ color: '#4A4A4A' }}
-              >
-                🏷️ Themes
-              </h4>
-              <div className='flex flex-wrap gap-3'>
-                {nostalgiaData.themes.map((theme, index) => (
-                  <span
-                    key={index}
-                    className='px-4 py-2 rounded-full text-sm font-medium'
-                    style={{ backgroundColor: '#F0F0F0', color: '#4A4A4A' }}
+            {/* Conversation Starters Section */}
+            {sections.conversation_starters &&
+              sections.conversation_starters.questions && (
+                <div>
+                  <h4
+                    className='text-2xl font-medium mb-6'
+                    style={{ color: '#4A4A4A' }}
                   >
-                    {theme}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Conversation Corner */}
-          <div>
-            <h4
-              className='text-2xl font-medium mb-6'
-              style={{ color: '#4A4A4A' }}
-            >
-              💬{' '}
-              {nostalgiaData.conversationCorner?.headline ||
-                'Conversation Starters'}
-            </h4>
-            <ul className='space-y-4'>
-              {nostalgiaData.conversationStarters &&
-              nostalgiaData.conversationStarters.length > 0 ? (
-                nostalgiaData.conversationStarters.map((starter, index) => (
-                  <li
-                    key={index}
-                    className='text-gray-700 text-lg p-6 rounded-lg border-2'
-                    style={{
-                      backgroundColor: '#F0F0F0',
-                      borderColor: '#A8B5A0',
-                    }}
-                  >
-                    "{starter}"
-                  </li>
-                ))
-              ) : nostalgiaData.conversationCorner?.questions &&
-                nostalgiaData.conversationCorner.questions.length > 0 ? (
-                nostalgiaData.conversationCorner.questions.map(
-                  (question, index) => (
-                    <li
-                      key={index}
-                      className='text-gray-700 text-lg p-6 rounded-lg border-2'
-                      style={{
-                        backgroundColor: '#F0F0F0',
-                        borderColor: '#A8B5A0',
-                      }}
-                    >
-                      "{question}"
-                    </li>
-                  ),
-                )
-              ) : (
-                <li className='text-gray-500 text-lg p-6 rounded-lg border-2 border-dashed border-gray-300'>
-                  Conversation starters loading...
-                </li>
+                    {sections.conversation_starters.headline ||
+                      '💭 Conversation Corner'}
+                  </h4>
+                  <ul className='space-y-4'>
+                    {sections.conversation_starters.questions.map(
+                      (question, index) => (
+                        <li
+                          key={index}
+                          className='text-gray-700 text-lg p-6 rounded-lg border-2'
+                          style={{
+                            backgroundColor: '#F0F0F0',
+                            borderColor: '#A8B5A0',
+                          }}
+                        >
+                          "{question}"
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </div>
               )}
-            </ul>
+
+            {/* Fallback if no sections available */}
+            {Object.keys(sections).length === 0 && (
+              <div
+                className='p-6 rounded-lg border-2'
+                style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
+              >
+                <h4
+                  className='text-2xl font-medium mb-4'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  ✨ Today's Special Story
+                </h4>
+                <p className='text-gray-700 text-lg leading-relaxed'>
+                  {nostalgiaData.content ||
+                    `Today is a wonderful day filled with beautiful memories and meaningful moments, ${
+                      patientInfo.name || 'friend'
+                    }!`}
+                </p>
+              </div>
+            )}
+
+            {/* Themes Section */}
+            {nostalgiaData.themes && nostalgiaData.themes.length > 0 && (
+              <div
+                className='p-4 rounded-lg'
+                style={{ backgroundColor: '#F8F6FF' }}
+              >
+                <h5
+                  className='text-lg font-medium mb-2'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  Today's Themes:
+                </h5>
+                <div className='flex flex-wrap gap-2'>
+                  {nostalgiaData.themes.map((theme, index) => (
+                    <span
+                      key={index}
+                      className='px-3 py-1 rounded-full text-sm font-medium'
+                      style={{ backgroundColor: '#8B7CB6', color: 'white' }}
+                    >
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

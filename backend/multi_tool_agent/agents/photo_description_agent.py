@@ -440,7 +440,7 @@ class PhotoDescriptionAgent:
             "image_name": "family.png",
             "theme": theme_id,
             "google_vision_description": "A warm, meaningful photograph",
-            "dementia_friendly_description": "Here's a lovely picture that brings back happy memories. Everyone looks so peaceful and joyful.",
+            "dementia_friendly_description": "Here's a lovely family enjoying time together outdoors! A little girl with curly hair is having her picture taken on a beautiful grassy hill. Someone is taking her photo while a man sits nearby watching with a smile. The golden grass and green trees make such a peaceful, happy scene. What a wonderful family moment!",
             "conversation_starters": [
                 "This picture brings back memories",
                 "Tell me what you see here",

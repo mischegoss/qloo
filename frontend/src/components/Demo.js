@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import apiService from '../services/apiService'
 
-const Demo = () => {
+const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
+  const [showJson, setShowJson] = useState(false)
+  const [apiResponse, setApiResponse] = useState(null)
 
   const agentSteps = [
     {
@@ -10,7 +13,7 @@ const Demo = () => {
       name: 'Information Consolidator',
       description: 'Gathering patient profile and theme selection',
       details:
-        'Processing patient info: Maria, age 80, Italian-American heritage. Selecting daily theme: Family.',
+        'Processing patient info: Maria, age 80, Italian-American heritage. Selecting daily theme: Travel.',
       status: 'waiting',
       color: '#D4A574',
     },
@@ -19,7 +22,7 @@ const Demo = () => {
       name: 'Photo Analysis',
       description: 'Analyzing cultural context of selected images',
       details:
-        'Analyzing family.png - detecting warm family scene with cultural context enhancement.',
+        'Analyzing travel.png - detecting coastal scene with cultural context enhancement.',
       status: 'waiting',
       color: '#8B7CB6',
     },
@@ -37,7 +40,7 @@ const Demo = () => {
       name: 'Content Generation',
       description: 'Curating music, recipes, and photo descriptions',
       details:
-        '4A: Music (Vivaldi), 4B: Recipe (Microwave Risotto), 4C: Photo Description (Cultural context)',
+        '4A: Music (Puccini), 4B: Recipe (Microwave Clam Chowder), 4C: Photo Description (Cultural context)',
       status: 'waiting',
       color: '#A8B5A0',
     },
@@ -63,12 +66,16 @@ const Demo = () => {
 
   const [steps, setSteps] = useState(agentSteps)
 
-  const runDemo = () => {
+  const runDemo = async () => {
     setIsRunning(true)
     setCurrentStep(0)
+    setApiResponse(null)
 
     // Reset all steps
     setSteps(agentSteps.map(step => ({ ...step, status: 'waiting' })))
+
+    // Start the API call in the background
+    const apiCall = apiService.refreshDashboard()
 
     // Run through each step with delays
     agentSteps.forEach((step, index) => {
@@ -93,7 +100,24 @@ const Demo = () => {
 
           // If this is the last step, finish the demo
           if (index === agentSteps.length - 1) {
-            setTimeout(() => {
+            setTimeout(async () => {
+              // Wait for API call to complete
+              try {
+                const realApiResponse = await apiCall
+                setApiResponse(realApiResponse)
+                console.log('🎉 Real API Response:', realApiResponse)
+
+                // Notify parent component about dashboard update
+                if (onDashboardUpdate) {
+                  onDashboardUpdate(realApiResponse)
+                }
+              } catch (error) {
+                console.error('API call failed:', error)
+                // Still show fallback data
+                const fallbackData = apiService.getFallbackData()
+                setApiResponse(fallbackData)
+              }
+
               setIsRunning(false)
               setCurrentStep(-1)
             }, 1000)
@@ -132,6 +156,28 @@ const Demo = () => {
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
       <div className='max-w-6xl mx-auto p-6'>
+        {/* Back to Dashboard Button */}
+        <button
+          onClick={onReturnToDashboard}
+          className='mb-8 flex items-center hover:text-gray-800 font-medium text-lg min-h-12'
+          style={{ color: '#4A4A4A' }}
+        >
+          <svg
+            className='w-6 h-6 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M10 19l-7-7m0 0l7-7m-7 7h18'
+            />
+          </svg>
+          Back to Dashboard
+        </button>
+
         {/* Header */}
         <div className='text-center mb-12'>
           <h1 className='text-5xl font-light mb-4' style={{ color: '#4A4A4A' }}>
@@ -145,10 +191,9 @@ const Demo = () => {
             onClick={runDemo}
             disabled={isRunning}
             className={`px-8 py-4 rounded-full text-white text-lg font-medium transition-all ${
-              isRunning
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-purple-600 hover:bg-purple-700 hover:shadow-lg'
+              isRunning ? 'bg-gray-400 cursor-not-allowed' : 'hover:shadow-lg'
             }`}
+            style={{ backgroundColor: isRunning ? '#9CA3AF' : '#8B7CB6' }}
           >
             {isRunning ? 'Running Demo...' : 'Start Demo'}
           </button>
@@ -167,8 +212,9 @@ const Demo = () => {
           <div className='mb-8'>
             <div className='w-full bg-gray-200 rounded-full h-3'>
               <div
-                className='bg-purple-600 h-3 rounded-full transition-all duration-1000 ease-out'
+                className='h-3 rounded-full transition-all duration-1000 ease-out'
                 style={{
+                  backgroundColor: '#8B7CB6',
                   width: `${((currentStep + 1) / steps.length) * 100}%`,
                 }}
               ></div>
@@ -247,7 +293,7 @@ const Demo = () => {
         {/* Results Section */}
         {!isRunning && currentStep === -1 && (
           <div className='mt-12'>
-            <div className='bg-green-50 border-2 border-green-200 rounded-xl p-8 text-center'>
+            <div className='bg-green-50 border-2 border-green-200 rounded-xl p-8 text-center mb-8'>
               <div className='text-6xl mb-4'>🎉</div>
               <h3 className='text-3xl font-semibold text-green-800 mb-4'>
                 Demo Complete!
@@ -259,21 +305,85 @@ const Demo = () => {
               <div className='grid md:grid-cols-4 gap-4 text-sm'>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Music</div>
-                  <div className='text-green-600'>Vivaldi Selected</div>
+                  <div className='text-green-600'>Puccini Selected</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Recipe</div>
-                  <div className='text-green-600'>Microwave Risotto</div>
+                  <div className='text-green-600'>Clam Chowder</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Photo</div>
-                  <div className='text-green-600'>Family Scene</div>
+                  <div className='text-green-600'>Travel Scene</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>News</div>
                   <div className='text-green-600'>Personal Story</div>
                 </div>
               </div>
+            </div>
+
+            {/* API Response Section */}
+            <div className='bg-white rounded-xl shadow-sm p-8 border-2 border-gray-100'>
+              <div className='flex justify-between items-center mb-6'>
+                <h3
+                  className='text-3xl font-medium'
+                  style={{ color: '#4A4A4A' }}
+                >
+                  📄 Real API Response
+                </h3>
+                <button
+                  onClick={() => setShowJson(!showJson)}
+                  disabled={!apiResponse}
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors text-lg min-h-12 ${
+                    !apiResponse ? 'bg-gray-400 cursor-not-allowed' : ''
+                  }`}
+                  style={{
+                    backgroundColor: !apiResponse ? '#9CA3AF' : '#8B7CB6',
+                    color: 'white',
+                  }}
+                >
+                  {showJson ? 'Hide' : 'View'} JSON Response
+                </button>
+              </div>
+
+              {!apiResponse && (
+                <div className='text-center p-8 text-gray-500'>
+                  <div className='text-4xl mb-4'>📡</div>
+                  <p className='text-lg'>
+                    API response will appear here after the demo completes...
+                  </p>
+                </div>
+              )}
+
+              {showJson && apiResponse && (
+                <pre
+                  className='p-6 rounded-lg overflow-auto text-base border-2'
+                  style={{ backgroundColor: '#F0F0F0', borderColor: '#A8B5A0' }}
+                >
+                  {JSON.stringify(apiResponse, null, 2)}
+                </pre>
+              )}
+            </div>
+
+            {/* Return to Dashboard Section */}
+            <div className='bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center mt-8'>
+              <div className='text-4xl mb-4'>🔄</div>
+              <h3 className='text-2xl font-semibold text-blue-800 mb-4'>
+                Dashboard Updated!
+              </h3>
+              <p className='text-lg text-blue-700 mb-6'>
+                The new personalized content from this API call is now cached
+                and will be reflected on the dashboard. The fresh data includes
+                updated music, recipes, photos, and nostalgia news tailored for
+                Maria.
+              </p>
+              <button
+                onClick={onReturnToDashboard}
+                className='px-8 py-4 rounded-xl text-xl font-medium transition-all shadow-sm hover:shadow-lg'
+                style={{ backgroundColor: '#8B7CB6', color: 'white' }}
+              >
+                Return to Dashboard to See Changes
+              </button>
             </div>
           </div>
         )}
@@ -288,7 +398,10 @@ const Demo = () => {
           </h3>
           <div className='grid md:grid-cols-3 gap-6'>
             <div className='bg-white rounded-xl p-6 border-2 border-gray-100'>
-              <h4 className='text-lg font-semibold mb-3 text-purple-700'>
+              <h4
+                className='text-lg font-semibold mb-3'
+                style={{ color: '#8B7CB6' }}
+              >
                 🤖 AI Technologies
               </h4>
               <ul className='text-sm text-gray-600 space-y-1'>
@@ -300,7 +413,10 @@ const Demo = () => {
             </div>
 
             <div className='bg-white rounded-xl p-6 border-2 border-gray-100'>
-              <h4 className='text-lg font-semibold mb-3 text-blue-700'>
+              <h4
+                className='text-lg font-semibold mb-3'
+                style={{ color: '#D4A574' }}
+              >
                 ⚡ Pipeline Features
               </h4>
               <ul className='text-sm text-gray-600 space-y-1'>
@@ -312,7 +428,10 @@ const Demo = () => {
             </div>
 
             <div className='bg-white rounded-xl p-6 border-2 border-gray-100'>
-              <h4 className='text-lg font-semibold mb-3 text-green-700'>
+              <h4
+                className='text-lg font-semibold mb-3'
+                style={{ color: '#A8B5A0' }}
+              >
                 🎯 Outcomes
               </h4>
               <ul className='text-sm text-gray-600 space-y-1'>

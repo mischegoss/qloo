@@ -1,19 +1,41 @@
 import React from 'react'
+import FeedbackButtons from './FeedbackButtons'
 
 const RecipeDetail = ({ data, onBack, onFeedback }) => {
   const recipeData = data || {}
 
-  const handleLike = () => {
-    if (onFeedback) {
-      onFeedback('like', recipeData.name, 'recipe')
-    }
+  // Emergency fallback recipe
+  const fallbackRecipe = {
+    name: 'Surprise Warm Apple Treat',
+    description: 'A comforting and easy-to-make warm treat',
+    ingredients: [
+      '1 apple (any kind you have)',
+      '1 tablespoon butter',
+      '1 tablespoon brown sugar or honey',
+      'A pinch of cinnamon (optional)',
+    ],
+    instructions: [
+      'Wash and cut the apple into small pieces',
+      'Put apple pieces in a microwave-safe bowl',
+      'Add butter and brown sugar on top',
+      'Microwave for 2 minutes',
+      'Stir gently and add cinnamon if you like',
+      'Let cool for 1 minute before enjoying',
+    ],
+    conversationQuestions: [
+      "What's your favorite type of apple?",
+      'Do you remember making treats like this before?',
+      'How does the warm apple smell?',
+      'What other simple treats do you enjoy?',
+      'Does this remind you of any family recipes?',
+    ],
   }
 
-  const handleDislike = () => {
-    if (onFeedback) {
-      onFeedback('dislike', recipeData.name, 'recipe')
-    }
-  }
+  // Use fallback if data is missing or incomplete
+  const currentRecipe =
+    !recipeData.name || !recipeData.ingredients || !recipeData.instructions
+      ? fallbackRecipe
+      : recipeData
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
@@ -52,110 +74,110 @@ const RecipeDetail = ({ data, onBack, onFeedback }) => {
             </div>
 
             {/* Feedback buttons */}
-            <div className='flex space-x-3'>
-              <button
-                onClick={handleLike}
-                className='px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👍</span>
-                <span>Like</span>
-              </button>
-              <button
-                onClick={handleDislike}
-                className='px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors flex items-center space-x-2'
-              >
-                <span>👎</span>
-                <span>Dislike</span>
-              </button>
-            </div>
+            <FeedbackButtons
+              onFeedback={onFeedback}
+              itemName={currentRecipe.name}
+              category='recipe'
+              size='default'
+            />
           </div>
 
           <div className='mb-8'>
             <h3 className='text-3xl font-medium text-gray-800 mb-2'>
-              {recipeData.name || 'Loading recipe...'}
+              {currentRecipe.name}
             </h3>
-            <p className='text-xl text-gray-600'>
-              {recipeData.description || 'A comforting dish'}
-            </p>
+            <p className='text-xl text-gray-600'>{currentRecipe.description}</p>
           </div>
 
-          <div className='grid md:grid-cols-2 gap-8 mb-8'>
-            {/* Ingredients */}
-            <div>
-              <h4
-                className='text-2xl font-medium mb-6'
-                style={{ color: '#4A4A4A' }}
-              >
-                🥘 Ingredients
-              </h4>
-              <ul className='space-y-3'>
-                {recipeData.ingredients && recipeData.ingredients.length > 0 ? (
-                  recipeData.ingredients.map((ingredient, index) => (
-                    <li
-                      key={index}
-                      className='text-gray-700 text-lg p-3 rounded border'
-                      style={{ backgroundColor: '#F0F0F0' }}
-                    >
-                      {ingredient}
-                    </li>
-                  ))
-                ) : (
-                  <li className='text-gray-500 text-lg p-3 rounded border border-dashed border-gray-300'>
-                    Ingredients loading...
-                  </li>
-                )}
-              </ul>
-            </div>
-
-            {/* Instructions */}
-            <div>
-              <h4
-                className='text-2xl font-medium mb-6'
-                style={{ color: '#4A4A4A' }}
-              >
-                👩‍🍳 Instructions
-              </h4>
-              <ol className='space-y-3'>
-                {recipeData.instructions &&
-                recipeData.instructions.length > 0 ? (
-                  recipeData.instructions.map((instruction, index) => (
-                    <li
-                      key={index}
-                      className='text-gray-700 text-lg p-3 rounded border'
-                      style={{ backgroundColor: '#F0F0F0' }}
-                    >
-                      <span className='font-medium text-gray-800'>
-                        {index + 1}.
-                      </span>{' '}
-                      {instruction}
-                    </li>
-                  ))
-                ) : (
-                  <li className='text-gray-500 text-lg p-3 rounded border border-dashed border-gray-300'>
-                    Instructions loading...
-                  </li>
-                )}
-              </ol>
-            </div>
-          </div>
-
-          {/* Cultural Context */}
-          {recipeData.culturalContext && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-6'
-                style={{ color: '#4A4A4A' }}
-              >
-                🏛️ Cultural Context
-              </h4>
-              <p
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
-                style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
-              >
-                {recipeData.culturalContext}
+          {/* Dementia-Friendly Instructions */}
+          <div className='mb-8'>
+            <h4
+              className='text-2xl font-medium mb-6'
+              style={{ color: '#4A4A4A' }}
+            >
+              Let's Explore This Recipe Together
+            </h4>
+            <div
+              className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
+              style={{ backgroundColor: '#E8F4FD', borderColor: '#8B7CB6' }}
+            >
+              <p className='mb-4'>
+                <strong>
+                  Food can bring back strong memories and feelings.
+                </strong>{' '}
+                Read this recipe together and talk about the smells and tastes
+                you remember.
+              </p>
+              <p className='mb-4'>
+                If you'd like, you can make this recipe together. All recipes
+                use simple ingredients and only need a microwave - safe and easy
+                to prepare.
+              </p>
+              <p>
+                Share any memories this food brings up, or simply enjoy reading
+                about it together. All ways of responding are welcome!
               </p>
             </div>
-          )}
+          </div>
+
+          {/* Ingredients - Now Full Width */}
+          <div className='mb-8'>
+            <h4
+              className='text-2xl font-medium mb-6'
+              style={{ color: '#4A4A4A' }}
+            >
+              🥘 Ingredients
+            </h4>
+            <ul className='space-y-3'>
+              {currentRecipe.ingredients &&
+              currentRecipe.ingredients.length > 0 ? (
+                currentRecipe.ingredients.map((ingredient, index) => (
+                  <li
+                    key={index}
+                    className='text-gray-700 text-lg p-3 rounded border'
+                    style={{ backgroundColor: '#F0F0F0' }}
+                  >
+                    {ingredient}
+                  </li>
+                ))
+              ) : (
+                <li className='text-gray-500 text-lg p-3 rounded border border-dashed border-gray-300'>
+                  Ingredients loading...
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Instructions - Now Full Width */}
+          <div className='mb-8'>
+            <h4
+              className='text-2xl font-medium mb-6'
+              style={{ color: '#4A4A4A' }}
+            >
+              👩‍🍳 Instructions
+            </h4>
+            <ol className='space-y-3'>
+              {currentRecipe.instructions &&
+              currentRecipe.instructions.length > 0 ? (
+                currentRecipe.instructions.map((instruction, index) => (
+                  <li
+                    key={index}
+                    className='text-gray-700 text-lg p-3 rounded border'
+                    style={{ backgroundColor: '#F0F0F0' }}
+                  >
+                    <span className='font-medium text-gray-800'>
+                      {index + 1}.
+                    </span>{' '}
+                    {instruction}
+                  </li>
+                ))
+              ) : (
+                <li className='text-gray-500 text-lg p-3 rounded border border-dashed border-gray-300'>
+                  Instructions loading...
+                </li>
+              )}
+            </ol>
+          </div>
 
           {/* Conversation Starters */}
           <div>
@@ -163,12 +185,12 @@ const RecipeDetail = ({ data, onBack, onFeedback }) => {
               className='text-2xl font-medium mb-6'
               style={{ color: '#4A4A4A' }}
             >
-              💬 Conversation Starters
+              💬 Optional Conversation Topics
             </h4>
             <ul className='space-y-4'>
-              {recipeData.conversationQuestions &&
-              recipeData.conversationQuestions.length > 0 ? (
-                recipeData.conversationQuestions.map((question, index) => (
+              {currentRecipe.conversationQuestions &&
+              currentRecipe.conversationQuestions.length > 0 ? (
+                currentRecipe.conversationQuestions.map((question, index) => (
                   <li
                     key={index}
                     className='text-gray-700 text-lg p-6 rounded-lg border-2'

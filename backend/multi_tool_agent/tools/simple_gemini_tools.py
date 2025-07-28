@@ -1,11 +1,11 @@
 """
-Simple Gemini Tools - Fixed Timeouts Version
+Simple Gemini Tools - FIXED: Added newsletter tone guidance
 File: backend/multi_tool_agent/tools/simple_gemini_tools.py
 
-TIMEOUT FIX: Increased from 30 seconds to 90 seconds for all Gemini API calls
-(Gemini can take longer due to complex prompts and generation)
-
-NEW: Added dementia-friendly photo description generation
+CRITICAL FIX:
+- Added generate_nostalgia_newsletter method with proper tone guidance
+- Ensures newsletter-style content that's appropriate for caregivers to read aloud
+- Clear guidelines for dementia care content
 """
 
 import asyncio
@@ -22,10 +22,9 @@ logger = logging.getLogger(__name__)
 
 class SimpleGeminiTool:
     """
-    Simplified Gemini AI tool for content generation.
+    Simple Gemini AI tool for content generation.
     
-    TIMEOUT FIX: Increased all timeouts to 90 seconds for reliability.
-    NEW: Added dementia-friendly photo description generation.
+    FIXED: Added proper newsletter tone guidance for nostalgia content.
     """
     
     def __init__(self, api_key: str):
@@ -41,20 +40,34 @@ class SimpleGeminiTool:
         - Use simple, clear language appropriate for seniors
         - Include culturally respectful content only
         - Generate safe, family-friendly content
+        - NEVER use personal names in the content
+        - Write for caregivers to read TO patients, not directly to patients
+        - Use professional but warm tone
+        - Create structured, easy-to-read content
+        - Never assume the caregiver has a prior knowledge of the patient or a shared heritage
         """
         
-        logger.info("Simple Gemini tool initialized for general content curation")
+        # Newsletter-specific tone guidelines
+        self.newsletter_tone_rules = """
+        NEWSLETTER TONE GUIDELINES:
+        - Write in newsletter style with engaging, friendly tone
+        - Use simple, warm language that's easy to read aloud
+        - Write for CAREGIVERS to read TO patients
+        - NEVER use patient names anywhere in the content
+        - Include interesting historical facts and gentle nostalgia
+        - Use phrases like "Remember when..." or "In those days..."
+        - Make it sound like friendly news from the past
+        - Include specific years and historical details when appropriate
+        - Example tone: "Today, in 1947, Percy Spencer invented the microwave oven while working with radar technology. It went on to revolutionize cooking in American homes!"
+        - Keep sentences conversational but informative
+        - Focus on positive cultural memories and traditions
+        """
+        
+        logger.info("Simple Gemini tool initialized with newsletter tone guidance")
     
-    async def generate_content(self, prompt: str, max_tokens: int = 500) -> Optional[str]:
+    async def generate_content(self, prompt: str, max_tokens: int = 800) -> Optional[str]:
         """
         Generate content using Gemini with bias prevention.
-        
-        Args:
-            prompt: The prompt to send to Gemini
-            max_tokens: Maximum response length
-            
-        Returns:
-            Generated text content or None if failed
         """
         
         if not httpx:
@@ -90,7 +103,7 @@ class SimpleGeminiTool:
             
             url = f"{self.base_url}/models/gemini-1.5-flash:generateContent?key={self.api_key}"
             
-            # TIMEOUT FIX: Increased from 30.0 to 90.0 seconds
+            # Increased timeout for reliability
             async with httpx.AsyncClient(timeout=90.0) as client:
                 response = await client.post(url, json=payload, headers=headers)
                 
@@ -118,13 +131,7 @@ class SimpleGeminiTool:
     async def generate_structured_json(self, prompt: str, json_schema: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Generate structured JSON response using Gemini.
-        
-        Args:
-            prompt: The prompt describing what to generate
-            json_schema: Expected JSON structure
-            
-        Returns:
-            Parsed JSON dict or None if failed
+        Enhanced for better parsing and error handling.
         """
         
         if not httpx:
@@ -143,10 +150,16 @@ class SimpleGeminiTool:
             {schema_str}
             
             IMPORTANT:
-            - Return ONLY the JSON, no additional text
+            - Return ONLY the JSON, no additional text before or after
             - Ensure all required fields are included
             - Use appropriate data types (strings, arrays, etc.)
             - Content must be positive and appropriate for seniors with dementia
+            - NEVER use personal names in the content
+            - Write for caregivers to read aloud to patients
+            - Each section should be substantial (2-3 sentences minimum)
+            - Create complete, meaningful content for all sections
+            - Focus heavily on the specified theme throughout all content
+             - Never assume the caregiver has a prior knowledge of the patient or a shared heritage
             """
             
             payload = {
@@ -163,7 +176,7 @@ class SimpleGeminiTool:
                     "temperature": 0.3,  # Lower temperature for structured output
                     "topK": 20,
                     "topP": 0.8,
-                    "maxOutputTokens": 1000,
+                    "maxOutputTokens": 1400,  # Increased for complete content
                     "candidateCount": 1
                 }
             }
@@ -174,7 +187,7 @@ class SimpleGeminiTool:
             
             url = f"{self.base_url}/models/gemini-1.5-flash:generateContent?key={self.api_key}"
             
-            # TIMEOUT FIX: Increased from 30.0 to 90.0 seconds
+            # Increased timeout for reliability
             async with httpx.AsyncClient(timeout=90.0) as client:
                 response = await client.post(url, json=payload, headers=headers)
                 
@@ -184,15 +197,33 @@ class SimpleGeminiTool:
                     if "candidates" in result and len(result["candidates"]) > 0:
                         content = result["candidates"][0]["content"]["parts"][0]["text"]
                         
-                        # Try to parse JSON
+                        # Enhanced JSON parsing
                         try:
-                            # Clean up the response (remove code blocks if present)
+                            # Clean up the response more thoroughly
                             content = content.strip()
+                            
+                            # Remove markdown code blocks
                             if content.startswith("```json"):
                                 content = content[7:]
+                            elif content.startswith("```"):
+                                content = content[3:]
+                            
                             if content.endswith("```"):
                                 content = content[:-3]
+                            
+                            # Remove any leading/trailing whitespace again
                             content = content.strip()
+                            
+                            # Try to find JSON boundaries if mixed with other text
+                            if not content.startswith('{'):
+                                start_idx = content.find('{')
+                                if start_idx != -1:
+                                    content = content[start_idx:]
+                            
+                            if not content.endswith('}'):
+                                end_idx = content.rfind('}')
+                                if end_idx != -1:
+                                    content = content[:end_idx + 1]
                             
                             parsed_json = json.loads(content)
                             logger.info("✅ Gemini structured JSON generated successfully")
@@ -200,7 +231,7 @@ class SimpleGeminiTool:
                             
                         except json.JSONDecodeError as e:
                             logger.error(f"❌ Failed to parse Gemini JSON: {e}")
-                            logger.error(f"Raw response: {content[:200]}...")
+                            logger.error(f"Raw response: {content[:500]}...")
                             return None
                     else:
                         logger.error("❌ No content in Gemini response")
@@ -216,20 +247,146 @@ class SimpleGeminiTool:
             logger.error(f"❌ Gemini structured generation failed: {e}")
             return None
     
+    async def generate_nostalgia_newsletter(self, prompt: str, json_schema: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Generate nostalgia newsletter content with proper tone guidance.
+        This method provides specific guidance for newsletter-style content.
+        """
+        
+        if not httpx:
+            logger.warning("⚠️ httpx not available for Gemini API")
+            return None
+        
+        try:
+            # Create newsletter-specific prompt with tone guidance
+            schema_str = json.dumps(json_schema, indent=2)
+            full_prompt = f"""
+            {self.bias_prevention_rules}
+            
+            {self.newsletter_tone_rules}
+            
+            TASK: {prompt}
+            
+            NEWSLETTER CONTENT REQUIREMENTS:
+            - Write in friendly newsletter style for caregivers to read aloud to patients
+            - NEVER use patient names anywhere in the content
+            - Use simple, warm language that flows naturally when spoken
+            - Include interesting historical facts with specific years when appropriate
+            - Use engaging phrases like "Remember when..." or "In those days..." or "Back in [year]..."
+            - Make it sound like friendly news from the past
+            - Focus on positive cultural memories and traditions
+            - Each section should be 2-3 sentences that sound conversational
+            - Include specific historical details that are accurate and interesting
+            
+            SECTION REQUIREMENTS:
+            - For the memory spotlight, include a on this day in [year]... fact that would resonate with seniors
+            - For the memory spotlight, keep it light and nostalgic, no war, killing or negative topics
+            - For heritage traditions, include information about both American and identified culture. For example, if the identified heritage is Italian-American, Italian, Italian-American, and American are all good choices. 
+            TONE EXAMPLES:
+            - "Back in 1947, Percy Spencer discovered the microwave oven by accident while working with radar technology. It took until the 1970s for these amazing appliances to become common in American kitchens!"
+            - "Remember those wonderful Sunday afternoon drives? In the 1950s, families would pile into their cars just to see the countryside and stop for ice cream along the way."
+            
+            RESPONSE FORMAT: Return ONLY valid JSON that matches this exact schema:
+            {schema_str}
+            
+            CRITICAL: 
+            - Return ONLY the JSON, no additional text
+            - Each section must sound like it could be read aloud naturally
+            - Use warm, conversational tone throughout
+            - Include cultural and historical context where appropriate
+            """
+            
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": full_prompt
+                            }
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.4,  # Slightly higher for creative newsletter tone
+                    "topK": 25,
+                    "topP": 0.85,
+                    "maxOutputTokens": 1600,  # More tokens for rich newsletter content
+                    "candidateCount": 1
+                }
+            }
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            url = f"{self.base_url}/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+            
+            # Increased timeout for reliability
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    if "candidates" in result and len(result["candidates"]) > 0:
+                        content = result["candidates"][0]["content"]["parts"][0]["text"]
+                        
+                        # Enhanced JSON parsing
+                        try:
+                            # Clean up the response more thoroughly
+                            content = content.strip()
+                            
+                            # Remove markdown code blocks
+                            if content.startswith("```json"):
+                                content = content[7:]
+                            elif content.startswith("```"):
+                                content = content[3:]
+                            
+                            if content.endswith("```"):
+                                content = content[:-3]
+                            
+                            # Remove any leading/trailing whitespace again
+                            content = content.strip()
+                            
+                            # Try to find JSON boundaries if mixed with other text
+                            if not content.startswith('{'):
+                                start_idx = content.find('{')
+                                if start_idx != -1:
+                                    content = content[start_idx:]
+                            
+                            if not content.endswith('}'):
+                                end_idx = content.rfind('}')
+                                if end_idx != -1:
+                                    content = content[:end_idx + 1]
+                            
+                            parsed_json = json.loads(content)
+                            logger.info("✅ Gemini newsletter content generated successfully")
+                            return parsed_json
+                            
+                        except json.JSONDecodeError as e:
+                            logger.error(f"❌ Failed to parse Gemini newsletter JSON: {e}")
+                            logger.error(f"Raw response: {content[:500]}...")
+                            return None
+                    else:
+                        logger.error("❌ No content in Gemini newsletter response")
+                        return None
+                else:
+                    logger.error(f"❌ Gemini newsletter API error: {response.status_code}")
+                    return None
+                    
+        except httpx.TimeoutException:
+            logger.error("❌ Gemini newsletter generation timeout")
+            return None
+        except Exception as e:
+            logger.error(f"❌ Gemini newsletter generation failed: {e}")
+            return None
+    
     async def generate_dementia_friendly_description(self, 
                                                    original_description: str,
                                                    patient_name: str = "Friend",
                                                    heritage: str = "American") -> Optional[str]:
         """
         Generate simple, warm, dementia-friendly photo description.
-        
-        Args:
-            original_description: Technical photo description from Google Vision
-            patient_name: Patient's first name for personalization
-            heritage: Patient's cultural heritage
-            
-        Returns:
-            Simple, warm description or None if failed
         """
         
         prompt = f"""
@@ -238,6 +395,9 @@ class SimpleGeminiTool:
         Original description: {original_description}
         
         Create a description that:
+        - Write for CAREGIVERS to read TO patients (not directly to patients)
+        - Professional but warm, engaging tone
+        - NO personal names anywhere in the content
         - Uses very simple, everyday words
         - Focuses on emotions and feelings (happy, loving, peaceful)
         - Uses short, clear sentences
@@ -245,10 +405,9 @@ class SimpleGeminiTool:
         - Sounds warm and comforting
         - Avoids technical photography terms
         - Makes the viewer feel good
-        
-        Example style: "Here's a happy family having a picnic outside. A little girl with curly hair is smiling. Someone is taking her picture. A man is sitting on the grass watching. It looks like a beautiful, sunny day. The family looks so happy together."
-        
-        Write 3-5 short sentences that describe what {patient_name} would see in simple, loving words.
+        - Is appropriate for seniors with memory care needs
+
+        Write 3-4 short sentences that describe what someone would see in simple, loving words.
         """
         
         result = await self.generate_content(prompt, max_tokens=200)
@@ -263,137 +422,8 @@ class SimpleGeminiTool:
         
         return None
     
-    async def curate_music_selection(self, 
-                                   heritage: str, 
-                                   available_artists: List[str],
-                                   theme: str = "classical music") -> Optional[Dict[str, Any]]:
-        """
-        Use Gemini to intelligently curate music selection.
-        
-        Args:
-            heritage: Patient's cultural heritage
-            available_artists: List of available artist names
-            theme: Music theme (default: classical music)
-            
-        Returns:
-            Curated music selection or None if failed
-        """
-        
-        prompt = f"""
-        Select the most appropriate classical music for a {heritage} senior citizen.
-        
-        Available artists: {', '.join(available_artists) if available_artists else 'None'}
-        Theme: {theme}
-        
-        Consider:
-        - Cultural connection to {heritage} heritage
-        - Calming, familiar classical pieces
-        - Appropriate for seniors with memory care needs
-        - Well-known, accessible compositions
-        
-        If no artists provided, suggest appropriate classical composer.
-        """
-        
-        schema = {
-            "selected_artist": "string",
-            "piece_suggestions": ["string"],
-            "conversation_starters": ["string"],
-            "fun_fact": "string",
-            "heritage_connection": "string"
-        }
-        
-        return await self.generate_structured_json(prompt, schema)
-    
-    async def enhance_photo_description(self, 
-                                      photo_info: Dict[str, Any],
-                                      patient_heritage: str,
-                                      theme: str) -> Optional[Dict[str, Any]]:
-        """
-        Use Gemini to enhance photo descriptions with cultural context.
-        
-        Args:
-            photo_info: Existing photo analysis data
-            patient_heritage: Patient's cultural heritage
-            theme: Current theme
-            
-        Returns:
-            Enhanced photo content or None if failed
-        """
-        
-        photo_desc = photo_info.get("google_vision_description", "A meaningful photograph")
-        existing_starters = photo_info.get("conversation_starters", [])
-        
-        prompt = f"""
-        Enhance this photo description for a {patient_heritage} senior with dementia:
-        
-        Original description: {photo_desc}
-        Theme: {theme}
-        Existing conversation starters: {existing_starters}
-        
-        Create culturally appropriate conversation starters that:
-        - Connect to {patient_heritage} heritage when relevant
-        - Are positive and memory-triggering
-        - Avoid complex or potentially upsetting topics
-        - Focus on happy, universal experiences
-        """
-        
-        schema = {
-            "cultural_description": "string",
-            "conversation_starters": ["string"],
-            "heritage_connections": ["string"],
-            "memory_triggers": ["string"]
-        }
-        
-        return await self.generate_structured_json(prompt, schema)
-    
-    async def generate_nostalgia_news(self, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Generate personalized nostalgia news using Gemini.
-        
-        Args:
-            context: Full context including profile, cultural data, content data
-            
-        Returns:
-            Generated news content or None if failed
-        """
-        
-        profile = context.get("profile", {})
-        content = context.get("today_content", {})
-        
-        prompt = f"""
-        Create a warm, personalized news story for {profile.get('first_name', 'our friend')} today.
-        
-        Person: {profile.get('first_name')} from {profile.get('heritage', 'America')} background
-        Age: {profile.get('age', 80)} years old
-        Era: {profile.get('era', '1940s')}
-        Theme: {profile.get('theme_display', 'Memory Lane')}
-        Date: {profile.get('full_date')}
-        
-        Today's Content:
-        - Music: {content.get('music', {}).get('artist', 'Classical music')}
-        - Recipe: {content.get('recipe', {}).get('name', 'Comfort food')}
-        - Photo: {content.get('photo', {}).get('description', 'Family memories')}
-        
-        Create a short, heartwarming news story (like a local newspaper) that:
-        - Feels personal and relevant to their era and heritage
-        - Mentions today's content naturally
-        - Uses positive, uplifting language
-        - Includes specific details that feel authentic
-        - Avoids current events or potentially upsetting topics
-        """
-        
-        schema = {
-            "headline": "string",
-            "story": "string",
-            "date": "string",
-            "theme": "string",
-            "personal_touches": ["string"]
-        }
-        
-        return await self.generate_structured_json(prompt, schema)
-    
     async def test_connection(self) -> bool:
-        """Test Gemini API connection with increased timeout"""
+        """Test Gemini API connection"""
         try:
             test_result = await self.generate_content("Hello, this is a test.", max_tokens=50)
             return test_result is not None

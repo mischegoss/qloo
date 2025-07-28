@@ -2,14 +2,10 @@
 Enhanced Sequential Agent with 6-Agent Pipeline + Nostalgia News
 File: backend/multi_tool_agent/sequential_agent.py
 
-FIXED: DashboardSynthesizer method signature mismatch
-- Added _create_final_enhanced_profile method
-- Agent 6 now receives single enhanced_profile parameter
-- All agent outputs properly combined before final synthesis
-
-PIPELINE:
-Agent 1: Information Consolidator → Agent 2: Photo Analysis → Agent 3: Qloo Cultural
-→ Agents 4A/4B/4C: Content Generation (parallel) → Agent 5: Nostalgia News → Agent 6: Dashboard Synthesis
+FIXED: Updated Agent 5 nostalgia news structure handling
+- Agent 5 now returns proper sections format
+- Updated _convert_nostalgia_structure to handle sections
+- Maintains all existing functionality
 """
 
 import logging
@@ -22,7 +18,7 @@ class SequentialAgent:
     """
     Enhanced Sequential Agent with 6-Agent Pipeline
     
-    FIXED: Method signature mismatch for DashboardSynthesizer
+    FIXED: Updated nostalgia news structure handling for sections format
     """
     
     def __init__(self, agent1=None, agent2=None, agent3=None, 
@@ -342,11 +338,12 @@ class SequentialAgent:
             photo_data["filename"] = f"{daily_theme.lower().replace(' ', '_')}.png"
             logger.warning(f"⚠️ Using theme-based fallback filename: {photo_data['filename']}")
         
-        # FIXED: Extract and convert nostalgia news data structure
+        # FIXED: Extract nostalgia news data structure (PASS THROUGH SECTIONS)
         agent5_nostalgia_raw = agent5_output.get("nostalgia_news", {})
         
-        # Convert complex Agent 5 structure to simple Agent 6 structure
-        nostalgia_data = self._convert_nostalgia_structure(agent5_nostalgia_raw, mapped_patient_info["name"])
+        # CRITICAL FIX: Don't convert! Pass through the sections structure directly
+        # The frontend expects the sections format, not the old flat format
+        nostalgia_data = agent5_nostalgia_raw if agent5_nostalgia_raw else self._create_empty_nostalgia_sections()
         
         # Create the final enhanced profile with correct structure
         final_profile = {
@@ -386,7 +383,7 @@ class SequentialAgent:
             "music_content": {},
             "recipe_content": {},
             "photo_content": {"filename": "", "description": "", "conversation_starters": []},
-            "nostalgia_news": {"headline": "", "content": "", "conversation_starters": []},
+            "nostalgia_news": self._create_empty_nostalgia_sections(),  # FIXED: Use sections structure
             "patient_info": {"name": "Unknown", "cultural_heritage": "", "age": 0},
             "qloo_intelligence": {}
         }
@@ -409,70 +406,120 @@ class SequentialAgent:
     
     def _convert_nostalgia_structure(self, agent5_data: Dict[str, Any], patient_name: str) -> Dict[str, Any]:
         """
-        FIXED: Convert complex Agent 5 nostalgia structure to simple Agent 6 format
+        FIXED: Convert new Agent 5 sections structure to Agent 6 format
         
-        Agent 5 outputs: {"title": ..., "sections": {...}, "conversation_questions": [...]}
-        Agent 6 expects: {"headline": ..., "content": ..., "conversation_starters": [...]}
+        Agent 5 NEW output: {"title": ..., "sections": {"memory_spotlight": {...}, "era_highlights": {...}, ...}, "themes": [...]}
+        Agent 6 expects: {"headline": ..., "content": ..., "conversation_starters": [...], "themes": [...]}
         """
         
         if not agent5_data:
-            return {"headline": "", "content": "", "conversation_starters": []}
+            return {"headline": "", "content": "", "conversation_starters": [], "themes": []}
+        
+        logger.info("🔄 Converting Agent 5 sections structure to Agent 6 format")
+        logger.info(f"   Agent 5 keys: {list(agent5_data.keys())}")
         
         # Extract title as headline
-        headline = agent5_data.get("title", f"{patient_name}'s Special Day")
+        headline = agent5_data.get("title", f"Today's Special News")
         
-        # Convert complex sections to simple content
+        # Extract sections and convert to content
         sections = agent5_data.get("sections", {})
         content_parts = []
         
-        # Extract content from different sections
-        if "on_this_day" in sections:
-            content_parts.append(sections["on_this_day"].get("content", ""))
+        logger.info(f"   Sections found: {list(sections.keys()) if sections else 'None'}")
         
-        if "era_spotlight" in sections:
-            content_parts.append(sections["era_spotlight"].get("content", ""))
-            
-        if "heritage_traditions" in sections:
-            content_parts.append(sections["heritage_traditions"].get("content", ""))
+        # Extract content from different sections in logical order
+        section_order = ["memory_spotlight", "era_highlights", "heritage_traditions"]
+        
+        for section_name in section_order:
+            if section_name in sections:
+                section_data = sections[section_name]
+                if isinstance(section_data, dict):
+                    section_content = section_data.get("content", "")
+                    if section_content:
+                        content_parts.append(section_content)
+                        logger.info(f"   Added content from {section_name}: {len(section_content)} chars")
         
         # Join all content with proper spacing
-        content = " ".join([part for part in content_parts if part]).strip()
+        content = " ".join(content_parts).strip()
         if not content:
-            content = f"Today is a special day filled with wonderful memories and traditions, {patient_name}!"
+            content = f"Today brings wonderful opportunities for meaningful moments and beautiful memories that enrich our lives."
+            logger.warning("⚠️ No content found in sections, using fallback")
         
         # Extract conversation starters
         conversation_starters = []
         
-        # Get from conversation_questions field
-        questions = agent5_data.get("conversation_questions", [])
-        if isinstance(questions, list):
-            conversation_starters.extend(questions)
-        
-        # Get from conversation_corner if it exists
-        corner = sections.get("conversation_corner", {})
-        if "questions" in corner:
-            corner_questions = corner["questions"]
-            if isinstance(corner_questions, list):
-                conversation_starters.extend(corner_questions)
+        # Get from conversation_starters section
+        if "conversation_starters" in sections:
+            starters_section = sections["conversation_starters"]
+            if isinstance(starters_section, dict):
+                questions = starters_section.get("questions", [])
+                if isinstance(questions, list):
+                    conversation_starters.extend(questions)
+                    logger.info(f"   Found {len(questions)} conversation starters")
         
         # Fallback conversation starters if none found
         if not conversation_starters:
             conversation_starters = [
-                f"What's your favorite holiday memory, {patient_name}?",
-                "Tell me about a special tradition your family had",
-                "What always makes you smile when you think back?"
+                "What brings you joy when you think about those wonderful days?",
+                "Tell me about a happy memory from your younger years",
+                "What traditions were most important to your family?"
             ]
+            logger.warning("⚠️ No conversation starters found, using fallback")
         
-        # Extract themes if available
+        # Extract themes
         themes = agent5_data.get("themes", [])
         if not themes:
-            themes = ["memories", "traditions", "family"]
+            themes = ["memories", "traditions", "heritage"]
+            logger.warning("⚠️ No themes found, using fallback")
         
-        return {
+        result = {
             "headline": headline,
             "content": content,
             "themes": themes,
             "conversation_starters": conversation_starters[:3]  # Limit to 3
+        }
+        
+        logger.info("✅ Nostalgia structure conversion completed")
+        logger.info(f"   Headline: {headline}")
+        logger.info(f"   Content length: {len(content)} chars")
+        logger.info(f"   Themes: {themes}")
+        logger.info(f"   Conversation starters: {len(conversation_starters)}")
+        
+        return result
+    
+    def _create_empty_nostalgia_sections(self) -> Dict[str, Any]:
+        """Create empty nostalgia news with sections structure"""
+        
+        return {
+            "title": "Today's Special News",
+            "subtitle": "Daily Edition",
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "sections": {
+                "memory_spotlight": {
+                    "headline": "📚 Memory Spotlight",
+                    "content": "Today brings wonderful opportunities for meaningful moments and beautiful memories.",
+                    "fun_fact": "Every day brings new possibilities for joy and connection."
+                },
+                "era_highlights": {
+                    "headline": "🎵 Era Highlights",
+                    "content": "Throughout history, music and traditions have brought people together in celebration.",
+                    "fun_fact": "Music is a universal language that speaks to every heart."
+                },
+                "heritage_traditions": {
+                    "headline": "🏛️ Heritage Traditions",
+                    "content": "Cultural traditions connect us to our roots and enrich our lives with meaning.",
+                    "fun_fact": "Every culture has beautiful traditions that celebrate life's important moments."
+                },
+                "conversation_starters": {
+                    "headline": "💬 Conversation Starters",
+                    "questions": [
+                        "What brings you joy today?",
+                        "Tell me about a happy memory",
+                        "What traditions are important to you?"
+                    ]
+                }
+            },
+            "themes": ["Connection", "Joy", "Memories"]
         }
     
     def _create_fallback_music(self) -> Dict[str, Any]:
@@ -558,7 +605,9 @@ class SequentialAgent:
         }
     
     def _create_fallback_nostalgia_news(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback nostalgia news content - ENHANCED"""
+        """
+        FIXED: Create fallback nostalgia news with new sections structure
+        """
         
         patient_info = agent1_output.get("patient_info", {})
         theme_info = agent1_output.get("theme_info", {})
@@ -567,42 +616,75 @@ class SequentialAgent:
         theme_name = theme_info.get("name", "Memory Lane")
         cultural_heritage = patient_info.get("cultural_heritage", "")
         
-        # Create rich fallback content based on theme
-        if "holiday" in theme_name.lower():
-            headline = f"Holiday Memories Bring Joy to {patient_name}"
-            content = f"The holiday season has always been a time of special gatherings and cherished traditions. {patient_name}, your holiday memories are filled with the warmth of family, the joy of celebrations, and the magic of special moments shared with loved ones."
-            themes = ["family", "traditions", "celebrations", "joy"]
-        elif "travel" in theme_name.lower():
-            headline = f"Adventures and Journeys with {patient_name}"  
-            content = f"Travel opens our hearts to new experiences and creates memories that last a lifetime. {patient_name}, your journeys have taken you to wonderful places and introduced you to amazing people along the way."
-            themes = ["adventure", "discovery", "experiences", "journeys"]
-        else:
-            headline = f"Beautiful Memories from {theme_name}"
-            content = f"Life's most precious moments come from the simple joys we share together. {patient_name}, your memories from {theme_name.lower()} remind us of the beauty in everyday moments and the love that surrounds us."
-            themes = ["memories", "joy", "love", "life"]
+        logger.info(f"🔄 Creating fallback nostalgia news with sections structure")
+        logger.info(f"   Theme: {theme_name}, Heritage: {cultural_heritage}")
         
-        # Add cultural context if available
-        if cultural_heritage and cultural_heritage != "American":
-            content += f" Your {cultural_heritage} heritage has enriched these experiences with wonderful traditions and cultural wisdom."
-            themes.append("heritage")
+        # Create newsletter-style content based on theme
+        if "holiday" in theme_name.lower():
+            memory_content = "Remember those wonderful holiday celebrations when families gathered together? The warmth of the season brought everyone closer, creating memories filled with joy, laughter, and cherished traditions."
+            era_content = "Back in the 1940s and 50s, holiday seasons were magical times filled with homemade decorations, family recipes, and the gentle sounds of holiday music playing in the background."
+            heritage_content = f"Holiday traditions have always brought families together, and {cultural_heritage} families created their own special ways of celebrating that honored both old customs and new American traditions."
+            themes = ["holidays", "family", "traditions", "celebrations"]
+        elif "travel" in theme_name.lower():
+            memory_content = "Remember those exciting family trips and adventures? Travel has always opened our hearts to new experiences, creating lasting memories of discovery and the joy of exploring new places together."
+            era_content = "In past decades, family travel was a grand adventure filled with scenic drives, roadside diners, and the excitement of seeing new places. Every journey was an opportunity to create stories that would be shared for years to come."
+            heritage_content = f"Travel traditions often reflected cultural heritage, with {cultural_heritage} families bringing their own perspectives to exploration and creating unique travel experiences that honored their roots."
+            themes = ["travel", "adventure", "discovery", "family"]
+        else:
+            memory_content = f"Remember those beautiful moments celebrating {theme_name.lower()}? Life's most precious memories come from the simple joys we share together, creating connections that warm the heart for years to come."
+            era_content = f"In those wonderful days, {theme_name.lower()} was celebrated with family gatherings, community events, and traditions that brought people together in joy and celebration."
+            heritage_content = f"Every family brought their own special traditions to {theme_name.lower()}, and {cultural_heritage} families created unique cultural experiences that honored their heritage while embracing new traditions."
+            themes = ["memories", "joy", "family", "traditions"]
+        
+        # Create the new sections structure
+        nostalgia_news = {
+            "title": f"Nostalgia News – {datetime.now().strftime('%B %d')}",
+            "subtitle": f"{theme_name} Edition", 
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "personalized_for": patient_name,
+            "sections": {
+                "memory_spotlight": {
+                    "headline": "📚 Memory Spotlight",
+                    "content": memory_content,
+                    "fun_fact": "Historical moments create our most treasured memories."
+                },
+                "era_highlights": {
+                    "headline": "🎵 Era Highlights",
+                    "content": era_content,
+                    "fun_fact": "Music has always been central to life's celebrations."
+                },
+                "heritage_traditions": {
+                    "headline": "🏛️ Heritage Traditions",
+                    "content": heritage_content,
+                    "fun_fact": "Cultural traditions connect us to our roots."
+                },
+                "conversation_starters": {
+                    "headline": "💬 Conversation Starters",
+                    "questions": [
+                        f"What memories about {theme_name.lower()} are most special to you?",
+                        "Tell me about a wonderful time that always makes you smile",
+                        "What traditions were most important to your family?"
+                    ]
+                }
+            },
+            "themes": themes,
+            "metadata": {
+                "generated_by": "sequential_fallback_sections",
+                "generation_timestamp": datetime.now().isoformat(),
+                "theme_integrated": theme_name,
+                "heritage_featured": cultural_heritage,
+                "safety_level": "dementia_friendly",
+                "structure_verified": True,
+                "sections_count": 4,
+                "newsletter_tone": True
+            }
+        }
+        
+        logger.info("✅ Fallback nostalgia news with sections structure created")
+        logger.info(f"   Sections: {list(nostalgia_news['sections'].keys())}")
         
         return {
-            "nostalgia_news": {
-                "headline": headline,
-                "content": content,
-                "themes": themes,
-                "conversation_starters": [
-                    f"What's your favorite memory from {theme_name.lower()}, {patient_name}?",
-                    "Tell me about a special moment that always makes you smile",
-                    "What traditions were most important to your family?"
-                ],
-                "metadata": {
-                    "generation_method": "enhanced_fallback",
-                    "personalized": True,
-                    "agent": "5_fallback",
-                    "cultural_context": cultural_heritage
-                }
-            }
+            "nostalgia_news": nostalgia_news
         }
 
 # Export the main class

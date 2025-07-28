@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import apiService from './services/apiService'
 import mapApiToUIData from './utils/dataMappers'
 import feedbackManager from './utils/feedbackManager'
@@ -12,21 +12,10 @@ import NostalgiaDetail from './components/NostalgiaDetail'
 import Profile from './components/ProfileInfo'
 import Demo from './components/Demo'
 
-// Loading and Error Components
-const LoadingSpinner = () => (
-  <div
-    className='min-h-screen flex items-center justify-center'
-    style={{ backgroundColor: '#F8F7ED' }}
-  >
-    <div className='text-center'>
-      <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4'></div>
-      <p className='text-gray-600 text-lg'>
-        Loading your personalized content...
-      </p>
-    </div>
-  </div>
-)
+// Import the new professional LoadingSpinner component
+import LoadingSpinner from './components/LoadingSpinner'
 
+// Error Component (keeping this inline since it's simple)
 const ErrorMessage = ({ error, onRetry }) => (
   <div
     className='min-h-screen flex items-center justify-center'
@@ -56,23 +45,9 @@ const App = () => {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [currentView, setCurrentView] = useState('app')
-  const [connectionStatus, setConnectionStatus] = useState(null)
 
-  // Load dashboard data on mount
-  useEffect(() => {
-    loadDashboardData()
-    testBackendConnection()
-  }, [])
-
-  // Test backend connection
-  const testBackendConnection = async () => {
-    const result = await apiService.testConnection()
-    setConnectionStatus(result)
-    console.log('Backend connection test:', result)
-  }
-
-  // Load dashboard data from API
-  const loadDashboardData = async () => {
+  // Load dashboard data from API (wrapped with useCallback to fix useEffect dependency warning)
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -84,7 +59,7 @@ const App = () => {
 
       // Make API call with feedback
       const apiResponse = await apiService.getDashboardData(
-        patientProfile,
+        null, // Remove patientProfile dependency to avoid loop
         currentFeedback,
       )
 
@@ -115,7 +90,12 @@ const App = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, []) // Empty dependency array - function doesn't depend on changing values
+
+  // Load dashboard data on mount
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData]) // Fixed: Added loadDashboardData to dependencies
 
   // Handle feedback collection
   const handleFeedback = (type, item, category) => {
@@ -140,6 +120,9 @@ const App = () => {
   const handleViewChange = view => {
     console.log(`👀 Changing view to: ${view}`)
     setCurrentView(view)
+    if (view === 'app') {
+      setCurrentPage('dashboard')
+    }
   }
 
   const handleProfileClick = () => {
@@ -147,7 +130,22 @@ const App = () => {
     setCurrentPage('profile')
   }
 
-  // Render loading state
+  // Demo-specific handlers
+  const handleDashboardUpdate = newData => {
+    console.log('📊 Dashboard updated with new data from demo:', newData)
+    // Optionally refresh the dashboard data to show the new content
+    // loadDashboardData()
+  }
+
+  const handleReturnToDashboard = () => {
+    console.log('🔄 Returning to dashboard from demo')
+    setCurrentView('app')
+    setCurrentPage('dashboard')
+    // Optionally refresh the dashboard to show new cached content
+    loadDashboardData()
+  }
+
+  // Render loading state with professional branded spinner
   if (loading) {
     return <LoadingSpinner />
   }
@@ -160,39 +158,12 @@ const App = () => {
   // Main app render
   return (
     <div className='app min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
-      {/* Optional: Connection status indicator */}
-      {connectionStatus && !connectionStatus.success && (
-        <div className='bg-yellow-50 border-b border-yellow-200 p-3'>
-          <div className='max-w-6xl mx-auto flex items-center justify-between'>
-            <p className='text-yellow-800 text-sm flex items-center'>
-              <span className='mr-2'>📡</span>
-              Backend connection: {connectionStatus.message} - Using demo data
-            </p>
-            <button
-              onClick={testBackendConnection}
-              className='text-yellow-700 hover:text-yellow-900 text-sm underline'
-            >
-              Test Again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Optional: Fallback indicator */}
-      {dashboardData?.metadata?.isUsingFallback && (
-        <div className='bg-blue-50 border-b border-blue-200 p-3'>
-          <div className='max-w-6xl mx-auto'>
-            <p className='text-blue-800 text-sm flex items-center'>
-              <span className='mr-2'>🎭</span>
-              Demo mode - showing sample personalized content
-            </p>
-          </div>
-        </div>
-      )}
-
       <main className='min-h-screen'>
         {currentView === 'demo' ? (
-          <Demo />
+          <Demo
+            onDashboardUpdate={handleDashboardUpdate}
+            onReturnToDashboard={handleReturnToDashboard}
+          />
         ) : (
           <>
             {currentPage === 'dashboard' && (

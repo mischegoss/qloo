@@ -1,4 +1,3 @@
-// Example of how to update your Dashboard component to use API data
 import React from 'react'
 
 const Dashboard = ({
@@ -13,26 +12,28 @@ const Dashboard = ({
   // Use data from API instead of hardcoded realDashboardData
   const dashboardData = data || {}
 
-  // Handle refresh with loading state
-  const handleRefresh = async () => {
-    console.log('🔄 Refreshing dashboard...')
-    if (onRefresh) {
-      await onRefresh()
-    }
-  }
+  // Extract data from new API structure
+  const patientInfo = dashboardData.patient_info || dashboardData.patient || {}
+  const content = dashboardData.content || {}
+  const musicData = content.music || {}
+  const recipeData = content.recipe || {}
+  const photoData = content.photo || {}
+  const nostalgiaData = content.nostalgia_news || {}
 
-  // Quick feedback handlers
-  const handleQuickLike = (category, item) => {
-    if (onFeedback) {
-      onFeedback('like', item, category)
-    }
-  }
+  // Get theme from correct location in API response
+  const currentTheme =
+    dashboardData.metadata?.theme ||
+    patientInfo.daily_theme ||
+    content.theme ||
+    'Memory Lane'
 
-  const handleQuickDislike = (category, item) => {
-    if (onFeedback) {
-      onFeedback('dislike', item, category)
-    }
-  }
+  // Get current date
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
@@ -91,222 +92,208 @@ const Dashboard = ({
       </header>
 
       <div className='max-w-6xl mx-auto p-6'>
-        {/* Welcome section with dynamic data */}
+        {/* Header Section */}
         <div className='text-center mb-12'>
-          <h1 className='text-5xl font-light mb-4' style={{ color: '#4A4A4A' }}>
-            Welcome, {dashboardData.patient?.name || 'Friend'}
+          <h1 className='text-5xl font-light mb-2' style={{ color: '#4A4A4A' }}>
+            Welcome, {patientInfo.name || 'Friend'}
           </h1>
-          <h2 className='text-3xl font-light' style={{ color: '#6B6B6B' }}>
-            Today's Theme is {dashboardData.patient?.theme || 'Memory Lane'}
+          <h2 className='text-4xl font-light mb-4' style={{ color: '#4A4A4A' }}>
+            Today is {currentDate}
           </h2>
+          <h3 className='text-5xl font-medium' style={{ color: '#8B7CB6' }}>
+            Today's Theme is {currentTheme}
+          </h3>
         </div>
 
-        {/* Content grid with dynamic data */}
-        <div className='grid md:grid-cols-2 gap-8 mb-12'>
+        {/* Three Card Grid - Desktop: 3 columns, Mobile: 1 column */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10'>
           {/* Music Card */}
           <div
-            className='bg-white rounded-xl p-8 shadow-sm border-2 border-gray-100 cursor-pointer hover:shadow-md transition-shadow'
+            className='bg-white rounded-xl p-8 shadow-sm border-2 border-transparent hover:border-orange-300 cursor-pointer hover:shadow-md transition-all hover:-translate-y-1'
             onClick={() => onNavigate && onNavigate('music')}
-            style={{ backgroundColor: '#FDF5E6' }}
+            style={{ borderColor: '#D4A574' }}
+            onMouseEnter={e => {
+              e.target.style.backgroundColor = '#FDF9F3'
+              e.target.style.borderColor = '#B8935F'
+            }}
+            onMouseLeave={e => {
+              e.target.style.backgroundColor = 'white'
+              e.target.style.borderColor = '#D4A574'
+            }}
           >
             <div className='flex items-center mb-6'>
               <div
-                className='w-8 h-8 rounded-full mr-4'
+                className='w-10 h-10 rounded-full mr-4 flex items-center justify-center text-white text-xl'
                 style={{ backgroundColor: '#D4A574' }}
-              ></div>
-              <h3 className='text-2xl font-medium' style={{ color: '#4A4A4A' }}>
+              >
+                🎵
+              </div>
+              <h3
+                className='text-2xl font-semibold'
+                style={{ color: '#4A4A4A' }}
+              >
                 Music
               </h3>
             </div>
-            <h4 className='text-xl font-medium text-gray-800 mb-2'>
-              {dashboardData.music?.title || 'Loading...'}
-            </h4>
-            <p className='text-lg text-gray-600 mb-4'>
-              by {dashboardData.music?.artist || 'Artist'}
-            </p>
-            {/* Quick feedback buttons */}
-            <div className='flex space-x-2'>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickLike(
-                    'music',
-                    `${dashboardData.music?.artist} - ${dashboardData.music?.title}`,
-                  )
-                }}
-                className='px-3 py-1 text-sm bg-green-100 hover:bg-green-200 rounded transition-colors'
-              >
-                👍
-              </button>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickDislike(
-                    'music',
-                    `${dashboardData.music?.artist} - ${dashboardData.music?.title}`,
-                  )
-                }}
-                className='px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded transition-colors'
-              >
-                👎
-              </button>
+            <div
+              className='text-base font-medium mb-4'
+              style={{ color: '#6B6B6B' }}
+            >
+              Engage through Sound
             </div>
+            <h4 className='text-xl font-semibold text-gray-800 mb-2'>
+              {musicData.artist && musicData.piece_title
+                ? `${musicData.artist}: ${musicData.piece_title}`
+                : musicData.artist ||
+                  musicData.piece_title ||
+                  'Classical Music'}
+            </h4>
+            <p className='text-base text-gray-600 leading-relaxed'>
+              {musicData.fun_fact ||
+                'A beautiful classical piece to inspire memories'}
+            </p>
           </div>
 
           {/* Recipe Card */}
           <div
-            className='bg-white rounded-xl p-8 shadow-sm border-2 border-gray-100 cursor-pointer hover:shadow-md transition-shadow'
+            className='bg-white rounded-xl p-8 shadow-sm border-2 border-transparent hover:border-orange-400 cursor-pointer hover:shadow-md transition-all hover:-translate-y-1'
             onClick={() => onNavigate && onNavigate('recipe')}
-            style={{ backgroundColor: '#F0F0F0' }}
+            style={{ borderColor: '#C4916B' }}
+            onMouseEnter={e => {
+              e.target.style.backgroundColor = '#FBF6F0'
+              e.target.style.borderColor = '#A67A56'
+            }}
+            onMouseLeave={e => {
+              e.target.style.backgroundColor = 'white'
+              e.target.style.borderColor = '#C4916B'
+            }}
           >
             <div className='flex items-center mb-6'>
               <div
-                className='w-8 h-8 rounded-full mr-4'
+                className='w-10 h-10 rounded-full mr-4 flex items-center justify-center text-white text-xl'
                 style={{ backgroundColor: '#C4916B' }}
-              ></div>
-              <h3 className='text-2xl font-medium' style={{ color: '#4A4A4A' }}>
+              >
+                🍽️
+              </div>
+              <h3
+                className='text-2xl font-semibold'
+                style={{ color: '#4A4A4A' }}
+              >
                 Recipe
               </h3>
             </div>
-            <h4 className='text-xl font-medium text-gray-800 mb-2'>
-              {dashboardData.recipe?.name || 'Loading...'}
-            </h4>
-            <p className='text-lg text-gray-600 mb-4'>A comforting dish</p>
-            {/* Quick feedback buttons */}
-            <div className='flex space-x-2'>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickLike('recipe', dashboardData.recipe?.name)
-                }}
-                className='px-3 py-1 text-sm bg-green-100 hover:bg-green-200 rounded transition-colors'
-              >
-                👍
-              </button>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickDislike('recipe', dashboardData.recipe?.name)
-                }}
-                className='px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded transition-colors'
-              >
-                👎
-              </button>
+            <div
+              className='text-base font-medium mb-4'
+              style={{ color: '#6B6B6B' }}
+            >
+              Connect Through Taste and Smell
             </div>
+            <h4 className='text-xl font-semibold text-gray-800 mb-2'>
+              {recipeData.name || 'Comfort Food Recipe'}
+            </h4>
+            <p className='text-base text-gray-600 leading-relaxed'>
+              {recipeData.cultural_context ||
+                `A ${
+                  patientInfo.cultural_heritage || 'traditional'
+                } dish to bring back memories`}
+            </p>
           </div>
 
           {/* Photo Card */}
           <div
-            className='bg-white rounded-xl p-8 shadow-sm border-2 border-gray-100 cursor-pointer hover:shadow-md transition-shadow'
+            className='bg-white rounded-xl p-8 shadow-sm border-2 border-transparent hover:border-purple-400 cursor-pointer hover:shadow-md transition-all hover:-translate-y-1'
             onClick={() => onNavigate && onNavigate('photo')}
-            style={{ backgroundColor: '#F5F3FF' }}
+            style={{ borderColor: '#8B7CB6' }}
+            onMouseEnter={e => {
+              e.target.style.backgroundColor = '#F8F6FF'
+              e.target.style.borderColor = '#7A6BA4'
+            }}
+            onMouseLeave={e => {
+              e.target.style.backgroundColor = 'white'
+              e.target.style.borderColor = '#8B7CB6'
+            }}
           >
             <div className='flex items-center mb-6'>
               <div
-                className='w-8 h-8 rounded-full mr-4'
+                className='w-10 h-10 rounded-full mr-4 flex items-center justify-center text-white text-xl'
                 style={{ backgroundColor: '#8B7CB6' }}
-              ></div>
-              <h3 className='text-2xl font-medium' style={{ color: '#4A4A4A' }}>
-                Photo of the day
-              </h3>
-            </div>
-            <h4 className='text-xl font-medium text-gray-800 mb-2'>
-              {dashboardData.photo?.filename || 'Loading...'}
-            </h4>
-            <p className='text-lg text-gray-600 mb-4'>A meaningful moment</p>
-            {/* Quick feedback buttons */}
-            <div className='flex space-x-2'>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickLike('photo', dashboardData.photo?.description)
-                }}
-                className='px-3 py-1 text-sm bg-green-100 hover:bg-green-200 rounded transition-colors'
               >
-                👍
-              </button>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickDislike('photo', dashboardData.photo?.description)
-                }}
-                className='px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded transition-colors'
-              >
-                👎
-              </button>
-            </div>
-          </div>
-
-          {/* Nostalgia News Card */}
-          <div
-            className='bg-white rounded-xl p-8 shadow-sm border-2 border-gray-100 cursor-pointer hover:shadow-md transition-shadow'
-            onClick={() => onNavigate && onNavigate('nostalgia')}
-            style={{ backgroundColor: '#FFF7F0' }}
-          >
-            <div className='flex items-center mb-6'>
-              <div className='flex space-x-2 mr-4'>
-                <div
-                  className='w-3 h-3 rounded-full'
-                  style={{ backgroundColor: '#D4A574' }}
-                ></div>
-                <div
-                  className='w-3 h-3 rounded-full'
-                  style={{ backgroundColor: '#C4916B' }}
-                ></div>
-                <div
-                  className='w-3 h-3 rounded-full'
-                  style={{ backgroundColor: '#8B7CB6' }}
-                ></div>
+                📸
               </div>
-              <h3 className='text-2xl font-medium' style={{ color: '#4A4A4A' }}>
-                Nostalgia News
+              <h3
+                className='text-2xl font-semibold'
+                style={{ color: '#4A4A4A' }}
+              >
+                Photo of the Day
               </h3>
             </div>
-            <h4 className='text-xl font-medium text-gray-800 mb-2'>
-              {dashboardData.nostalgia?.headline || 'Loading...'}
-            </h4>
-            <p className='text-lg text-gray-600 mb-4'>
-              Personal stories and memories
-            </p>
-            {/* Quick feedback buttons */}
-            <div className='flex space-x-2'>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickLike(
-                    'nostalgia',
-                    dashboardData.nostalgia?.headline,
-                  )
-                }}
-                className='px-3 py-1 text-sm bg-green-100 hover:bg-green-200 rounded transition-colors'
-              >
-                👍
-              </button>
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  handleQuickDislike(
-                    'nostalgia',
-                    dashboardData.nostalgia?.headline,
-                  )
-                }}
-                className='px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded transition-colors'
-              >
-                👎
-              </button>
+            <div
+              className='text-base font-medium mb-4'
+              style={{ color: '#6B6B6B' }}
+            >
+              Stimulate through Sight
             </div>
+            <h4 className='text-xl font-semibold text-gray-800 mb-2'>
+              {photoData.filename
+                ? `${currentTheme}'s Photo`
+                : `A ${currentTheme}-Related Photo`}
+            </h4>
+            <p className='text-base text-gray-600 leading-relaxed'>
+              {photoData.cultural_context ||
+                'An inspiring image to spark conversation and memories'}
+            </p>
           </div>
         </div>
 
-        {/* Refresh button */}
-        <div className='text-center'>
-          <button
-            onClick={handleRefresh}
-            className='px-8 py-4 rounded-full text-white text-lg font-medium hover:opacity-90 transition-opacity'
-            style={{ backgroundColor: '#4A4A4A' }}
+        {/* Nostalgia News Section - Larger and Centered */}
+        <div className='flex justify-center mt-4'>
+          <div
+            className='bg-white rounded-xl p-12 shadow-lg border-2 cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 max-w-4xl w-full'
+            onClick={() => onNavigate && onNavigate('nostalgia')}
+            style={{ borderColor: '#B8A9D9' }}
+            onMouseEnter={e => {
+              e.target.style.backgroundColor = '#FDFCFF'
+              e.target.style.borderColor = '#A695C7'
+            }}
+            onMouseLeave={e => {
+              e.target.style.backgroundColor = 'white'
+              e.target.style.borderColor = '#B8A9D9'
+            }}
           >
-            Refresh Dashboard
-          </button>
+            <div className='flex items-center mb-6'>
+              <div
+                className='w-12 h-12 rounded-full mr-4 flex items-center justify-center text-white text-2xl'
+                style={{ backgroundColor: '#B8A9D9' }}
+              >
+                📰
+              </div>
+              <h3
+                className='text-3xl font-semibold'
+                style={{ color: '#4A4A4A' }}
+              >
+                Nostalgia News
+              </h3>
+            </div>
+            <div
+              className='text-lg font-medium mb-4'
+              style={{ color: '#6B6B6B' }}
+            >
+              Explore through Stories
+            </div>
+            <h4 className='text-2xl font-semibold text-gray-800 mb-4'>
+              {nostalgiaData.headline ||
+                nostalgiaData.title ||
+                `Personalized for ${patientInfo.name || 'you'}`}
+            </h4>
+            <p className='text-lg text-gray-600 leading-relaxed'>
+              {nostalgiaData.content ||
+                `Today's special story connects your ${
+                  patientInfo.cultural_heritage || 'heritage'
+                } with 
+                the ${currentTheme.toLowerCase()} theme. Discover meaningful connections 
+                and memories that bring warmth to your day.`}
+            </p>
+          </div>
         </div>
       </div>
     </div>

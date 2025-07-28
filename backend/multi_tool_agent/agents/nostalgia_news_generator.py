@@ -1,14 +1,12 @@
 """
-Agent 5: Nostalgia News Generator - Enhanced with Theme-Based Fallbacks
+Agent 5: Nostalgia News Generator - FIXED NEWSLETTER TONE
 File: backend/multi_tool_agent/agents/nostalgia_news_generator.py
 
-ENHANCED:
-- Uses simple_gemini_tools for consistency
-- Extensive theme-based fallbacks from JSON
-- Always works even when Gemini fails
-- Personalized content without dates in fallbacks
-- Comprehensive error handling
-- FIXED: Slice error in _extract_cultural_data method
+CRITICAL FIX:
+- Always returns sections format that Agent 6 expects
+- Uses generate_nostalgia_newsletter with proper tone guidance
+- Newsletter-style content appropriate for caregivers to read aloud
+- No more format mismatches
 """
 
 import logging
@@ -22,552 +20,331 @@ logger = logging.getLogger(__name__)
 
 class NostalgiaNewsGenerator:
     """
-    Agent 5: Enhanced Nostalgia News Generator
-    
-    Creates personalized cultural "newspaper" using Gemini AI with extensive
-    theme-based fallbacks that ensure the feature always works beautifully.
+    Agent 5: FIXED Nostalgia News Generator - Newsletter Tone Restored
     """
     
     def __init__(self, gemini_tool=None):
-        # Use simple_gemini_tools for consistency
         self.gemini_tool = gemini_tool
-        
-        # Load theme-based fallback content
         self.theme_fallbacks = self._load_theme_fallbacks()
         
-        # Load additional fallback content for when everything fails
-        self.emergency_fallback = self._load_emergency_fallback()
-        
-        logger.info("📰 Agent 5: Enhanced Nostalgia News Generator initialized")
+        logger.info("📰 Agent 5: FIXED Nostalgia News Generator initialized")
         logger.info(f"🧠 Gemini tool available: {self.gemini_tool is not None}")
-        logger.info(f"🎯 Theme fallbacks loaded: {len(self.theme_fallbacks)} themes")
-        logger.info("✅ Extensive fallbacks ensure this feature ALWAYS works")
+        logger.info("✅ SECTIONS format with NEWSLETTER TONE guaranteed")
     
     def _load_theme_fallbacks(self) -> Dict[str, Any]:
-        """Load theme-based fallback content from JSON"""
+        """Load theme fallbacks with guaranteed newsletter-style structure"""
         
         try:
-            # Try multiple paths for the fallback JSON file
-            possible_paths = [
-                Path(__file__).parent.parent.parent / "config" / "nostalgia_news_fallbacks.json",
-                Path(__file__).parent.parent / "config" / "nostalgia_news_fallbacks.json", 
-                Path(__file__).parent / "nostalgia_news_fallbacks.json",
-                Path("config/nostalgia_news_fallbacks.json"),
-                Path("nostalgia_news_fallbacks.json")
-            ]
-            
-            for path in possible_paths:
-                if path.exists():
-                    with open(path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        logger.info(f"✅ Loaded theme fallbacks from {path}")
-                        return data.get("theme_fallbacks", {})
-            
-            logger.warning("⚠️ Nostalgia news fallbacks JSON not found, using built-in fallbacks")
-            
+            config_path = Path(__file__).parent.parent.parent / "config" / "nostalgia_news_fallbacks.json"
+            if config_path.exists():
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    theme_fallbacks = data.get("theme_fallbacks", {})
+                    if theme_fallbacks:
+                        logger.info(f"✅ Loaded {len(theme_fallbacks)} theme fallbacks from JSON")
+                        return theme_fallbacks
         except Exception as e:
-            logger.error(f"❌ Error loading theme fallbacks: {e}")
+            logger.warning(f"⚠️ Error loading JSON fallbacks: {e}")
         
-        # Return built-in fallbacks if file loading fails
-        return self._get_builtin_theme_fallbacks()
-    
-    def _load_emergency_fallback(self) -> Dict[str, Any]:
-        """Load emergency fallback content"""
-        
-        try:
-            # Try to get from the same JSON file
-            possible_paths = [
-                Path(__file__).parent.parent.parent / "config" / "nostalgia_news_fallbacks.json",
-                Path(__file__).parent.parent / "config" / "nostalgia_news_fallbacks.json",
-            ]
-            
-            for path in possible_paths:
-                if path.exists():
-                    with open(path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        return data.get("emergency_fallback", {})
-                        
-        except Exception as e:
-            logger.error(f"❌ Error loading emergency fallback: {e}")
-        
-        # Return built-in emergency fallback
-        return self._get_builtin_emergency_fallback()
-    
-    def _get_builtin_theme_fallbacks(self) -> Dict[str, Any]:
-        """Built-in theme fallbacks if JSON file is unavailable"""
-        
+        # Guaranteed fallbacks with newsletter-style content
         return {
-            "birthday": {
-                "on_this_day": {
-                    "content": "Birthdays have always been special celebrations that bring families together! Throughout history, people have marked these precious days with joy, love, and treasured memories.",
-                    "generic_facts": ["Birthday celebrations date back thousands of years", "Making birthday wishes is a tradition found worldwide"]
-                },
-                "era_spotlight": {
-                    "content": "Throughout the decades, families have celebrated birthdays with homemade cakes, music, and gathered loved ones creating beautiful memories together.",
-                    "generic_facts": ["Birthday parties often featured family sing-alongs", "Homemade birthday cakes were labors of love"]
-                },
-                "heritage_traditions": {
-                    "content": "Every culture has beautiful birthday traditions that honor the special person, from sharing favorite foods to creating lasting memories with loved ones.",
-                    "generic_facts": ["Many cultures have special birthday foods", "Birthday songs exist in nearly every culture"]
-                },
-                "conversation_questions": [
-                    "What was your most memorable birthday celebration?",
-                    "Did your family have special birthday traditions?", 
-                    "What's your favorite birthday memory?"
+            "travel": {
+                "memory_spotlight": "Remember those wonderful family road trips? Back in the 1950s, families would pack their cars and set off to explore America's highways, stopping at roadside diners and scenic overlooks. Travel has always opened hearts to new experiences and created lasting memories that connect us to the wider world.",
+                "era_highlights": "In past decades, travel was a grand family adventure filled with discovery and wonder. Picture those classic family station wagons from the 1960s, loaded with suitcases and excitement for the journey ahead. Every trip was an opportunity to see something new and create stories that would be shared for years to come.",
+                "heritage_traditions": "Every culture has its own special travel traditions, from family pilgrimages to seasonal journeys that honor heritage. Many families would visit relatives during holidays, creating beautiful connections across generations and sharing the joy of being together in different places.",
+                "conversation_starters": [
+                    "What was your favorite place to visit with your family?",
+                    "Tell me about a memorable family trip you took",
+                    "What did you enjoy most about traveling in those days?"
+                ]
+            },
+            "food": {
+                "memory_spotlight": "Remember those wonderful Sunday dinners when the whole family gathered around the table? Back in the 1940s and 50s, the aroma of home-cooked meals would fill the house, bringing everyone together. Food has always been at the heart of family life, creating moments of connection and love.",
+                "era_highlights": "Those were the days when meals were prepared from scratch with care and attention. Picture Grandma's kitchen in the 1950s, with fresh bread rising and soup simmering on the stove. Every meal was a celebration of family togetherness and the simple pleasure of sharing good food.",
+                "heritage_traditions": "Every family brought their own special food traditions to America, creating unique recipes that told the story of their heritage. These cherished recipes were passed down through generations, connecting families to their roots while creating new memories around the dinner table.",
+                "conversation_starters": [
+                    "What was your favorite family recipe growing up?",
+                    "Tell me about special meals you remember from your childhood",
+                    "What food traditions were most important to your family?"
                 ]
             },
             "family": {
-                "on_this_day": {
-                    "content": "Family gatherings have always been the heart of happy memories! Families have come together to share stories, laughter, and bonds that make life meaningful.",
-                    "generic_facts": ["Family traditions preserve cultural heritage", "Family gatherings strengthen emotional bonds"]
-                },
-                "era_spotlight": {
-                    "content": "Families often gathered around dinner tables for conversations, shared photo albums, and created traditions that brought everyone together.",
-                    "generic_facts": ["Sunday dinners were family tradition highlights", "Photo albums were treasured family keepsakes"]
-                },
-                "heritage_traditions": {
-                    "content": "Each family heritage brings unique traditions, from special recipes passed down through generations to cultural celebrations that connect us to our roots.",
-                    "generic_facts": ["Family recipes often carry cultural history", "Heritage traditions strengthen family identity"]
-                },
-                "conversation_questions": [
-                    "What family traditions do you remember most fondly?",
-                    "Tell me about your favorite family gathering",
-                    "What made your family special?"
+                "memory_spotlight": "Remember those wonderful family gatherings when everyone came together? Back in those days, families would gather for holidays, birthdays, and Sunday dinners, filling the house with laughter and stories. Family bonds have always been the foundation of life's most meaningful moments.",
+                "era_highlights": "In the 1940s and 50s, family gatherings were grand affairs with multiple generations sharing the same table. Picture those holiday celebrations with children playing, adults sharing stories, and everyone feeling the warmth of being surrounded by loved ones. Every gathering created memories that would last a lifetime.",
+                "heritage_traditions": "Every family brought their own special traditions to celebrations, whether it was singing songs, playing games, or sharing stories from the old country. These beautiful customs connected generations and preserved the wisdom and love that made each family unique.",
+                "conversation_starters": [
+                    "Tell me about your favorite family tradition growing up",
+                    "What family gatherings do you remember most fondly?",
+                    "Who was the best storyteller in your family?"
                 ]
             },
-            "memory_lane": {
-                "on_this_day": {
-                    "content": "Walking down memory lane reminds us of all the beautiful moments that have shaped our lives! Every memory is a treasure that connects us to joy, love, and meaningful experiences.",
-                    "generic_facts": ["Memories help us appreciate life's journey", "Sharing memories strengthens relationships"]
-                },
-                "era_spotlight": {
-                    "content": "Each era brought its own special moments and memories, from music and dancing to simple pleasures that made life beautiful and meaningful.",
-                    "generic_facts": ["Every generation creates unique memories", "Music often triggers the strongest memories"]
-                },
-                "heritage_traditions": {
-                    "content": "Our heritage gives us rich memories and traditions that connect us to our families and cultural roots, creating a beautiful tapestry of experiences.",
-                    "generic_facts": ["Cultural memories span generations", "Heritage traditions create lasting memories"]
-                },
-                "conversation_questions": [
-                    "What's one of your happiest memories?",
-                    "What always makes you smile when you think about it?",
-                    "Tell me about a perfect day from your past"
+            "birthday": {
+                "memory_spotlight": "Remember those magical birthday celebrations when the whole family would come together? Back in the 1950s, birthdays were special occasions marked by homemade cakes, family sing-alongs, and cherished traditions. Every birthday was a celebration of life and the joy of being surrounded by loved ones.",
+                "era_highlights": "In those days, birthday cakes were lovingly made from scratch, and the whole family would gather to sing and celebrate. Picture those wonderful moments when everyone would crowd around the birthday person, sharing hugs and making wishes. Every celebration created precious memories that would be treasured for years.",
+                "heritage_traditions": "Every culture brought beautiful birthday traditions to America, with special foods, songs, and customs that made each celebration unique. These meaningful traditions connected families to their heritage while creating new memories that would be passed down through generations.",
+                "conversation_starters": [
+                    "What made birthday celebrations special in your family?",
+                    "Do you remember a particularly wonderful birthday from your younger days?",
+                    "What was your favorite birthday cake or special treat?"
                 ]
             }
         }
     
-    def _get_builtin_emergency_fallback(self) -> Dict[str, Any]:
-        """Built-in emergency fallback when everything fails"""
-        
-        return {
-            "on_this_day": {
-                "content": "Today is a special day to celebrate the wonderful person you are! Every day brings new opportunities for joy, connection, and beautiful moments.",
-                "generic_facts": ["Every day is an opportunity for joy", "Human connections make life meaningful"]
-            },
-            "era_spotlight": {
-                "content": "Throughout all the years, the most important things remain the same: kindness, love, and the connections we make with others.",
-                "generic_facts": ["Love and kindness are timeless", "Human connections transcend all eras"]
-            },
-            "heritage_traditions": {
-                "content": "No matter where we come from, we all share the universal values of family, kindness, and caring for one another.",
-                "generic_facts": ["Kindness and care are universal human values", "Every person has unique experiences to share"]
-            },
-            "conversation_questions": [
-                "What brings you joy today?",
-                "Tell me about something that makes you smile",
-                "What are you grateful for?"
-            ]
-        }
-    
     def _extract_profile_data(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Safely extract profile data with defaults"""
+        """Extract profile data with safe defaults"""
         
         try:
             patient_info = agent1_output.get("patient_info", {})
             theme_info = agent1_output.get("theme_info", {})
             
-            first_name = patient_info.get("first_name", "Friend")
-            age = patient_info.get("current_age", 80)
-            heritage = patient_info.get("cultural_heritage", "american")
-            birth_year = patient_info.get("birth_year", 1945)
-            theme = theme_info.get("name", "memory_lane")
-            theme_display = theme_info.get("display_name", "Memory Lane")
-            
-            # Calculate era based on birth year
-            if birth_year <= 1945:
-                era = "1940s"
-            elif birth_year <= 1955:
-                era = "1950s"
-            elif birth_year <= 1965:
-                era = "1960s"
-            else:
-                era = "1970s"
-            
             return {
-                "first_name": first_name,
-                "age": age,
-                "heritage": heritage.lower(), 
-                "theme": theme,
-                "theme_display": theme_display,
+                "first_name": patient_info.get("first_name", "Friend"),
+                "heritage": patient_info.get("cultural_heritage", "American").lower(),
+                "theme_id": theme_info.get("id", "travel"),
+                "theme_name": theme_info.get("name", "Travel"),
                 "current_date": datetime.now().strftime("%B %d"),
-                "full_date": datetime.now().strftime("%B %d, %Y"),
-                "era": era,
-                "birth_year": birth_year
+                "birth_year": patient_info.get("birth_year", 1945)
             }
-            
         except Exception as e:
             logger.warning(f"⚠️ Error extracting profile data: {e}")
             return {
                 "first_name": "Friend",
-                "age": 80,
-                "heritage": "american", 
-                "theme": "memory_lane",
-                "theme_display": "Memory Lane",
+                "heritage": "american",
+                "theme_id": "travel", 
+                "theme_name": "Travel",
                 "current_date": datetime.now().strftime("%B %d"),
-                "full_date": datetime.now().strftime("%B %d, %Y"),
-                "era": "1940s"
-            }
-    
-    def _extract_cultural_data(self, agent3_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Safely extract cultural intelligence with defaults - FIXED SLICE ERROR"""
-        
-        try:
-            qloo_data = agent3_output.get("qloo_intelligence", {})
-            cultural_recs = qloo_data.get("cultural_recommendations", {})
-            
-            # CRITICAL FIX: Safe extraction with type checking before slicing
-            artists_data = cultural_recs.get("artists", {})
-            if isinstance(artists_data, dict):
-                artists = artists_data.get("entities", [])
-            else:
-                artists = []
-                
-            # CRITICAL FIX: Ensure artists is a list before slicing
-            if not isinstance(artists, list):
-                artists = []
-            
-            return {
-                "preferred_artists": [artist.get("name", "") for artist in artists[:3] if isinstance(artist, dict) and artist.get("name")],
-                "cultural_insights": qloo_data.get("cultural_insights", {}),
-                "heritage_connections": qloo_data.get("heritage_connections", [])
-            }
-            
-        except Exception as e:
-            logger.warning(f"⚠️ Error extracting cultural data: {e}")
-            return {
-                "preferred_artists": ["Classical Music"],
-                "cultural_insights": {},
-                "heritage_connections": []
+                "birth_year": 1945
             }
     
     def _extract_content_data(self, agent4a_output: Dict[str, Any], 
                              agent4b_output: Dict[str, Any],
                              agent4c_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Safely extract selected content with defaults"""
+        """Extract content data with safe defaults"""
         
         try:
             music_content = agent4a_output.get("music_content", {})
             recipe_content = agent4b_output.get("recipe_content", {})
-            photo_content = agent4c_output.get("photo_content", {})
             
             return {
-                "selected_artist": music_content.get("artist", "Classical music"),
-                "selected_piece": music_content.get("piece_title", "beautiful melodies"),
-                "selected_recipe": recipe_content.get("name", "comfort food"),
-                "recipe_heritage": recipe_content.get("heritage_tags", []),
-                "photo_description": photo_content.get("description", "cherished memories"),
-                "photo_theme": photo_content.get("theme", "special moments")
+                "music_artist": music_content.get("artist", "Classical Music"),
+                "music_piece": music_content.get("piece_title", "Beautiful Melodies"),
+                "recipe_name": recipe_content.get("name", "Comfort Food")
             }
-            
         except Exception as e:
             logger.warning(f"⚠️ Error extracting content data: {e}")
             return {
-                "selected_artist": "Classical music",
-                "selected_piece": "beautiful melodies", 
-                "selected_recipe": "comfort food",
-                "recipe_heritage": [],
-                "photo_description": "cherished memories",
-                "photo_theme": "special moments"
+                "music_artist": "Classical Music",
+                "music_piece": "Beautiful Melodies",
+                "recipe_name": "Comfort Food"
             }
     
-    async def _generate_with_gemini(self, profile_data: Dict[str, Any],
-                                   cultural_data: Dict[str, Any], 
-                                   content_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate nostalgia news using Gemini AI with error handling"""
-    
-        try:
-            # Create comprehensive prompt
-            prompt = self._create_gemini_prompt(profile_data, cultural_data, content_data)
-            
-            # Call Gemini using simple_gemini_tools (returns string directly)
-            if hasattr(self.gemini_tool, 'generate_content'):
-                gemini_content = await self.gemini_tool.generate_content(prompt)
-            else:
-                logger.warning("⚠️ Gemini tool missing generate_content method")
-                return {"success": False}
-            
-            # Parse and validate response (simple_gemini_tools returns string directly)
-            if gemini_content and isinstance(gemini_content, str):
-                parsed_result = self._parse_gemini_response(gemini_content, profile_data)
-                if parsed_result:
-                    parsed_result["success"] = True
-                    return parsed_result
-            
-            logger.warning("⚠️ Gemini response validation failed")
-            return {"success": False}
-                
-        except Exception as e:
-            logger.warning(f"⚠️ Gemini generation exception: {e}")
-            return {"success": False}
-    
-    def _create_gemini_prompt(self, profile_data: Dict[str, Any],
-                             cultural_data: Dict[str, Any],
-                             content_data: Dict[str, Any]) -> str:
-        """Create optimized prompt for Gemini"""
+    async def _generate_with_gemini(self, profile_data: Dict[str, Any], content_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Generate using Gemini with NEWSLETTER TONE guidance"""
         
-        prompt = f"""
-Create warm, positive "Nostalgia News" for {profile_data['first_name']}, a {profile_data['age']}-year-old {profile_data['heritage']} person.
-
-CONTEXT:
-- Today: {profile_data['full_date']}
-- Theme: {profile_data['theme_display']}
-- Era: {profile_data['era']} (born {profile_data.get('birth_year', 'unknown')})
-- Heritage: {profile_data['heritage']}
-- Music: {content_data['selected_artist']} - {content_data['selected_piece']}
-- Food: {content_data['selected_recipe']}
-
-Create exactly 4 sections in JSON format:
-
-1. "on_this_day": Positive historical event from {profile_data['current_date']} connecting to their era. 2-3 sentences using their name.
-
-2. "era_spotlight": How {profile_data['theme_display']} was celebrated in the {profile_data['era']}. Connect to today's music. 2-3 sentences using their name.
-
-3. "heritage_traditions": How {profile_data['heritage']} families celebrated {profile_data['theme_display']}. Connect to today's recipe. 2-3 sentences using their name.
-
-4. "conversation_questions": 3 gentle questions about their {profile_data['theme_display']} experiences using their name.
-
-REQUIREMENTS:
-- Use {profile_data['first_name']}'s name in each section
-- Keep positive, warm, encouraging tone
-- Focus on family, traditions, happy memories
-- No illness, loss, or negative events
-- 2-3 sentences maximum per section
-- Return valid JSON only
-
-JSON format:
-{{
-    "on_this_day": "Content here with {profile_data['first_name']}'s name...",
-    "era_spotlight": "Content here with {profile_data['first_name']}'s name...",
-    "heritage_traditions": "Content here with {profile_data['first_name']}'s name...",
-    "conversation_questions": ["Question 1 for {profile_data['first_name']}?", "Question 2 for {profile_data['first_name']}?", "Question 3 for {profile_data['first_name']}?"]
-}}
-"""
+        # Check if Gemini tool has the newsletter method
+        if not self.gemini_tool:
+            logger.info("🤖 No Gemini tool available")
+            return None
         
-        return prompt
-    
-    def _parse_gemini_response(self, gemini_content: str, profile_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Parse and validate Gemini response with extensive error handling"""
-        
-        try:
-            # Extract JSON from response (simple_gemini_tools returns string directly)
-            if "{" in gemini_content and "}" in gemini_content:
-                start = gemini_content.find("{")
-                end = gemini_content.rfind("}") + 1
-                json_str = gemini_content[start:end]
+        # Try the new newsletter method first
+        if hasattr(self.gemini_tool, 'generate_nostalgia_newsletter'):
+            try:
+                logger.info("🧠 Using Gemini generate_nostalgia_newsletter method")
                 
-                parsed_content = json.loads(json_str)
+                # Create comprehensive newsletter prompt
+                prompt = f"""
+                Create warm, positive nostalgia newsletter content focusing on {profile_data['theme_name']} for dementia care.
                 
-                # Validate required fields
-                required_fields = ["on_this_day", "era_spotlight", "heritage_traditions", "conversation_questions"]
-                if not all(field in parsed_content for field in required_fields):
-                    logger.warning("⚠️ Gemini response missing required fields")
-                    return None
+                Context:
+                - Theme: {profile_data['theme_name']} (THIS IS THE MAIN FOCUS)
+                - Heritage: {profile_data['heritage']} background
+                - Era: 1940s-1950s
+                - Today's music: {content_data['music_artist']} - {content_data['music_piece']}
+                - Today's recipe: {content_data['recipe_name']}
                 
-                # Validate conversation_questions is a list
-                if not isinstance(parsed_content.get("conversation_questions"), list):
-                    logger.warning("⚠️ Gemini response conversation_questions not a list")
-                    return None
+                Create newsletter-style content that caregivers can read aloud to patients. Use warm, conversational tone with historical details and cultural context appropriate for the {profile_data['heritage']} heritage and {profile_data['theme_name']} theme.
+                """
                 
-                # Structure the final response
-                return {
-                    "title": f"{profile_data['first_name']}'s Nostalgia News for {profile_data['current_date']}",
-                    "subtitle": f"{profile_data['heritage'].title()} Heritage Edition",
-                    "date": profile_data['full_date'],
-                    "personalized_for": profile_data['first_name'],
-                    
-                    "sections": {
-                        "on_this_day": {
-                            "headline": "🌟 On This Day in History",
-                            "content": parsed_content["on_this_day"],
-                            "era_connection": profile_data['era']
-                        },
-                        "era_spotlight": {
-                            "headline": "🎵 Your Era Spotlight",
-                            "content": parsed_content["era_spotlight"],
-                            "era": profile_data['era']
-                        },
-                        "heritage_traditions": {
-                            "headline": "🍽️ Heritage Traditions",
-                            "content": parsed_content["heritage_traditions"],
-                            "heritage": profile_data['heritage'].title()
-                        },
-                        "conversation_corner": {
-                            "headline": "💭 Conversation Corner",
-                            "questions": parsed_content["conversation_questions"]
-                        }
-                    },
-                    
-                    "metadata": {
-                        "generated_by": "gemini",
-                        "generation_timestamp": datetime.now().isoformat(),
-                        "theme_integrated": profile_data['theme_display'],
-                        "heritage_featured": profile_data['heritage'],
-                        "era_highlighted": profile_data['era'],
-                        "safety_level": "dementia_friendly"
-                    }
+                # Define EXACT JSON structure
+                json_schema = {
+                    "memory_spotlight": "string",
+                    "era_highlights": "string", 
+                    "heritage_traditions": "string",
+                    "conversation_starters": ["string", "string", "string"]
                 }
                 
-        except json.JSONDecodeError as e:
-            logger.warning(f"⚠️ Gemini response JSON parsing failed: {e}")
-        except Exception as e:
-            logger.warning(f"⚠️ Gemini response parsing error: {e}")
+                gemini_result = await self.gemini_tool.generate_nostalgia_newsletter(prompt, json_schema)
+                
+                if gemini_result and self._validate_gemini_result(gemini_result):
+                    logger.info("✅ Gemini newsletter generation successful!")
+                    return gemini_result
+                else:
+                    logger.warning("⚠️ Gemini newsletter result validation failed")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Gemini newsletter generation exception: {e}")
         
+        # Fallback to regular structured JSON method
+        if hasattr(self.gemini_tool, 'generate_structured_json'):
+            try:
+                logger.info("🧠 Falling back to Gemini generate_structured_json")
+                
+                # Create comprehensive prompt with newsletter tone guidance
+                prompt = f"""
+                Create warm, positive nostalgia content in NEWSLETTER STYLE focusing heavily on {profile_data['theme_name']} for dementia care.
+                
+                Context:
+                - Theme: {profile_data['theme_name']} (THIS IS THE MAIN FOCUS)
+                - Heritage: {profile_data['heritage']} background
+                - Era: 1940s-1950s
+                - Today's music: {content_data['music_artist']} - {content_data['music_piece']}
+                - Today's recipe: {content_data['recipe_name']}
+                
+                NEWSLETTER TONE REQUIREMENTS:
+                - Write for caregivers to read aloud to patients
+                - NEVER use patient names in the content
+                - Use simple, warm language that flows naturally when spoken
+                - Include phrases like "Remember when..." or "Back in [year]..." 
+                - Include specific historical details with years when appropriate
+                - Make it sound like friendly news from the past
+                - Focus on positive cultural memories and traditions
+                - Each section should be 2-3 sentences that sound conversational
+                
+                EXAMPLE TONE: "Remember those wonderful Sunday drives? Back in the 1950s, families would pile into their cars just to see the countryside and stop for ice cream along the way."
+                """
+                
+                # Define EXACT JSON structure
+                json_schema = {
+                    "memory_spotlight": "string",
+                    "era_highlights": "string", 
+                    "heritage_traditions": "string",
+                    "conversation_starters": ["string", "string", "string"]
+                }
+                
+                gemini_result = await self.gemini_tool.generate_structured_json(prompt, json_schema)
+                
+                if gemini_result and self._validate_gemini_result(gemini_result):
+                    logger.info("✅ Gemini structured generation successful!")
+                    return gemini_result
+                else:
+                    logger.warning("⚠️ Gemini structured result validation failed")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Gemini structured generation exception: {e}")
+        
+        logger.info("🤖 No suitable Gemini methods available")
         return None
     
-    def _generate_theme_fallback(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate theme-based fallback content that always works"""
+    def _validate_gemini_result(self, result: Dict[str, Any]) -> bool:
+        """Validate Gemini generated content has all required sections"""
         
-        logger.info(f"📰 Generating theme-based fallback for: {profile_data['theme']}")
+        required_sections = ["memory_spotlight", "era_highlights", "heritage_traditions", "conversation_starters"]
         
-        # Get theme-specific fallback content
-        theme_content = self.theme_fallbacks.get(profile_data['theme'], 
-                                                 self.theme_fallbacks.get('memory_lane',
-                                                                         self.emergency_fallback))
+        for section in required_sections:
+            if section not in result:
+                logger.warning(f"⚠️ Missing section: {section}")
+                return False
+            
+            if section == "conversation_starters":
+                if not isinstance(result[section], list) or len(result[section]) < 3:
+                    logger.warning(f"⚠️ Invalid conversation_starters: {type(result[section])}, length: {len(result[section]) if isinstance(result[section], list) else 'N/A'}")
+                    return False
+            else:
+                content = result[section]
+                if not content or len(content.split()) < 10:
+                    logger.warning(f"⚠️ Section {section} too short: {len(content.split()) if content else 0} words")
+                    return False
+        
+        return True
+    
+    def _create_guaranteed_fallback(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create guaranteed fallback content with newsletter-style tone"""
+        
+        theme_id = profile_data['theme_id']
+        theme_name = profile_data['theme_name']
+        heritage = profile_data['heritage']
+        
+        # Get theme-specific content or create it
+        theme_content = self.theme_fallbacks.get(theme_id)
         
         if not theme_content:
-            theme_content = self.emergency_fallback
+            # Create newsletter-style content for any theme
+            heritage_title = heritage.title()
+            theme_content = {
+                "memory_spotlight": f"Remember when {theme_name.lower()} brought families together in such special ways? Back in the 1940s and 50s, {theme_name.lower()} was an important part of creating meaningful connections and cherished memories. Every moment was an opportunity to celebrate what mattered most in life.",
+                "era_highlights": f"In those wonderful days, {theme_name.lower()} was celebrated with family gatherings, community events, and traditions that brought people together in joy. Picture those times when everyone would come together, sharing stories and creating memories that would last a lifetime. Every celebration was a testament to the simple pleasures that made life so rich.",
+                "heritage_traditions": f"{heritage_title} families brought their own beautiful traditions to {theme_name.lower()}, creating unique cultural experiences that honored their heritage. These special customs connected generations and preserved the wisdom and love that made each family's story unique. Every tradition was a bridge between the past and the present.",
+                "conversation_starters": [
+                    f"What memories about {theme_name.lower()} are most special to you?",
+                    f"How did your family celebrate {theme_name.lower()} in those days?",
+                    "What traditions were most important to your family?"
+                ]
+            }
         
-        # Personalize the content with the user's name
-        first_name = profile_data['first_name']
+        logger.info(f"📝 Created newsletter-style fallback for {theme_name} theme")
+        return theme_content
+    
+    def _format_final_response(self, content: Dict[str, Any], profile_data: Dict[str, Any], source: str) -> Dict[str, Any]:
+        """Format content into GUARANTEED sections structure for Agent 6"""
         
-        return {
-            "title": f"{first_name}'s Nostalgia News",  # No date in fallback
-            "subtitle": f"Special Edition for {first_name}",
-            "personalized_for": first_name,
+        logger.info(f"🎨 Formatting newsletter-style final response from {source}")
+        
+        # CRITICAL: This is the EXACT structure Agent 6 expects
+        final_response = {
+            "title": f"Nostalgia News – {profile_data['current_date']}",
+            "subtitle": f"{profile_data['theme_name']} Edition",
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "personalized_for": profile_data['first_name'],
             
+            # THIS IS THE KEY - Agent 6 looks for "sections" with this exact structure
             "sections": {
-                "on_this_day": {
-                    "headline": "🌟 On This Day",
-                    "content": self._personalize_content(theme_content["on_this_day"]["content"], first_name),
-                    "fun_fact": random.choice(theme_content["on_this_day"].get("generic_facts", ["Every day is special!"]))
+                "memory_spotlight": {
+                    "headline": "📚 Memory Spotlight",
+                    "content": content.get("memory_spotlight", "Remember those wonderful times when families came together? Every day brought opportunities for meaningful moments and beautiful memories that would last a lifetime."),
+                    "fun_fact": "Historical moments create our most treasured memories."
                 },
-                "era_spotlight": {
-                    "headline": "🎵 Through the Years",
-                    "content": self._personalize_content(theme_content["era_spotlight"]["content"], first_name),
-                    "fun_fact": random.choice(theme_content["era_spotlight"].get("generic_facts", ["Music brings joy to every era!"]))
+                "era_highlights": {
+                    "headline": "🎵 Era Highlights", 
+                    "content": content.get("era_highlights", "Back in the 1940s and 50s, every era brought its own special joys and celebrations. Those were the days when simple pleasures created the most lasting happiness."),
+                    "fun_fact": "Music has always been central to life's celebrations."
                 },
                 "heritage_traditions": {
-                    "headline": "🍽️ Cherished Traditions",
-                    "content": self._personalize_content(theme_content["heritage_traditions"]["content"], first_name),
-                    "fun_fact": random.choice(theme_content["heritage_traditions"].get("generic_facts", ["Traditions connect us to our heritage!"]))
+                    "headline": "🏛️ Heritage Traditions",
+                    "content": content.get("heritage_traditions", "Every family brought their own beautiful traditions to America, creating cultural experiences that honored their heritage. These special customs connected generations and preserved wisdom through time."),
+                    "fun_fact": "Cultural traditions connect us to our roots."
                 },
-                "conversation_corner": {
-                    "headline": "💭 Let's Talk",
-                    "questions": [self._personalize_question(q, first_name) for q in random.sample(
-                        theme_content["conversation_questions"], 
-                        min(3, len(theme_content["conversation_questions"]))
-                    )]
+                "conversation_starters": {
+                    "headline": "💬 Conversation Starters",
+                    "questions": content.get("conversation_starters", [
+                        "What brings you joy when you think about those days?",
+                        "Tell me about a happy memory from your younger years",
+                        "What traditions were most important to your family?"
+                    ])[:3]  # Ensure exactly 3 questions
                 }
             },
             
-            "metadata": {
-                "generated_by": "theme_fallback",
-                "generation_timestamp": datetime.now().isoformat(),
-                "theme_used": profile_data['theme'],
-                "theme_display": profile_data['theme_display'],
-                "safety_level": "dementia_friendly",
-                "fallback_type": "theme_based"
-            }
-        }
-    
-    def _generate_emergency_fallback(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate emergency fallback when everything else fails"""
-        
-        logger.warning("🚨 Using emergency fallback for Nostalgia News")
-        
-        # Extract name safely
-        try:
-            first_name = agent1_output.get("patient_info", {}).get("first_name", "Friend")
-        except:
-            first_name = "Friend"
-        
-        emergency_content = self.emergency_fallback
-        
-        return {
-            "title": f"{first_name}'s Special News",
-            "subtitle": "Daily Edition",
-            "personalized_for": first_name,
-            
-            "sections": {
-                "on_this_day": {
-                    "headline": "✨ Today's Message",
-                    "content": self._personalize_content(emergency_content["on_this_day"]["content"], first_name),
-                    "fun_fact": random.choice(emergency_content["on_this_day"].get("generic_facts", ["Every day is a gift!"]))
-                },
-                "era_spotlight": {
-                    "headline": "🎵 Timeless Joy",
-                    "content": self._personalize_content(emergency_content["era_spotlight"]["content"], first_name),
-                    "fun_fact": random.choice(emergency_content["era_spotlight"].get("generic_facts", ["Joy is timeless!"]))
-                },
-                "heritage_traditions": {
-                    "headline": "🤝 Human Connection", 
-                    "content": self._personalize_content(emergency_content["heritage_traditions"]["content"], first_name),
-                    "fun_fact": random.choice(emergency_content["heritage_traditions"].get("generic_facts", ["We are all connected!"]))
-                },
-                "conversation_corner": {
-                    "headline": "💭 Share With Us",
-                    "questions": [self._personalize_question(q, first_name) for q in emergency_content["conversation_questions"]]
-                }
-            },
+            "themes": [profile_data['theme_name'], "Heritage", "Memories"],
             
             "metadata": {
-                "generated_by": "emergency_fallback",
+                "generated_by": source,
                 "generation_timestamp": datetime.now().isoformat(),
+                "theme_integrated": profile_data['theme_name'],
+                "heritage_featured": profile_data['heritage'],
                 "safety_level": "dementia_friendly",
-                "fallback_type": "emergency"
+                "structure_verified": True,
+                "sections_count": 4,
+                "newsletter_tone": True
             }
         }
-    
-    def _personalize_content(self, content: str, first_name: str) -> str:
-        """Add personalization to content by inserting the person's name"""
         
-        if not first_name or first_name == "Friend":
-            return content
+        # Log the structure we're creating
+        logger.info(f"✅ Newsletter-style final response structure created:")
+        logger.info(f"   - Title: {final_response['title']}")
+        logger.info(f"   - Sections: {list(final_response['sections'].keys())}")
+        logger.info(f"   - Conversation starters: {len(final_response['sections']['conversation_starters']['questions'])}")
+        logger.info(f"   - Newsletter tone: {final_response['metadata']['newsletter_tone']}")
         
-        # Add name at the end if not already present
-        if first_name.lower() not in content.lower():
-            # Add name naturally to the content
-            if content.endswith("!") or content.endswith("."):
-                return content[:-1] + f", {first_name}!"
-            else:
-                return content + f", {first_name}!"
-        
-        return content
-    
-    def _personalize_question(self, question: str, first_name: str) -> str:
-        """Personalize a question with the person's name"""
-        
-        if not first_name or first_name == "Friend":
-            return question
-        
-        # If the question doesn't already contain the name, add it
-        if first_name.lower() not in question.lower():
-            if question.endswith("?"):
-                return question[:-1] + f", {first_name}?"
-            else:
-                return f"{question}, {first_name}?"
-        
-        return question
+        return final_response
 
     async def run(self,
                   agent1_output: Dict[str, Any],
@@ -577,47 +354,76 @@ JSON format:
                   agent4b_output: Dict[str, Any],
                   agent4c_output: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate personalized Nostalgia News with extensive fallback support
-        
-        This method ALWAYS succeeds and returns properly formatted content.
+        Generate nostalgia news with GUARANTEED sections format and NEWSLETTER TONE
         """
         
-        logger.info("📰 Agent 5: Generating Nostalgia News with extensive fallbacks")
+        logger.info("📰 Agent 5: Generating NEWSLETTER-STYLE SECTIONS FORMAT Nostalgia News")
         
         try:
-            # Extract profile data (always works)
+            # Extract data with safe defaults
             profile_data = self._extract_profile_data(agent1_output)
+            content_data = self._extract_content_data(agent4a_output, agent4b_output, agent4c_output)
             
-            logger.info(f"📋 Generating news for: {profile_data['first_name']} - Theme: {profile_data['theme']}")
+            logger.info(f"📋 Profile: {profile_data['first_name']} | Theme: {profile_data['theme_name']} | Heritage: {profile_data['heritage']}")
             
-            # Try Gemini first if available
+            # Try Gemini first with newsletter tone guidance
+            generated_content = None
+            source = "fallback"
+            
             if self.gemini_tool:
-                logger.info("🧠 Attempting Gemini generation...")
-                try:
-                    cultural_data = self._extract_cultural_data(agent3_output)
-                    content_data = self._extract_content_data(agent4a_output, agent4b_output, agent4c_output)
-                    
-                    gemini_result = await self._generate_with_gemini(profile_data, cultural_data, content_data)
-                    
-                    if gemini_result and gemini_result.get("success"):
-                        logger.info("✅ Gemini generation successful!")
-                        return {"nostalgia_news": gemini_result}
-                    else:
-                        logger.info("⚠️ Gemini generation failed, using theme fallback")
-                        
-                except Exception as e:
-                    logger.warning(f"⚠️ Gemini generation error: {e}")
+                logger.info("🧠 Attempting Gemini newsletter generation...")
+                
+                generated_content = await self._generate_with_gemini(profile_data, content_data)
+                
+                if generated_content:
+                    source = "gemini_newsletter"
+                    logger.info("✅ Gemini newsletter generation successful!")
+                else:
+                    logger.info("⚠️ Gemini newsletter generation failed, using guaranteed fallback")
+            else:
+                logger.info("🤖 No Gemini tool, using guaranteed newsletter fallback")
             
-            # If Gemini failed or unavailable, use theme-based fallback
-            logger.info("📰 Using theme-based fallback generation")
-            theme_fallback = self._generate_theme_fallback(profile_data)
-            return {"nostalgia_news": theme_fallback}
+            # Use fallback if Gemini failed or unavailable
+            if not generated_content:
+                generated_content = self._create_guaranteed_fallback(profile_data)
+                source = "guaranteed_newsletter_fallback"
+                logger.info("✅ Guaranteed newsletter fallback content created")
+            
+            # Format the final response with GUARANTEED sections structure
+            final_response = self._format_final_response(generated_content, profile_data, source)
+            
+            logger.info("✅ NEWSLETTER-STYLE SECTIONS FORMAT nostalgia news generated!")
+            logger.info(f"📊 Response structure: {list(final_response.keys())}")
+            logger.info(f"📊 Sections structure: {list(final_response['sections'].keys())}")
+            
+            return {"nostalgia_news": final_response}
             
         except Exception as e:
-            # Last resort: emergency fallback
-            logger.error(f"❌ All fallbacks failed, using emergency mode: {e}")
-            emergency_fallback = self._generate_emergency_fallback(agent1_output)
-            return {"nostalgia_news": emergency_fallback}
+            logger.error(f"❌ All methods failed, using emergency newsletter fallback: {e}")
+            
+            # Emergency fallback with newsletter tone and guaranteed structure
+            emergency_profile = {
+                "first_name": "Friend",
+                "theme_name": "Beautiful Moments",
+                "current_date": datetime.now().strftime("%B %d"),
+                "heritage": "universal",
+                "theme_id": "universal"
+            }
+            
+            emergency_content = {
+                "memory_spotlight": "Remember those wonderful times when life was filled with simple pleasures? Back in the 1940s and 50s, every day brought opportunities for meaningful moments and beautiful memories that would warm the heart for years to come.",
+                "era_highlights": "In those special days, families and communities came together in celebration and joy. Picture those times when people found happiness in the simplest things - sharing a meal, listening to music, or just spending time with loved ones.",
+                "heritage_traditions": "Every family brought their own beautiful traditions to America, creating a rich tapestry of cultural experiences. These special customs connected generations and preserved the wisdom and love that made each family's story unique.",
+                "conversation_starters": [
+                    "What brings you joy when you think about those wonderful days?",
+                    "Tell me about a happy memory from your younger years",
+                    "What traditions were most important to your family?"
+                ]
+            }
+            
+            emergency_response = self._format_final_response(emergency_content, emergency_profile, "emergency_newsletter_fallback")
+            
+            return {"nostalgia_news": emergency_response}
 
 # Export the main class
 __all__ = ["NostalgiaNewsGenerator"]
