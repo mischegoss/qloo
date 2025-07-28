@@ -34,7 +34,6 @@ class QlooInsightsAPI:
     async def get_safe_classical_music(self, 
                                      cultural_heritage: str,
                                      age_group: str = "55_and_older",
-                                     gender: Optional[str] = None,
                                      take: int = 10) -> Dict[str, Any]:
         """
         Get classical music based on cultural heritage.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import apiService from './services/apiService'
-import mapApiToUIData from './utils/dataMappers'
+import { mapApiToUIData } from './utils/dataMappers'
 import feedbackManager from './utils/feedbackManager'
 
 // Import your existing components
@@ -15,7 +15,119 @@ import Demo from './components/Demo'
 // Import the new professional LoadingSpinner component
 import LoadingSpinner from './components/LoadingSpinner'
 
-// Error Component (keeping this inline since it's simple)
+// LumiCue Logo Component with subtle animation
+const LumiCueLogo = () => (
+  <div className='flex items-center'>
+    {/* Animated dots - centered and sized to match font */}
+    <div className='flex items-center space-x-1 mr-3'>
+      <div
+        className='w-4 h-4 rounded-full animate-bounce-subtle'
+        style={{ backgroundColor: '#B8B0D7', animationDelay: '0ms' }}
+      ></div>
+      <div
+        className='w-4 h-4 rounded-full animate-bounce-subtle'
+        style={{ backgroundColor: '#FFDAC0', animationDelay: '400ms' }}
+      ></div>
+      <div
+        className='w-4 h-4 rounded-full animate-bounce-subtle'
+        style={{ backgroundColor: '#8B7CB6', animationDelay: '800ms' }}
+      ></div>
+    </div>
+    <span
+      className='text-2xl font-light tracking-wide'
+      style={{ color: '#4A4A4A' }}
+    >
+      LumiCue
+    </span>
+
+    {/* Custom styles for subtle header animation */}
+    <style>{`
+      @keyframes header-bounce-subtle {
+        0%, 10% { 
+          transform: translateY(0); 
+          opacity: 0.7;
+        }
+        5% { 
+          transform: translateY(-3px); 
+          opacity: 1;
+        }
+        15%, 100% { 
+          transform: translateY(0); 
+          opacity: 0.7;
+        }
+      }
+      
+      .animate-bounce-subtle { 
+        animation: header-bounce-subtle 8s ease-in-out infinite; 
+      }
+    `}</style>
+  </div>
+)
+
+// Header Component
+const Header = ({ currentView, onViewChange, onProfileClick }) => {
+  return (
+    <header
+      className='text-gray-700 p-4 shadow-sm border-b border-gray-200'
+      style={{ backgroundColor: '#F8F7ED' }}
+    >
+      <div className='max-w-6xl mx-auto flex justify-between items-center'>
+        <LumiCueLogo />
+        <div className='flex items-center space-x-6'>
+          <nav className='flex space-x-4'>
+            <button
+              onClick={() => onViewChange('app')}
+              className={`px-6 py-3 rounded-lg text-lg font-medium transition-colors min-h-12 ${
+                currentView === 'app'
+                  ? 'text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              style={{
+                backgroundColor:
+                  currentView === 'app' ? '#8B7CB6' : 'transparent',
+              }}
+              title='Access the personalized recommendations dashboard.'
+            >
+              App
+            </button>
+            <button
+              onClick={() => onViewChange('demo')}
+              className={`px-6 py-3 rounded-lg text-lg font-medium transition-colors min-h-12 ${
+                currentView === 'demo'
+                  ? 'text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              style={{
+                backgroundColor:
+                  currentView === 'demo' ? '#8B7CB6' : 'transparent',
+              }}
+              title='Watch the AI agents at work making personalized recommendations.'
+            >
+              Demo
+            </button>
+          </nav>
+          {currentView === 'app' && (
+            <button
+              onClick={onProfileClick}
+              className='p-3 rounded-full hover:bg-orange-200 transition-colors min-h-12 min-w-12'
+              style={{ backgroundColor: '#D4A574' }}
+            >
+              <svg
+                className='w-6 h-6 text-white'
+                fill='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+// Error Component
 const ErrorMessage = ({ error, onRetry }) => (
   <div
     className='min-h-screen flex items-center justify-center'
@@ -47,7 +159,7 @@ const App = () => {
   const [currentView, setCurrentView] = useState('app')
 
   // Load dashboard data from API (wrapped with useCallback to fix useEffect dependency warning)
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (profileToUse = null) => {
     try {
       setLoading(true)
       setError(null)
@@ -57,9 +169,44 @@ const App = () => {
 
       console.log('📡 Loading dashboard data...')
 
-      // Make API call with feedback
+      // Get stored profile from localStorage or use default
+      let currentProfile = profileToUse
+      if (!currentProfile) {
+        try {
+          const storedProfile = localStorage.getItem('patient_profile')
+          currentProfile = storedProfile ? JSON.parse(storedProfile) : null
+        } catch (error) {
+          console.warn('Failed to load stored profile:', error)
+        }
+      }
+
+      // If no stored profile, use default
+      if (!currentProfile) {
+        currentProfile = {
+          name: 'Lily', // Use 'name' for API
+          first_name: 'Lily',
+          last_name: '',
+          birth_year: 1942,
+          cultural_heritage: 'Italian-American',
+          city: 'Brooklyn',
+          state: 'New York',
+          interests: ['cooking', 'family', 'music'],
+          current_age: new Date().getFullYear() - 1942,
+        }
+        // Store the default profile
+        try {
+          localStorage.setItem(
+            'patient_profile',
+            JSON.stringify(currentProfile),
+          )
+        } catch (error) {
+          console.warn('Failed to store default profile:', error)
+        }
+      }
+
+      // Make API call with correct profile
       const apiResponse = await apiService.getDashboardData(
-        null, // Remove patientProfile dependency to avoid loop
+        currentProfile, // Send the actual profile!
         currentFeedback,
       )
 
@@ -69,19 +216,8 @@ const App = () => {
       const uiData = mapApiToUIData(apiResponse)
       setDashboardData(uiData)
 
-      // Store patient profile for display
-      const profileData = {
-        first_name: apiResponse.patient_info?.name?.split(' ')[0] || 'Guest',
-        last_name: apiResponse.patient_info?.name?.split(' ')[1] || '',
-        current_age: apiResponse.patient_info?.age || 0,
-        cultural_heritage: apiResponse.patient_info?.cultural_heritage || '',
-        birth_year:
-          new Date().getFullYear() - (apiResponse.patient_info?.age || 0),
-        city: 'Brooklyn', // Default from our API payload
-        state: 'New York',
-        interests: ['cooking', 'family', 'music'],
-      }
-      setPatientProfile(profileData)
+      // Store patient profile for display (use what we sent to API)
+      setPatientProfile(currentProfile)
 
       console.log('✅ Dashboard data loaded successfully')
     } catch (err) {
@@ -95,15 +231,44 @@ const App = () => {
   // Load dashboard data on mount
   useEffect(() => {
     loadDashboardData()
-  }, [loadDashboardData]) // Fixed: Added loadDashboardData to dependencies
+  }, [loadDashboardData])
+
+  // Handle profile updates
+  const handleProfileUpdate = async updatedProfile => {
+    try {
+      console.log('🔄 Updating patient profile...', updatedProfile)
+
+      // Add 'name' field for API compatibility
+      const profileWithName = {
+        ...updatedProfile,
+        name: updatedProfile.first_name || updatedProfile.name,
+      }
+
+      // Store in localStorage for persistence
+      try {
+        localStorage.setItem('patient_profile', JSON.stringify(profileWithName))
+        console.log('💾 Profile saved to localStorage')
+      } catch (error) {
+        console.warn('Failed to save profile to localStorage:', error)
+      }
+
+      // Update the patient profile state
+      setPatientProfile(profileWithName)
+
+      // Reload dashboard with new profile data
+      await loadDashboardData(profileWithName)
+
+      console.log('✅ Profile and dashboard updated successfully')
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      throw error
+    }
+  }
 
   // Handle feedback collection
   const handleFeedback = (type, item, category) => {
     console.log(`📝 Collecting feedback: ${type} for ${category}`)
     feedbackManager.collectFeedback(type, item, category)
-
-    // Optional: Show a brief confirmation
-    // Could add a toast notification here
   }
 
   // Navigation handlers
@@ -158,6 +323,12 @@ const App = () => {
   // Main app render
   return (
     <div className='app min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
+      <Header
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        onProfileClick={handleProfileClick}
+      />
+
       <main className='min-h-screen'>
         {currentView === 'demo' ? (
           <Demo
@@ -168,53 +339,47 @@ const App = () => {
           <>
             {currentPage === 'dashboard' && (
               <Dashboard
-                data={dashboardData}
                 onNavigate={handleNavigate}
                 onFeedback={handleFeedback}
-                onRefresh={loadDashboardData}
-                onViewChange={handleViewChange}
-                onProfileClick={handleProfileClick}
-                currentView={currentView}
+                data={dashboardData}
+                patientProfile={patientProfile}
+                // Pass the local profile name, not from API
+                patientName={patientProfile?.first_name || 'Lily'}
               />
             )}
             {currentPage === 'music' && (
               <MusicDetail
-                data={dashboardData?.music}
                 onBack={handleBack}
+                musicData={dashboardData?.music}
                 onFeedback={handleFeedback}
               />
             )}
             {currentPage === 'photo' && (
               <PhotoDetail
-                data={dashboardData?.photo}
                 onBack={handleBack}
+                photoData={dashboardData?.photo}
                 onFeedback={handleFeedback}
               />
             )}
             {currentPage === 'recipe' && (
               <RecipeDetail
-                data={dashboardData?.recipe}
                 onBack={handleBack}
+                recipeData={dashboardData?.recipe}
                 onFeedback={handleFeedback}
               />
             )}
             {currentPage === 'nostalgia' && (
               <NostalgiaDetail
-                data={dashboardData?.nostalgia}
                 onBack={handleBack}
+                nostalgiaData={dashboardData?.nostalgia}
                 onFeedback={handleFeedback}
               />
             )}
             {currentPage === 'profile' && (
               <Profile
-                patientProfile={patientProfile}
-                feedback={feedbackManager.getFeedback()}
-                feedbackSummary={feedbackManager.getFeedbackSummary()}
                 onBack={handleBack}
-                onClearFeedback={() => {
-                  feedbackManager.clearFeedback()
-                  window.location.reload() // Simple refresh
-                }}
+                patientProfile={patientProfile}
+                onProfileUpdate={handleProfileUpdate}
               />
             )}
           </>

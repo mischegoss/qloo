@@ -1,11 +1,13 @@
 """
-Enhanced Sequential Agent with 6-Agent Pipeline + Nostalgia News
+Enhanced Sequential Agent with 6-Agent Pipeline + Nostalgia News - ANONYMIZED PROFILE COMPATIBLE
 File: backend/multi_tool_agent/sequential_agent.py
 
-FIXED: Updated Agent 5 nostalgia news structure handling
-- Agent 5 now returns proper sections format
-- Updated _convert_nostalgia_structure to handle sections
-- Maintains all existing functionality
+CRITICAL FIXES FOR PII COMPLIANCE:
+- Updated to work with anonymized profile format (no names, no location)
+- Fixed field mapping for age_group, cultural_heritage, interests
+- Removed all PII references in fallbacks and data flow
+- Added anonymized profile validation
+- Maintains full functionality with privacy compliance
 """
 
 import logging
@@ -16,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 class SequentialAgent:
     """
-    Enhanced Sequential Agent with 6-Agent Pipeline
+    Enhanced Sequential Agent with 6-Agent Pipeline - PII COMPLIANT
     
-    FIXED: Updated nostalgia news structure handling for sections format
+    UPDATED: Works with anonymized profiles only - no names, no location data
     """
     
     def __init__(self, agent1=None, agent2=None, agent3=None, 
@@ -43,7 +45,7 @@ class SequentialAgent:
             if agent is not None
         ]
         
-        logger.info(f"🤖 Sequential Agent initialized with {len(self.agents_available)}/8 agents")
+        logger.info(f"🤖 PII-Compliant Sequential Agent initialized with {len(self.agents_available)}/8 agents")
     
     async def run(self, 
                   patient_profile: Dict[str, Any],
@@ -51,27 +53,32 @@ class SequentialAgent:
                   session_id: Optional[str] = None,
                   feedback_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Execute the complete 6-agent pipeline with Nostalgia News
+        Execute the complete 6-agent pipeline with anonymized profile
         
         Args:
-            patient_profile: Patient information from UI
+            patient_profile: ANONYMIZED patient information (no PII)
             request_type: Type of request
             session_id: Session identifier
             feedback_data: User feedback data
             
         Returns:
-            Complete dashboard with Nostalgia News
+            Complete dashboard with Nostalgia News (PII-compliant)
         """
         
-        logger.info("🚀 Starting 6-agent pipeline with Nostalgia News")
+        logger.info("🚀 Starting PII-compliant 6-agent pipeline with Nostalgia News")
         logger.info(f"📋 Pipeline: Info → Photo → Qloo → Content(4A/4B/4C) → Nostalgia News → Dashboard")
+        
+        # VALIDATE ANONYMIZED PROFILE
+        if not self._validate_anonymized_profile(patient_profile):
+            logger.error("🚨 Profile validation failed - contains PII or invalid format")
+            return {"success": False, "error": "Profile contains PII or invalid format"}
         
         try:
             # ===== AGENT 1: Information Consolidator =====
             if not self.agent1:
                 return {"success": False, "error": "Agent 1 (Information Consolidator) not available"}
             
-            logger.info("📋 Running Agent 1: Information Consolidator")
+            logger.info("📋 Running Agent 1: Information Consolidator (PII-compliant)")
             agent1_output = await self.agent1.run(
                 patient_profile=patient_profile,
                 request_type=request_type,
@@ -101,7 +108,7 @@ class SequentialAgent:
             if not self.agent3:
                 return {"success": False, "error": "Agent 3 (Qloo Cultural Intelligence) not available"}
             
-            logger.info("🎯 Running Agent 3: Qloo Cultural Intelligence")
+            logger.info("🎯 Running Agent 3: Qloo Cultural Intelligence (PII-compliant)")
             agent3_output = await self.agent3.run(agent1_output, agent2_output)
             
             if not agent3_output:
@@ -111,7 +118,7 @@ class SequentialAgent:
             logger.info("✅ Agent 3 completed")
             
             # ===== AGENTS 4A, 4B, 4C: Content Generation (Parallel) =====
-            logger.info("🎨 Running Agents 4A/4B/4C: Content Generation (parallel)")
+            logger.info("🎨 Running Agents 4A/4B/4C: Content Generation (parallel, PII-compliant)")
             
             # Create enhanced profile for content agents
             enhanced_profile = self._create_enhanced_profile(agent1_output, agent2_output, agent3_output)
@@ -155,7 +162,7 @@ class SequentialAgent:
             if not self.agent5:
                 return {"success": False, "error": "Agent 5 (Nostalgia News Generator) not available"}
             
-            logger.info("📰 Running Agent 5: Nostalgia News Generator (STAR FEATURE)")
+            logger.info("📰 Running Agent 5: Nostalgia News Generator (STAR FEATURE, PII-compliant)")
             agent5_output = await self.agent5.run(
                 agent1_output=agent1_output,
                 agent2_output=agent2_output,
@@ -169,49 +176,51 @@ class SequentialAgent:
                 agent5_output = self._create_fallback_nostalgia_news(agent1_output)
                 logger.warning("⚠️ Agent 5 failed, using nostalgia news fallback")
             
-            logger.info("✅ Agent 5 completed - Nostalgia News generated!")
+            logger.info("✅ Agent 5 completed - PII-compliant Nostalgia News generated!")
             
             # ===== AGENT 6: Dashboard Synthesizer =====
             if not self.agent6:
                 return {"success": False, "error": "Agent 6 (Dashboard Synthesizer) not available"}
             
-            logger.info("🎨 Running Agent 6: Dashboard Synthesizer (Final Assembly)")
+            logger.info("🎨 Running Agent 6: Dashboard Synthesizer (Final Assembly, PII-compliant)")
             
-            # FIXED: Create final enhanced profile that combines ALL agent outputs
+            # Create final enhanced profile that combines ALL agent outputs
             final_enhanced_profile = self._create_final_enhanced_profile(
                 agent1_output, agent2_output, agent3_output,
                 agent4a_output, agent4b_output, agent4c_output, agent5_output
             )
             
-            # FIXED: Call Agent 6 with single enhanced profile parameter
+            # Call Agent 6 with single enhanced profile parameter
             final_dashboard = await self.agent6.run(final_enhanced_profile)
             
             if not final_dashboard:
                 return {"success": False, "error": "Dashboard synthesis failed"}
             
-            logger.info("✅ Agent 6 completed - Final dashboard assembled!")
+            logger.info("✅ Agent 6 completed - PII-compliant final dashboard assembled!")
             
             # ===== PIPELINE SUCCESS =====
-            logger.info("🎉 Complete 6-agent pipeline executed successfully!")
-            logger.info("📰 Dashboard includes personalized Nostalgia News!")
+            logger.info("🎉 Complete PII-compliant 6-agent pipeline executed successfully!")
+            logger.info("📰 Dashboard includes personalized Nostalgia News (no PII)!")
             
             # Add pipeline metadata
             final_dashboard["pipeline_metadata"] = {
                 **final_dashboard.get("pipeline_metadata", {}),
                 "agents_executed": len(self.agents_available),
                 "execution_timestamp": datetime.now().isoformat(),
-                "pipeline_version": "6_agent_nostalgia_news",
+                "pipeline_version": "6_agent_nostalgia_news_pii_compliant",
                 "star_feature": "nostalgia_news_generator",
                 "cultural_intelligence": "qloo_powered",
                 "personalization": "gemini_enhanced",
+                "pii_compliant": True,
+                "anonymized_profile": True,
                 "agents_summary": {
-                    "agent1": "Information consolidation with theme selection",
+                    "agent1": "Information consolidation with theme selection (anonymized)",
                     "agent2": "Simple photo analysis (theme-based)",
-                    "agent3": "Qloo cultural intelligence (heritage-driven)",
+                    "agent3": "Qloo cultural intelligence (heritage-driven, PII-compliant)",
                     "agent4a": "Music curation with YouTube integration",
                     "agent4b": "Recipe selection (microwave-safe)",
                     "agent4c": "Photo description with cultural context",
-                    "agent5": "Nostalgia News generation (Gemini AI)",
+                    "agent5": "Nostalgia News generation (Gemini AI, PII-compliant)",
                     "agent6": "Dashboard synthesis and final assembly"
                 }
             }
@@ -230,32 +239,61 @@ class SequentialAgent:
                 "timestamp": datetime.now().isoformat()
             }
     
+    def _validate_anonymized_profile(self, patient_profile: Dict[str, Any]) -> bool:
+        """
+        Validate that profile is properly anonymized and contains no PII
+        """
+        
+        # Check for PII fields that should not be present
+        pii_fields = ["first_name", "last_name", "name", "full_name", "email", "phone", 
+                     "address", "city", "state", "zip_code", "coordinates"]
+        
+        detected_pii = [field for field in pii_fields if patient_profile.get(field)]
+        
+        if detected_pii:
+            logger.error(f"🚨 PII detected in profile: {detected_pii}")
+            return False
+        
+        # Check for required anonymized fields
+        required_fields = ["cultural_heritage", "age_group"]
+        missing_fields = [field for field in required_fields if not patient_profile.get(field)]
+        
+        if missing_fields:
+            logger.error(f"🚨 Missing required anonymized fields: {missing_fields}")
+            return False
+        
+        logger.info("✅ Profile anonymization validation passed")
+        return True
+    
     def _create_enhanced_profile(self, agent1_output: Dict[str, Any], 
                                 agent2_output: Dict[str, Any],
                                 agent3_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Create enhanced profile for content agents (4A/4B/4C) - FIXED heritage flow"""
+        """Create enhanced profile for content agents (4A/4B/4C) - PII COMPLIANT"""
         
         # Start with Agent 1 output
         enhanced_profile = agent1_output.copy()
         
-        # FIXED: Ensure cultural heritage flows through properly to Agents 4A/4B/4C
+        # Extract anonymized patient info safely
         patient_info = enhanced_profile.get("patient_info", {})
-        cultural_heritage = patient_info.get("cultural_heritage", "")
+        cultural_heritage = patient_info.get("cultural_heritage", "American")
+        age_group = patient_info.get("age_group", "senior")
         
         # Add heritage to multiple places for maximum compatibility
         enhanced_profile["cultural_heritage"] = cultural_heritage
         enhanced_profile["heritage"] = cultural_heritage
+        enhanced_profile["age_group"] = age_group
         
-        # Ensure patient_info has complete heritage info with all possible field names
+        # Ensure patient_info has complete anonymized info with all possible field names
         if "patient_info" in enhanced_profile:
             enhanced_profile["patient_info"]["heritage"] = cultural_heritage
             enhanced_profile["patient_info"]["cultural_background"] = cultural_heritage
-            # Keep the original field name too
             enhanced_profile["patient_info"]["cultural_heritage"] = cultural_heritage
+            enhanced_profile["patient_info"]["age_group"] = age_group
         
-        # CRITICAL: Add debug logging to track heritage flow
-        logger.info(f"✅ Enhanced profile created with heritage: '{cultural_heritage}'")
-        logger.info(f"   Heritage available in: patient_info.cultural_heritage, patient_info.heritage, heritage, cultural_heritage")
+        # CRITICAL: Add debug logging to track heritage flow (no PII)
+        logger.info(f"✅ Enhanced profile created with anonymized data:")
+        logger.info(f"   Heritage: '{cultural_heritage}', Age group: '{age_group}'")
+        logger.info(f"   Heritage available in: patient_info.cultural_heritage, heritage, cultural_heritage")
         
         # Add photo analysis from Agent 2
         enhanced_profile["photo_analysis"] = agent2_output.get("photo_analysis", {})
@@ -268,7 +306,8 @@ class SequentialAgent:
             "current_step": "content_generation",
             "agents_completed": ["1", "2", "3"],
             "next_agents": ["4A", "4B", "4C"],
-            "ready_for_content": True
+            "ready_for_content": True,
+            "pii_compliant": True
         }
         
         return enhanced_profile
@@ -282,22 +321,20 @@ class SequentialAgent:
                                      agent4c_output: Dict[str, Any],
                                      agent5_output: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Create final enhanced profile combining ALL agent outputs for Agent 6
-        
-        This method creates the comprehensive profile that Agent 6 expects,
-        with proper field name mapping and data structure conversion.
+        Create final enhanced profile combining ALL agent outputs for Agent 6 - PII COMPLIANT
         """
         
-        logger.info("🔄 Creating final enhanced profile for Dashboard Synthesizer")
+        logger.info("🔄 Creating PII-compliant final enhanced profile for Dashboard Synthesizer")
         
-        # Extract patient info from Agent 1 and map field names correctly
+        # Extract anonymized patient info from Agent 1
         agent1_patient_info = agent1_output.get("patient_info", {})
         
-        # FIXED: Map field names to what DashboardSynthesizer expects
+        # FIXED: Map anonymized fields correctly (no PII)
         mapped_patient_info = {
-            "name": agent1_patient_info.get("first_name", "Unknown"),  # first_name → name
-            "cultural_heritage": agent1_patient_info.get("cultural_heritage", ""),
-            "age": agent1_patient_info.get("current_age", 0),  # current_age → age
+            # REMOVED: "name" field (PII) - use generic identifier
+            "display_name": "Friend",  # Generic, non-identifying name for UI
+            "cultural_heritage": agent1_patient_info.get("cultural_heritage", "American"),
+            "age": self._calculate_age_from_anonymized_profile(agent1_patient_info),
             "birth_year": agent1_patient_info.get("birth_year"),
             "age_group": agent1_patient_info.get("age_group", "senior")
         }
@@ -310,10 +347,10 @@ class SequentialAgent:
         music_data = agent4a_output.get("music_content", {})
         recipe_data = agent4b_output.get("recipe_content", {})
         
-        # FIXED: Map photo content fields correctly with theme filename priority
+        # Map photo content fields correctly with theme filename priority
         agent4c_photo_data = agent4c_output.get("photo_content", {})
         
-        # CRITICAL FIX: Ensure theme photo filename is preserved for UI
+        # Ensure theme photo filename is preserved for UI
         theme_photo_filename = theme_info.get("photo_filename", "")
         agent_photo_filename = agent4c_photo_data.get("image_name", agent4c_photo_data.get("filename", ""))
         
@@ -321,13 +358,13 @@ class SequentialAgent:
         correct_filename = theme_photo_filename if theme_photo_filename else agent_photo_filename
         
         photo_data = {
-            "filename": correct_filename,  # FIXED: Use correct theme-based filename
+            "filename": correct_filename,
             "description": agent4c_photo_data.get("description", ""),
             "cultural_context": agent4c_photo_data.get("cultural_context", agent4c_photo_data.get("heritage_connection", "")),
             "conversation_starters": agent4c_photo_data.get("conversation_starters", [])
         }
         
-        # Debug logging for photo filename
+        # Debug logging for photo filename (no PII)
         logger.info(f"📷 Photo filename mapping:")
         logger.info(f"   Theme photo: {theme_photo_filename}")
         logger.info(f"   Agent photo: {agent_photo_filename}")
@@ -338,16 +375,13 @@ class SequentialAgent:
             photo_data["filename"] = f"{daily_theme.lower().replace(' ', '_')}.png"
             logger.warning(f"⚠️ Using theme-based fallback filename: {photo_data['filename']}")
         
-        # FIXED: Extract nostalgia news data structure (PASS THROUGH SECTIONS)
+        # Extract nostalgia news data structure (PASS THROUGH SECTIONS)
         agent5_nostalgia_raw = agent5_output.get("nostalgia_news", {})
-        
-        # CRITICAL FIX: Don't convert! Pass through the sections structure directly
-        # The frontend expects the sections format, not the old flat format
         nostalgia_data = agent5_nostalgia_raw if agent5_nostalgia_raw else self._create_empty_nostalgia_sections()
         
-        # Create the final enhanced profile with correct structure
+        # Create the final enhanced profile with correct structure - PII COMPLIANT
         final_profile = {
-            # FIXED: Use mapped patient_info with correct field names
+            # FIXED: Use mapped patient_info with anonymized fields only
             "patient_info": mapped_patient_info,
             
             # Theme information
@@ -358,7 +392,7 @@ class SequentialAgent:
             "music_content": music_data,
             "recipe_content": recipe_data,
             "photo_content": photo_data,
-            "nostalgia_news": nostalgia_data,  # FIXED: Converted structure
+            "nostalgia_news": nostalgia_data,
             
             # Additional data for analysis
             "photo_analysis": agent2_output.get("photo_analysis", {}),
@@ -374,17 +408,18 @@ class SequentialAgent:
                 "agents_completed": ["1", "2", "3", "4A", "4B", "4C", "5"],
                 "next_step": "complete",
                 "ready_for_synthesis": True,
-                "all_content_available": True
+                "all_content_available": True,
+                "pii_compliant": True
             }
         }
         
-        # Safe fallback: ensure required keys exist for Agent 6
+        # Safe fallbacks: ensure required keys exist for Agent 6
         safe_fallbacks = {
             "music_content": {},
             "recipe_content": {},
             "photo_content": {"filename": "", "description": "", "conversation_starters": []},
-            "nostalgia_news": self._create_empty_nostalgia_sections(),  # FIXED: Use sections structure
-            "patient_info": {"name": "Unknown", "cultural_heritage": "", "age": 0},
+            "nostalgia_news": self._create_empty_nostalgia_sections(),
+            "patient_info": {"display_name": "Friend", "cultural_heritage": "American", "age": 0, "age_group": "senior"},
             "qloo_intelligence": {}
         }
         
@@ -393,102 +428,42 @@ class SequentialAgent:
                 final_profile[key] = fallback_value
                 logger.warning(f"⚠️ Added safe fallback for {key}")
         
-        # Log the mapping for debugging
-        logger.info("✅ Final enhanced profile created successfully")
-        logger.info(f"   Patient: {mapped_patient_info['name']} (age: {mapped_patient_info['age']})")
+        # Log the mapping for debugging (no PII)
+        logger.info("✅ PII-compliant final enhanced profile created successfully")
+        logger.info(f"   Display: {mapped_patient_info['display_name']} (age group: {mapped_patient_info['age_group']})")
+        logger.info(f"   Heritage: {mapped_patient_info['cultural_heritage']}")
         logger.info(f"   Theme: {daily_theme}")
         logger.info(f"   Music: {music_data.get('artist', 'N/A')}")
         logger.info(f"   Recipe: {recipe_data.get('name', 'N/A')}")
         logger.info(f"   Photo: {photo_data.get('filename', 'N/A')}")
-        logger.info(f"   News: {nostalgia_data.get('headline', 'N/A')}")
+        logger.info(f"   News: {nostalgia_data.get('title', 'N/A')}")
         
         return final_profile
     
-    def _convert_nostalgia_structure(self, agent5_data: Dict[str, Any], patient_name: str) -> Dict[str, Any]:
+    def _calculate_age_from_anonymized_profile(self, patient_info: Dict[str, Any]) -> int:
         """
-        FIXED: Convert new Agent 5 sections structure to Agent 6 format
-        
-        Agent 5 NEW output: {"title": ..., "sections": {"memory_spotlight": {...}, "era_highlights": {...}, ...}, "themes": [...]}
-        Agent 6 expects: {"headline": ..., "content": ..., "conversation_starters": [...], "themes": [...]}
+        Calculate age from anonymized profile data safely
         """
         
-        if not agent5_data:
-            return {"headline": "", "content": "", "conversation_starters": [], "themes": []}
+        birth_year = patient_info.get("birth_year")
+        if birth_year and isinstance(birth_year, int):
+            current_year = datetime.now().year
+            calculated_age = current_year - birth_year
+            if 0 <= calculated_age <= 120:  # Reasonable age range
+                return calculated_age
         
-        logger.info("🔄 Converting Agent 5 sections structure to Agent 6 format")
-        logger.info(f"   Agent 5 keys: {list(agent5_data.keys())}")
-        
-        # Extract title as headline
-        headline = agent5_data.get("title", f"Today's Special News")
-        
-        # Extract sections and convert to content
-        sections = agent5_data.get("sections", {})
-        content_parts = []
-        
-        logger.info(f"   Sections found: {list(sections.keys()) if sections else 'None'}")
-        
-        # Extract content from different sections in logical order
-        section_order = ["memory_spotlight", "era_highlights", "heritage_traditions"]
-        
-        for section_name in section_order:
-            if section_name in sections:
-                section_data = sections[section_name]
-                if isinstance(section_data, dict):
-                    section_content = section_data.get("content", "")
-                    if section_content:
-                        content_parts.append(section_content)
-                        logger.info(f"   Added content from {section_name}: {len(section_content)} chars")
-        
-        # Join all content with proper spacing
-        content = " ".join(content_parts).strip()
-        if not content:
-            content = f"Today brings wonderful opportunities for meaningful moments and beautiful memories that enrich our lives."
-            logger.warning("⚠️ No content found in sections, using fallback")
-        
-        # Extract conversation starters
-        conversation_starters = []
-        
-        # Get from conversation_starters section
-        if "conversation_starters" in sections:
-            starters_section = sections["conversation_starters"]
-            if isinstance(starters_section, dict):
-                questions = starters_section.get("questions", [])
-                if isinstance(questions, list):
-                    conversation_starters.extend(questions)
-                    logger.info(f"   Found {len(questions)} conversation starters")
-        
-        # Fallback conversation starters if none found
-        if not conversation_starters:
-            conversation_starters = [
-                "What brings you joy when you think about those wonderful days?",
-                "Tell me about a happy memory from your younger years",
-                "What traditions were most important to your family?"
-            ]
-            logger.warning("⚠️ No conversation starters found, using fallback")
-        
-        # Extract themes
-        themes = agent5_data.get("themes", [])
-        if not themes:
-            themes = ["memories", "traditions", "heritage"]
-            logger.warning("⚠️ No themes found, using fallback")
-        
-        result = {
-            "headline": headline,
-            "content": content,
-            "themes": themes,
-            "conversation_starters": conversation_starters[:3]  # Limit to 3
+        # Fallback: estimate age from age_group
+        age_group = patient_info.get("age_group", "senior")
+        age_estimates = {
+            "adult": 50,
+            "senior": 75,
+            "oldest_senior": 85
         }
         
-        logger.info("✅ Nostalgia structure conversion completed")
-        logger.info(f"   Headline: {headline}")
-        logger.info(f"   Content length: {len(content)} chars")
-        logger.info(f"   Themes: {themes}")
-        logger.info(f"   Conversation starters: {len(conversation_starters)}")
-        
-        return result
+        return age_estimates.get(age_group, 75)
     
     def _create_empty_nostalgia_sections(self) -> Dict[str, Any]:
-        """Create empty nostalgia news with sections structure"""
+        """Create empty nostalgia news with sections structure - PII COMPLIANT"""
         
         return {
             "title": "Today's Special News",
@@ -523,7 +498,7 @@ class SequentialAgent:
         }
     
     def _create_fallback_music(self) -> Dict[str, Any]:
-        """Create fallback music content"""
+        """Create fallback music content - PII COMPLIANT"""
         
         return {
             "music_content": {
@@ -539,12 +514,13 @@ class SequentialAgent:
             "metadata": {
                 "heritage_match": False,
                 "selection_method": "emergency_fallback",
-                "agent": "4A_fallback"
+                "agent": "4A_fallback",
+                "pii_compliant": True
             }
         }
     
     def _create_fallback_recipe(self) -> Dict[str, Any]:
-        """Create fallback recipe content"""
+        """Create fallback recipe content - PII COMPLIANT"""
         
         return {
             "recipe_content": {
@@ -563,27 +539,28 @@ class SequentialAgent:
                 "heritage_match": False,
                 "theme_match": False,
                 "selection_method": "emergency_fallback",
-                "agent": "4B_fallback"
+                "agent": "4B_fallback",
+                "pii_compliant": True
             }
         }
     
     def _create_fallback_photo_description(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Create fallback photo description - FIXED to respect theme filename"""
+        """Create fallback photo description - PII COMPLIANT"""
         
         theme_info = agent1_output.get("theme_info", {})
         theme_name = theme_info.get("name", "Memory")
         theme_id = theme_info.get("id", "memory_lane")
         
-        # CRITICAL FIX: Use theme-based photo filename, not hardcoded "default.png"
+        # Use theme-based photo filename
         photo_filename = theme_info.get("photo_filename", f"{theme_id.lower()}.png")
         
-        logger.info(f"🔄 Creating fallback photo description for theme: {theme_name}")
+        logger.info(f"🔄 Creating PII-compliant fallback photo description for theme: {theme_name}")
         logger.info(f"📷 Using photo filename: {photo_filename}")
         
         return {
             "photo_content": {
-                "image_name": photo_filename,  # FIXED: Use correct theme filename
-                "filename": photo_filename,    # FIXED: Add both field names for compatibility
+                "image_name": photo_filename,
+                "filename": photo_filename,
                 "theme": theme_name,
                 "description": f"A special moment celebrating {theme_name.lower()}",
                 "heritage_connection": "Universal human experiences",
@@ -600,48 +577,50 @@ class SequentialAgent:
                 "theme_match": True,
                 "selection_method": "emergency_fallback",
                 "agent": "4C_fallback",
-                "filename_source": "theme_based"
+                "filename_source": "theme_based",
+                "pii_compliant": True
             }
         }
     
     def _create_fallback_nostalgia_news(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Create fallback nostalgia news with new sections structure
+        Create fallback nostalgia news with new sections structure - PII COMPLIANT
         """
         
         patient_info = agent1_output.get("patient_info", {})
         theme_info = agent1_output.get("theme_info", {})
         
-        patient_name = patient_info.get("first_name", "Friend")
+        # FIXED: No longer use patient names - use generic approach
         theme_name = theme_info.get("name", "Memory Lane")
-        cultural_heritage = patient_info.get("cultural_heritage", "")
+        cultural_heritage = patient_info.get("cultural_heritage", "American")
+        age_group = patient_info.get("age_group", "senior")
         
-        logger.info(f"🔄 Creating fallback nostalgia news with sections structure")
-        logger.info(f"   Theme: {theme_name}, Heritage: {cultural_heritage}")
+        logger.info(f"🔄 Creating PII-compliant fallback nostalgia news with sections structure")
+        logger.info(f"   Theme: {theme_name}, Heritage: {cultural_heritage}, Age group: {age_group}")
         
-        # Create newsletter-style content based on theme
+        # Create newsletter-style content based on theme (no personal references)
         if "holiday" in theme_name.lower():
             memory_content = "Remember those wonderful holiday celebrations when families gathered together? The warmth of the season brought everyone closer, creating memories filled with joy, laughter, and cherished traditions."
             era_content = "Back in the 1940s and 50s, holiday seasons were magical times filled with homemade decorations, family recipes, and the gentle sounds of holiday music playing in the background."
-            heritage_content = f"Holiday traditions have always brought families together, and {cultural_heritage} families created their own special ways of celebrating that honored both old customs and new American traditions."
+            heritage_content = f"Holiday traditions have always brought families together, and {cultural_heritage} families created their own special ways of celebrating that honored both old customs and new traditions."
             themes = ["holidays", "family", "traditions", "celebrations"]
         elif "travel" in theme_name.lower():
-            memory_content = "Remember those exciting family trips and adventures? Travel has always opened our hearts to new experiences, creating lasting memories of discovery and the joy of exploring new places together."
+            memory_content = "Remember those exciting family trips and adventures? Travel has always opened hearts to new experiences, creating lasting memories of discovery and the joy of exploring new places together."
             era_content = "In past decades, family travel was a grand adventure filled with scenic drives, roadside diners, and the excitement of seeing new places. Every journey was an opportunity to create stories that would be shared for years to come."
             heritage_content = f"Travel traditions often reflected cultural heritage, with {cultural_heritage} families bringing their own perspectives to exploration and creating unique travel experiences that honored their roots."
             themes = ["travel", "adventure", "discovery", "family"]
         else:
-            memory_content = f"Remember those beautiful moments celebrating {theme_name.lower()}? Life's most precious memories come from the simple joys we share together, creating connections that warm the heart for years to come."
+            memory_content = f"Remember those beautiful moments celebrating {theme_name.lower()}? Life's most precious memories come from the simple joys shared together, creating connections that warm the heart for years to come."
             era_content = f"In those wonderful days, {theme_name.lower()} was celebrated with family gatherings, community events, and traditions that brought people together in joy and celebration."
             heritage_content = f"Every family brought their own special traditions to {theme_name.lower()}, and {cultural_heritage} families created unique cultural experiences that honored their heritage while embracing new traditions."
             themes = ["memories", "joy", "family", "traditions"]
         
-        # Create the new sections structure
+        # Create the new sections structure - NO PERSONAL INFORMATION
         nostalgia_news = {
             "title": f"Nostalgia News – {datetime.now().strftime('%B %d')}",
             "subtitle": f"{theme_name} Edition", 
             "date": datetime.now().strftime("%B %d, %Y"),
-            "personalized_for": patient_name,
+            # REMOVED: "personalized_for" field (PII)
             "sections": {
                 "memory_spotlight": {
                     "headline": "📚 Memory Spotlight",
@@ -673,14 +652,17 @@ class SequentialAgent:
                 "generation_timestamp": datetime.now().isoformat(),
                 "theme_integrated": theme_name,
                 "heritage_featured": cultural_heritage,
+                "age_group": age_group,
                 "safety_level": "dementia_friendly",
                 "structure_verified": True,
                 "sections_count": 4,
-                "newsletter_tone": True
+                "newsletter_tone": True,
+                "pii_compliant": True,
+                "anonymized": True
             }
         }
         
-        logger.info("✅ Fallback nostalgia news with sections structure created")
+        logger.info("✅ PII-compliant fallback nostalgia news with sections structure created")
         logger.info(f"   Sections: {list(nostalgia_news['sections'].keys())}")
         
         return {

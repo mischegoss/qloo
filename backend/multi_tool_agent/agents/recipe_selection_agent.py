@@ -1,14 +1,15 @@
 """
-Agent 4B: Recipe Selection Agent - Pure JSON-based System
+Agent 4B: Recipe Selection Agent - COMPLETE PII-COMPLIANT VERSION
 File: backend/multi_tool_agent/agents/recipe_selection_agent.py
 
-SIMPLIFIED APPROACH:
-- Uses curated recipes.json (no external API failures)
+CRITICAL UPDATES FOR PII COMPLIANCE:
+- Removed all personal name usage and references
+- Works with anonymized profile data (cultural_heritage, age_group)
+- All logging now PII-free
+- Pure JSON-based system (no external API failures)
 - Filters by theme first, then heritage
 - Uses pre-written conversation starters (no Gemini needed)
-- Comprehensive fallbacks ensure it always works
 - Perfect for dementia patients: microwave-safe, simple ingredients
-- Fast, reliable, and cost-effective
 """
 
 import logging
@@ -17,14 +18,13 @@ import random
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
-# Configure logger
 logger = logging.getLogger(__name__)
 
 class RecipeSelectionAgent:
     """
-    Agent 4B: Recipe Selection with pure JSON-based filtering.
+    Agent 4B: PII-Compliant Recipe Selection with pure JSON-based filtering.
     
-    Takes patient profile and theme, selects culturally-appropriate microwave-safe recipes.
+    Takes anonymized patient profile and theme, selects culturally-appropriate microwave-safe recipes.
     Uses curated conversation starters from JSON for reliability and speed.
     """
     
@@ -32,7 +32,7 @@ class RecipeSelectionAgent:
         # Load recipes from JSON file
         self.recipes_database = self._load_recipes_database()
         
-        logger.info("🍽️ Agent 4B: Recipe Selection initialized with pure JSON-based system")
+        logger.info("🍽️ Agent 4B: PII-Compliant Recipe Selection initialized with pure JSON-based system")
         logger.info(f"📊 Loaded {len(self.recipes_database)} culturally-diverse recipes")
         logger.info("⚡ Using curated conversation starters for maximum reliability")
     
@@ -72,7 +72,7 @@ class RecipeSelectionAgent:
                 "theme_tags": ["comfort", "family"],
                 "cultural_context": "Classic American comfort food loved by families everywhere",
                 "conversation_starters": [
-                    "Did you make mac and cheese for your children?",
+                    "Did families make mac and cheese for their children?",
                     "What was your favorite comfort food?",
                     "Do you remember cooking for your family?"
                 ],
@@ -92,61 +92,90 @@ class RecipeSelectionAgent:
                 "theme_tags": ["family", "comfort"],
                 "cultural_context": "Risotto is a beloved Italian comfort food, often made for family gatherings",
                 "conversation_starters": [
-                    "Did your family make risotto on special occasions?",
+                    "Did families make risotto on special occasions?",
                     "Do you remember Italian dishes from your childhood?",
                     "What was your favorite Italian restaurant?"
                 ],
                 "prep_time": "5 minutes",
+                "difficulty": "Easy"
+            },
+            {
+                "name": "Simple Warm Apple Treat",
+                "ingredients": ["1 apple", "1 tablespoon butter", "1 tablespoon brown sugar", "Pinch of cinnamon"],
+                "instructions": [
+                    "Cut apple into small pieces",
+                    "Place in microwave-safe bowl with butter and sugar",
+                    "Microwave for 2 minutes",
+                    "Stir and add cinnamon",
+                    "Let cool for 1 minute before serving"
+                ],
+                "heritage_tags": ["american", "universal"],
+                "theme_tags": ["comfort", "memories", "family"],
+                "cultural_context": "A simple, comforting treat that brings back childhood memories",
+                "conversation_starters": [
+                    "What's your favorite type of apple?",
+                    "Do you remember making treats like this?",
+                    "What other simple desserts do you enjoy?"
+                ],
+                "prep_time": "3 minutes",
                 "difficulty": "Easy"
             }
         ]
     
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Select and enhance a recipe based on patient profile and theme.
+        Select and enhance a recipe based on anonymized patient profile and theme.
         
         Args:
             enhanced_profile: Profile from previous agents containing patient_info, theme_info, qloo_intelligence
             
         Returns:
-            Dict containing selected recipe with enhanced conversation starters
+            Dict containing selected recipe with enhanced conversation starters (PII-compliant)
         """
         
-        logger.info("🍽️ Agent 4B: Starting recipe selection with cultural matching")
+        logger.info("🍽️ Agent 4B: Starting PII-compliant recipe selection with cultural matching")
         
         try:
-            # Extract patient information
+            # Extract anonymized patient information
             patient_info = enhanced_profile.get("patient_info", {})
             theme_info = enhanced_profile.get("theme_info", {})
             
-            heritage = patient_info.get("cultural_heritage", "american").lower()
+            # FIXED: Extract only anonymized data (no personal names)
+            cultural_heritage = patient_info.get("cultural_heritage", "american").lower()
+            age_group = patient_info.get("age_group", "senior")
             theme_id = theme_info.get("id", "comfort")
             theme_name = theme_info.get("name", "Comfort")
-            patient_name = patient_info.get("first_name", "Friend")
             
-            logger.info(f"🎯 Selecting recipe for {patient_name} (Theme: {theme_name}, Heritage: {heritage})")
+            # FIXED: Log only anonymized data (no personal names)
+            logger.info(f"🎯 Selecting recipe - Theme: {theme_name}, Heritage: {cultural_heritage}, Age Group: {age_group}")
             
             # Step 1: Filter recipes by THEME first (priority for daily variety)
             theme_matches = self._filter_by_theme(self.recipes_database, theme_id)
             logger.info(f"🎯 Found {len(theme_matches)} theme-matching recipes")
             
             # Step 2: Filter by heritage within theme matches (secondary filter)
-            final_candidates = self._filter_by_heritage_within_theme(theme_matches, heritage)
+            final_candidates = self._filter_by_heritage_within_theme(theme_matches, cultural_heritage)
             
             # Step 3: If no theme + heritage match, use theme-only
             if not final_candidates:
-                logger.info(f"⚠️ No {theme_id} + {heritage} matches, using theme-only")
+                logger.info(f"⚠️ No {theme_id} + {cultural_heritage} matches, using theme-only")
                 final_candidates = theme_matches
             
             # Step 4: If no theme matches, fall back to heritage-only
             if not final_candidates:
                 logger.info(f"⚠️ No theme matches, falling back to heritage-only")
-                final_candidates = self._filter_by_heritage(heritage)
+                final_candidates = self._filter_by_heritage(cultural_heritage)
             
             # Step 5: Emergency fallback
             if not final_candidates:
                 logger.warning("⚠️ No matches found, using emergency fallback")
                 final_candidates = self._get_fallback_recipes()
+            
+            # Step 6: Age-appropriate selection
+            age_appropriate_candidates = self._filter_by_age_group(final_candidates, age_group)
+            if age_appropriate_candidates:
+                final_candidates = age_appropriate_candidates
+                logger.info(f"✅ Found {len(age_appropriate_candidates)} age-appropriate recipes")
             
             # Select recipe (could add randomization here)
             selected_recipe = final_candidates[0]
@@ -154,11 +183,11 @@ class RecipeSelectionAgent:
             
             logger.info(f"✅ Selected: {recipe_name}")
             
-            # Step 6: Format final output (no Gemini enhancement needed)
+            # Step 7: Format final output (no Gemini enhancement needed)
             theme_match_count = len(theme_matches)
             heritage_match_within_theme = len(final_candidates) < theme_match_count if theme_match_count > 0 else False
             
-            return self._format_recipe_output(selected_recipe, heritage, theme_id, theme_match_count, heritage_match_within_theme)
+            return self._format_recipe_output(selected_recipe, cultural_heritage, theme_id, theme_match_count, heritage_match_within_theme, age_group)
             
         except Exception as e:
             logger.error(f"❌ Recipe selection failed: {e}")
@@ -250,8 +279,27 @@ class RecipeSelectionAgent:
         logger.debug(f"🎯 Theme filter '{theme_id}' found {len(matching_recipes)} matches")
         return matching_recipes
     
-    def _format_recipe_output(self, recipe: Dict[str, Any], heritage: str, theme_id: str, theme_match_count: int, heritage_match_within_theme: bool) -> Dict[str, Any]:
-        """Format the final recipe output for the dashboard"""
+    def _filter_by_age_group(self, recipes: List[Dict[str, Any]], age_group: str) -> List[Dict[str, Any]]:
+        """Filter recipes appropriate for specific age group"""
+        
+        if age_group == "oldest_senior":
+            # Prefer simpler, more traditional recipes for oldest seniors
+            age_appropriate = []
+            for recipe in recipes:
+                difficulty = recipe.get("difficulty", "").lower()
+                prep_time = recipe.get("prep_time", "")
+                
+                # Prefer easy recipes with short prep times
+                if difficulty == "easy" and ("5 min" in prep_time or "3 min" in prep_time):
+                    age_appropriate.append(recipe)
+            
+            return age_appropriate if age_appropriate else recipes
+        
+        return recipes  # All recipes are appropriate for other age groups
+    
+    def _format_recipe_output(self, recipe: Dict[str, Any], heritage: str, theme_id: str, 
+                             theme_match_count: int, heritage_match_within_theme: bool, age_group: str) -> Dict[str, Any]:
+        """Format the final recipe output for the dashboard - PII COMPLIANT"""
         
         # Use original curated conversation starters from JSON
         conversation_starters = recipe.get("conversation_starters", [])
@@ -271,21 +319,31 @@ class RecipeSelectionAgent:
             "metadata": {
                 "heritage_match": heritage_match_within_theme,
                 "theme_match": theme_id in recipe.get("theme_tags", []),
-                "selection_method": "pure_json_based",
+                "age_appropriate": True,  # All our recipes are designed to be age-appropriate
+                "selection_method": "pure_json_based_pii_compliant",
                 "total_recipes_available": len(self.recipes_database),
                 "theme_recipes_found": theme_match_count,
                 "conversation_source": "curated_json",
-                "agent": "recipe_selection_agent_4b",
+                "agent": "recipe_selection_agent_4b_pii_compliant",
                 "safety_verified": True,  # All our recipes are microwave-safe
                 "microwave_only": True,
-                "filtering_approach": "theme_first_heritage_second"
+                "filtering_approach": "theme_first_heritage_second_age_aware",
+                "pii_compliant": True,
+                "anonymized_profile": True,
+                "heritage_target": heritage,
+                "age_group_target": age_group
             }
         }
     
     async def _get_emergency_fallback(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Emergency fallback if everything fails"""
+        """Emergency fallback if everything fails - PII COMPLIANT"""
         
-        logger.warning("🚨 Using emergency recipe fallback")
+        logger.warning("🚨 Using PII-compliant emergency recipe fallback")
+        
+        # Extract anonymized data for fallback
+        patient_info = enhanced_profile.get("patient_info", {})
+        cultural_heritage = patient_info.get("cultural_heritage", "american")
+        age_group = patient_info.get("age_group", "senior")
         
         emergency_recipe = {
             "name": "Simple Microwave Mac and Cheese",
@@ -299,75 +357,78 @@ class RecipeSelectionAgent:
             "conversation_starters": [
                 "What was your favorite comfort food?",
                 "Do you remember cooking for your family?",
-                "What foods make you feel happy?"
-            ]
+                "What foods make you feel happy and comfortable?"
+            ],
+            "prep_time": "4 minutes",
+            "difficulty": "Easy",
+            "heritage_tags": ["universal"],
+            "theme_tags": ["comfort", "family"]
         }
         
-        return {
-            "recipe_content": {
-                "name": emergency_recipe["name"],
-                "ingredients": emergency_recipe["ingredients"],
-                "instructions": emergency_recipe["instructions"],
-                "prep_time": "5 minutes",
-                "difficulty": "Easy",
-                "cultural_context": emergency_recipe["cultural_context"],
-                "conversation_starters": emergency_recipe["conversation_starters"],
-                "heritage_connection": "Universal comfort food",
-                "theme_connection": "Always appropriate"
-            },
-            "metadata": {
-                "heritage_match": False,
-                "theme_match": False,
-                "selection_method": "emergency_fallback",
-                "total_recipes_available": 0,
-                "conversation_source": "curated_json",
-                "agent": "recipe_selection_agent_4b",
-                "safety_verified": True,
-                "microwave_only": True
-            }
-        }
-
-# Simple test function for development
-async def test_recipe_agent():
-    """Test the recipe selection agent with sample data"""
+        return self._format_recipe_output(
+            emergency_recipe, 
+            cultural_heritage, 
+            "comfort", 
+            1, 
+            False, 
+            age_group
+        )
     
-    logger.info("🧪 Testing Recipe Selection Agent...")
+    def get_recipe_by_theme_and_heritage(self, theme_id: str, heritage: str) -> Optional[Dict[str, Any]]:
+        """Public method to get a specific recipe by theme and heritage for testing"""
+        
+        theme_matches = self._filter_by_theme(self.recipes_database, theme_id)
+        heritage_matches = self._filter_by_heritage_within_theme(theme_matches, heritage)
+        
+        if heritage_matches:
+            return heritage_matches[0]
+        elif theme_matches:
+            return theme_matches[0]
+        else:
+            return self._get_fallback_recipes()[0]
     
-    # Mock enhanced profile from previous agents
-    mock_profile = {
-        "patient_info": {
-            "first_name": "Maria",
-            "cultural_heritage": "Italian-American",
-            "birth_year": 1945
-        },
-        "theme_info": {
-            "id": "family",
-            "name": "Family",
-            "description": "Cherishing family bonds and togetherness"
-        },
-        "qloo_intelligence": {
-            "cultural_recommendations": {
-                "artists": {
-                    "success": True,
-                    "entities": [{"name": "Vivaldi"}]
-                }
-            }
-        }
-    }
+    def get_available_themes(self) -> List[str]:
+        """Get all available theme tags from the recipe database"""
+        
+        themes = set()
+        for recipe in self.recipes_database:
+            themes.update(recipe.get("theme_tags", []))
+        
+        return sorted(list(themes))
     
-    # Test with pure JSON approach (no external dependencies)
-    logger.info("🧪 Testing pure JSON-based recipe selection...")
-    agent = RecipeSelectionAgent()
-    result = await agent.run(mock_profile)
+    def get_available_heritages(self) -> List[str]:
+        """Get all available heritage tags from the recipe database"""
+        
+        heritages = set()
+        for recipe in self.recipes_database:
+            heritages.update(recipe.get("heritage_tags", []))
+        
+        return sorted(list(heritages))
     
-    print(f"✅ Result: {result['recipe_content']['name']}")
-    print(f"   Heritage Match: {result['metadata']['heritage_match']}")
-    print(f"   Theme Match: {result['metadata']['theme_match']}")
-    print(f"   Selection Method: {result['metadata']['selection_method']}")
-    print(f"   Conversation Source: {result['metadata']['conversation_source']}")
-    
-    return result
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(test_recipe_agent())
+    def validate_recipe_safety(self, recipe: Dict[str, Any]) -> bool:
+        """Validate that a recipe is safe for dementia patients (microwave-only, simple)"""
+        
+        instructions = recipe.get("instructions", [])
+        
+        # Check for dangerous keywords
+        dangerous_keywords = ["stove", "oven", "knife", "sharp", "hot oil", "fry", "boil"]
+        
+        for instruction in instructions:
+            instruction_lower = instruction.lower()
+            for keyword in dangerous_keywords:
+                if keyword in instruction_lower:
+                    logger.warning(f"⚠️ Recipe {recipe.get('name')} contains dangerous keyword: {keyword}")
+                    return False
+        
+        # Check for microwave-safe cooking
+        microwave_keywords = ["microwave", "heat", "warm"]
+        has_microwave = any(
+            any(keyword in instruction.lower() for keyword in microwave_keywords)
+            for instruction in instructions
+        )
+        
+        if not has_microwave:
+            logger.warning(f"⚠️ Recipe {recipe.get('name')} may not be microwave-safe")
+            return False
+        
+        return True

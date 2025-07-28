@@ -8,6 +8,8 @@ const Dashboard = ({
   onViewChange,
   onProfileClick,
   currentView,
+  patientName, // Use this prop instead of API response
+  patientProfile, // Also available if needed
 }) => {
   // Use data from API instead of hardcoded realDashboardData
   const dashboardData = data || {}
@@ -27,7 +29,7 @@ const Dashboard = ({
     content.theme ||
     'Memory Lane'
 
-  // Get current date
+  // Get current date using JavaScript Date object (no API call)
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -37,72 +39,21 @@ const Dashboard = ({
 
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
-      {/* Header */}
-      <header className='text-gray-700 p-4 shadow-sm border-b border-gray-200'>
-        <div className='max-w-6xl mx-auto flex justify-between items-center'>
-          <div className='flex items-center'>
-            {/* Your existing LumiCue logo */}
-            <span
-              className='text-2xl font-light tracking-wide'
-              style={{ color: '#4A4A4A' }}
-            >
-              LumiCue
-            </span>
-          </div>
-          <div className='flex items-center space-x-6'>
-            <nav className='flex space-x-4'>
-              <button
-                onClick={() => onViewChange && onViewChange('app')}
-                className={`px-6 py-3 rounded-lg text-lg font-medium transition-colors min-h-12 ${
-                  currentView === 'app'
-                    ? 'text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                style={{
-                  backgroundColor:
-                    currentView === 'app' ? '#8B7CB6' : 'transparent',
-                }}
-              >
-                App
-              </button>
-              <button
-                onClick={() => onViewChange && onViewChange('demo')}
-                className={`px-6 py-3 rounded-lg text-lg font-medium transition-colors min-h-12 ${
-                  currentView === 'demo'
-                    ? 'text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                style={{
-                  backgroundColor:
-                    currentView === 'demo' ? '#8B7CB6' : 'transparent',
-                }}
-              >
-                Demo
-              </button>
-            </nav>
-            <button
-              onClick={onProfileClick}
-              className='p-3 rounded-full hover:bg-gray-100 transition-colors'
-              title='View Profile'
-            >
-              👤
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className='max-w-6xl mx-auto p-6'>
-        {/* Header Section */}
+        {/* Welcome Header */}
         <div className='text-center mb-12'>
-          <h1 className='text-5xl font-light mb-2' style={{ color: '#4A4A4A' }}>
-            Welcome, {patientInfo.name || 'Friend'}
+          <h1 className='text-5xl font-light mb-6' style={{ color: '#4A4A4A' }}>
+            Welcome, {patientName || 'Friend'}!
           </h1>
-          <h2 className='text-4xl font-light mb-4' style={{ color: '#4A4A4A' }}>
+          <div
+            className='text-3xl font-light mb-2'
+            style={{ color: '#4A4A4A' }}
+          >
             Today is {currentDate}
-          </h2>
-          <h3 className='text-5xl font-medium' style={{ color: '#8B7CB6' }}>
+          </div>
+          <div className='text-3xl font-light' style={{ color: '#4A4A4A' }}>
             Today's Theme is {currentTheme}
-          </h3>
+          </div>
         </div>
 
         {/* Three Card Grid - Desktop: 3 columns, Mobile: 1 column */}
@@ -194,7 +145,9 @@ const Dashboard = ({
             <p className='text-base text-gray-600 leading-relaxed'>
               {recipeData.cultural_context ||
                 `A ${
-                  patientInfo.cultural_heritage || 'traditional'
+                  patientProfile?.cultural_heritage ||
+                  patientInfo.cultural_heritage ||
+                  'traditional'
                 } dish to bring back memories`}
             </p>
           </div>
@@ -283,12 +236,14 @@ const Dashboard = ({
             <h4 className='text-2xl font-semibold text-gray-800 mb-4'>
               {nostalgiaData.headline ||
                 nostalgiaData.title ||
-                `Personalized for ${patientInfo.name || 'you'}`}
+                `Personalized for ${patientName || 'you'}`}
             </h4>
             <p className='text-lg text-gray-600 leading-relaxed'>
               {nostalgiaData.content ||
                 `Today's special story connects your ${
-                  patientInfo.cultural_heritage || 'heritage'
+                  patientProfile?.cultural_heritage ||
+                  patientInfo.cultural_heritage ||
+                  'heritage'
                 } with 
                 the ${currentTheme.toLowerCase()} theme. Discover meaningful connections 
                 and memories that bring warmth to your day.`}

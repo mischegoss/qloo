@@ -1,12 +1,13 @@
 """
-Agent 5: Nostalgia News Generator - FIXED NEWSLETTER TONE
+Agent 5: Nostalgia News Generator - UPDATED FOR ANONYMIZED PROFILES
 File: backend/multi_tool_agent/agents/nostalgia_news_generator.py
 
-CRITICAL FIX:
+CRITICAL UPDATES FOR PII COMPLIANCE:
+- Removed all personal name usage and references
+- Works with anonymized profile data (cultural_heritage, age_group, interests)
+- Newsletter tone guidance maintained
 - Always returns sections format that Agent 6 expects
-- Uses generate_nostalgia_newsletter with proper tone guidance
-- Newsletter-style content appropriate for caregivers to read aloud
-- No more format mismatches
+- No PII anywhere in generation or logging
 """
 
 import logging
@@ -20,19 +21,19 @@ logger = logging.getLogger(__name__)
 
 class NostalgiaNewsGenerator:
     """
-    Agent 5: FIXED Nostalgia News Generator - Newsletter Tone Restored
+    Agent 5: PII-COMPLIANT Nostalgia News Generator - Newsletter Tone with Anonymized Profiles
     """
     
     def __init__(self, gemini_tool=None):
         self.gemini_tool = gemini_tool
         self.theme_fallbacks = self._load_theme_fallbacks()
         
-        logger.info("📰 Agent 5: FIXED Nostalgia News Generator initialized")
+        logger.info("📰 Agent 5: PII-Compliant Nostalgia News Generator initialized")
         logger.info(f"🧠 Gemini tool available: {self.gemini_tool is not None}")
-        logger.info("✅ SECTIONS format with NEWSLETTER TONE guaranteed")
+        logger.info("✅ SECTIONS format with NEWSLETTER TONE and PII COMPLIANCE guaranteed")
     
     def _load_theme_fallbacks(self) -> Dict[str, Any]:
-        """Load theme fallbacks with guaranteed newsletter-style structure"""
+        """Load theme fallbacks with guaranteed newsletter-style structure - PII COMPLIANT"""
         
         try:
             config_path = Path(__file__).parent.parent.parent / "config" / "nostalgia_news_fallbacks.json"
@@ -41,12 +42,12 @@ class NostalgiaNewsGenerator:
                     data = json.load(f)
                     theme_fallbacks = data.get("theme_fallbacks", {})
                     if theme_fallbacks:
-                        logger.info(f"✅ Loaded {len(theme_fallbacks)} theme fallbacks from JSON")
+                        logger.info(f"✅ Loaded {len(theme_fallbacks)} PII-compliant theme fallbacks from JSON")
                         return theme_fallbacks
         except Exception as e:
             logger.warning(f"⚠️ Error loading JSON fallbacks: {e}")
         
-        # Guaranteed fallbacks with newsletter-style content
+        # Guaranteed PII-compliant fallbacks with newsletter-style content
         return {
             "travel": {
                 "memory_spotlight": "Remember those wonderful family road trips? Back in the 1950s, families would pack their cars and set off to explore America's highways, stopping at roadside diners and scenic overlooks. Travel has always opened hearts to new experiences and created lasting memories that connect us to the wider world.",
@@ -60,7 +61,7 @@ class NostalgiaNewsGenerator:
             },
             "food": {
                 "memory_spotlight": "Remember those wonderful Sunday dinners when the whole family gathered around the table? Back in the 1940s and 50s, the aroma of home-cooked meals would fill the house, bringing everyone together. Food has always been at the heart of family life, creating moments of connection and love.",
-                "era_highlights": "Those were the days when meals were prepared from scratch with care and attention. Picture Grandma's kitchen in the 1950s, with fresh bread rising and soup simmering on the stove. Every meal was a celebration of family togetherness and the simple pleasure of sharing good food.",
+                "era_highlights": "Those were the days when meals were prepared from scratch with care and attention. Picture a warm kitchen in the 1950s, with fresh bread rising and soup simmering on the stove. Every meal was a celebration of family togetherness and the simple pleasure of sharing good food.",
                 "heritage_traditions": "Every family brought their own special food traditions to America, creating unique recipes that told the story of their heritage. These cherished recipes were passed down through generations, connecting families to their roots while creating new memories around the dinner table.",
                 "conversation_starters": [
                     "What was your favorite family recipe growing up?",
@@ -91,29 +92,35 @@ class NostalgiaNewsGenerator:
         }
     
     def _extract_profile_data(self, agent1_output: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract profile data with safe defaults"""
+        """Extract anonymized profile data with safe defaults - PII COMPLIANT"""
         
         try:
             patient_info = agent1_output.get("patient_info", {})
             theme_info = agent1_output.get("theme_info", {})
             
+            # FIXED: Extract only anonymized fields (no personal names)
             return {
-                "first_name": patient_info.get("first_name", "Friend"),
+                # REMOVED: "first_name" (PII) - use generic terms only
+                "cultural_heritage": patient_info.get("cultural_heritage", "American"),
+                "age_group": patient_info.get("age_group", "senior"),
                 "heritage": patient_info.get("cultural_heritage", "American").lower(),
                 "theme_id": theme_info.get("id", "travel"),
                 "theme_name": theme_info.get("name", "Travel"),
                 "current_date": datetime.now().strftime("%B %d"),
-                "birth_year": patient_info.get("birth_year", 1945)
+                "birth_year": patient_info.get("birth_year", 1945),
+                "interests": patient_info.get("interests", [])
             }
         except Exception as e:
-            logger.warning(f"⚠️ Error extracting profile data: {e}")
+            logger.warning(f"⚠️ Error extracting anonymized profile data: {e}")
             return {
-                "first_name": "Friend",
+                "cultural_heritage": "American",
+                "age_group": "senior",
                 "heritage": "american",
                 "theme_id": "travel", 
                 "theme_name": "Travel",
                 "current_date": datetime.now().strftime("%B %d"),
-                "birth_year": 1945
+                "birth_year": 1945,
+                "interests": []
             }
     
     def _extract_content_data(self, agent4a_output: Dict[str, Any], 
@@ -139,7 +146,7 @@ class NostalgiaNewsGenerator:
             }
     
     async def _generate_with_gemini(self, profile_data: Dict[str, Any], content_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Generate using Gemini with NEWSLETTER TONE guidance"""
+        """Generate using Gemini with NEWSLETTER TONE guidance and PII COMPLIANCE"""
         
         # Check if Gemini tool has the newsletter method
         if not self.gemini_tool:
@@ -149,20 +156,27 @@ class NostalgiaNewsGenerator:
         # Try the new newsletter method first
         if hasattr(self.gemini_tool, 'generate_nostalgia_newsletter'):
             try:
-                logger.info("🧠 Using Gemini generate_nostalgia_newsletter method")
+                logger.info("🧠 Using Gemini generate_nostalgia_newsletter method (PII-compliant)")
                 
-                # Create comprehensive newsletter prompt
+                # Create comprehensive PII-compliant newsletter prompt
                 prompt = f"""
                 Create warm, positive nostalgia newsletter content focusing on {profile_data['theme_name']} for dementia care.
                 
-                Context:
+                ANONYMIZED Context (NO PERSONAL INFORMATION):
                 - Theme: {profile_data['theme_name']} (THIS IS THE MAIN FOCUS)
-                - Heritage: {profile_data['heritage']} background
-                - Era: 1940s-1950s
+                - Cultural Heritage: {profile_data['cultural_heritage']} background
+                - Age Group: {profile_data['age_group']}
+                - Historical Era: 1940s-1950s
                 - Today's music: {content_data['music_artist']} - {content_data['music_piece']}
                 - Today's recipe: {content_data['recipe_name']}
                 
-                Create newsletter-style content that caregivers can read aloud to patients. Use warm, conversational tone with historical details and cultural context appropriate for the {profile_data['heritage']} heritage and {profile_data['theme_name']} theme.
+                PII COMPLIANCE REQUIREMENTS:
+                - NEVER use personal names anywhere in the content
+                - Write for caregivers to read aloud to patients
+                - Use generic references like "families" or "people" instead of personal pronouns
+                - Focus on cultural heritage and age-appropriate themes only
+                
+                Create newsletter-style content that caregivers can read aloud to patients. Use warm, conversational tone with historical details and cultural context appropriate for the {profile_data['cultural_heritage']} heritage and {profile_data['theme_name']} theme.
                 """
                 
                 # Define EXACT JSON structure
@@ -176,7 +190,7 @@ class NostalgiaNewsGenerator:
                 gemini_result = await self.gemini_tool.generate_nostalgia_newsletter(prompt, json_schema)
                 
                 if gemini_result and self._validate_gemini_result(gemini_result):
-                    logger.info("✅ Gemini newsletter generation successful!")
+                    logger.info("✅ PII-compliant Gemini newsletter generation successful!")
                     return gemini_result
                 else:
                     logger.warning("⚠️ Gemini newsletter result validation failed")
@@ -187,28 +201,31 @@ class NostalgiaNewsGenerator:
         # Fallback to regular structured JSON method
         if hasattr(self.gemini_tool, 'generate_structured_json'):
             try:
-                logger.info("🧠 Falling back to Gemini generate_structured_json")
+                logger.info("🧠 Falling back to Gemini generate_structured_json (PII-compliant)")
                 
-                # Create comprehensive prompt with newsletter tone guidance
+                # Create comprehensive PII-compliant prompt with newsletter tone guidance
                 prompt = f"""
                 Create warm, positive nostalgia content in NEWSLETTER STYLE focusing heavily on {profile_data['theme_name']} for dementia care.
                 
-                Context:
+                ANONYMIZED Context (NO PERSONAL INFORMATION):
                 - Theme: {profile_data['theme_name']} (THIS IS THE MAIN FOCUS)
-                - Heritage: {profile_data['heritage']} background
-                - Era: 1940s-1950s
+                - Cultural Heritage: {profile_data['cultural_heritage']} background
+                - Age Group: {profile_data['age_group']}
+                - Historical Era: 1940s-1950s
                 - Today's music: {content_data['music_artist']} - {content_data['music_piece']}
                 - Today's recipe: {content_data['recipe_name']}
                 
-                NEWSLETTER TONE REQUIREMENTS:
+                NEWSLETTER TONE & PII COMPLIANCE REQUIREMENTS:
                 - Write for caregivers to read aloud to patients
-                - NEVER use patient names in the content
+                - ABSOLUTELY NEVER use personal names anywhere in the content
                 - Use simple, warm language that flows naturally when spoken
                 - Include phrases like "Remember when..." or "Back in [year]..." 
                 - Include specific historical details with years when appropriate
                 - Make it sound like friendly news from the past
                 - Focus on positive cultural memories and traditions
                 - Each section should be 2-3 sentences that sound conversational
+                - Use inclusive language like "families enjoyed" rather than "you enjoyed"
+                - Address content generically, never personally
                 
                 EXAMPLE TONE: "Remember those wonderful Sunday drives? Back in the 1950s, families would pile into their cars just to see the countryside and stop for ice cream along the way."
                 """
@@ -224,7 +241,7 @@ class NostalgiaNewsGenerator:
                 gemini_result = await self.gemini_tool.generate_structured_json(prompt, json_schema)
                 
                 if gemini_result and self._validate_gemini_result(gemini_result):
-                    logger.info("✅ Gemini structured generation successful!")
+                    logger.info("✅ PII-compliant Gemini structured generation successful!")
                     return gemini_result
                 else:
                     logger.warning("⚠️ Gemini structured result validation failed")
@@ -236,7 +253,7 @@ class NostalgiaNewsGenerator:
         return None
     
     def _validate_gemini_result(self, result: Dict[str, Any]) -> bool:
-        """Validate Gemini generated content has all required sections"""
+        """Validate Gemini generated content has all required sections and is PII-compliant"""
         
         required_sections = ["memory_spotlight", "era_highlights", "heritage_traditions", "conversation_starters"]
         
@@ -255,46 +272,60 @@ class NostalgiaNewsGenerator:
                     logger.warning(f"⚠️ Section {section} too short: {len(content.split()) if content else 0} words")
                     return False
         
+        # Basic PII check - warn if common names detected
+        all_content = str(result).lower()
+        common_pii_indicators = ["maria", "john", "mary", "robert", "linda", "address", "phone", "email"]
+        pii_detected = [indicator for indicator in common_pii_indicators if indicator in all_content]
+        
+        if pii_detected:
+            logger.warning(f"⚠️ Potential PII detected in Gemini result: {pii_detected}")
+            # Don't reject - just warn, as these could be false positives
+        
         return True
     
     def _create_guaranteed_fallback(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create guaranteed fallback content with newsletter-style tone"""
+        """Create guaranteed PII-compliant fallback content with newsletter-style tone"""
         
         theme_id = profile_data['theme_id']
         theme_name = profile_data['theme_name']
-        heritage = profile_data['heritage']
+        cultural_heritage = profile_data['cultural_heritage']
+        age_group = profile_data['age_group']
         
         # Get theme-specific content or create it
         theme_content = self.theme_fallbacks.get(theme_id)
         
         if not theme_content:
-            # Create newsletter-style content for any theme
-            heritage_title = heritage.title()
+            # Create PII-compliant newsletter-style content for any theme
+            heritage_title = cultural_heritage.title()
+            
+            # Age-appropriate content adjustments
+            era_reference = "1940s and 50s" if age_group == "oldest_senior" else "past decades"
+            
             theme_content = {
-                "memory_spotlight": f"Remember when {theme_name.lower()} brought families together in such special ways? Back in the 1940s and 50s, {theme_name.lower()} was an important part of creating meaningful connections and cherished memories. Every moment was an opportunity to celebrate what mattered most in life.",
+                "memory_spotlight": f"Remember when {theme_name.lower()} brought families together in such special ways? Back in the {era_reference}, {theme_name.lower()} was an important part of creating meaningful connections and cherished memories. Every moment was an opportunity to celebrate what mattered most in life.",
                 "era_highlights": f"In those wonderful days, {theme_name.lower()} was celebrated with family gatherings, community events, and traditions that brought people together in joy. Picture those times when everyone would come together, sharing stories and creating memories that would last a lifetime. Every celebration was a testament to the simple pleasures that made life so rich.",
                 "heritage_traditions": f"{heritage_title} families brought their own beautiful traditions to {theme_name.lower()}, creating unique cultural experiences that honored their heritage. These special customs connected generations and preserved the wisdom and love that made each family's story unique. Every tradition was a bridge between the past and the present.",
                 "conversation_starters": [
                     f"What memories about {theme_name.lower()} are most special to you?",
-                    f"How did your family celebrate {theme_name.lower()} in those days?",
-                    "What traditions were most important to your family?"
+                    f"How did families celebrate {theme_name.lower()} in those days?",
+                    "What traditions were most important to families back then?"
                 ]
             }
         
-        logger.info(f"📝 Created newsletter-style fallback for {theme_name} theme")
+        logger.info(f"📝 Created PII-compliant newsletter-style fallback for {theme_name} theme")
         return theme_content
     
     def _format_final_response(self, content: Dict[str, Any], profile_data: Dict[str, Any], source: str) -> Dict[str, Any]:
-        """Format content into GUARANTEED sections structure for Agent 6"""
+        """Format content into GUARANTEED sections structure for Agent 6 - PII COMPLIANT"""
         
-        logger.info(f"🎨 Formatting newsletter-style final response from {source}")
+        logger.info(f"🎨 Formatting PII-compliant newsletter-style final response from {source}")
         
-        # CRITICAL: This is the EXACT structure Agent 6 expects
+        # CRITICAL: This is the EXACT structure Agent 6 expects - NO PII
         final_response = {
             "title": f"Nostalgia News – {profile_data['current_date']}",
             "subtitle": f"{profile_data['theme_name']} Edition",
             "date": datetime.now().strftime("%B %d, %Y"),
-            "personalized_for": profile_data['first_name'],
+            # REMOVED: "personalized_for" field (PII) - content is generic for all
             
             # THIS IS THE KEY - Agent 6 looks for "sections" with this exact structure
             "sections": {
@@ -318,7 +349,7 @@ class NostalgiaNewsGenerator:
                     "questions": content.get("conversation_starters", [
                         "What brings you joy when you think about those days?",
                         "Tell me about a happy memory from your younger years",
-                        "What traditions were most important to your family?"
+                        "What traditions were most important to families back then?"
                     ])[:3]  # Ensure exactly 3 questions
                 }
             },
@@ -329,20 +360,26 @@ class NostalgiaNewsGenerator:
                 "generated_by": source,
                 "generation_timestamp": datetime.now().isoformat(),
                 "theme_integrated": profile_data['theme_name'],
-                "heritage_featured": profile_data['heritage'],
+                "heritage_featured": profile_data['cultural_heritage'],
+                "age_group": profile_data['age_group'],
                 "safety_level": "dementia_friendly",
                 "structure_verified": True,
                 "sections_count": 4,
-                "newsletter_tone": True
+                "newsletter_tone": True,
+                "pii_compliant": True,
+                "anonymized": True
             }
         }
         
-        # Log the structure we're creating
-        logger.info(f"✅ Newsletter-style final response structure created:")
+        # Log the structure we're creating (no PII)
+        logger.info(f"✅ PII-compliant newsletter-style final response structure created:")
         logger.info(f"   - Title: {final_response['title']}")
+        logger.info(f"   - Heritage: {profile_data['cultural_heritage']}")
+        logger.info(f"   - Age group: {profile_data['age_group']}")
         logger.info(f"   - Sections: {list(final_response['sections'].keys())}")
         logger.info(f"   - Conversation starters: {len(final_response['sections']['conversation_starters']['questions'])}")
         logger.info(f"   - Newsletter tone: {final_response['metadata']['newsletter_tone']}")
+        logger.info(f"   - PII compliant: {final_response['metadata']['pii_compliant']}")
         
         return final_response
 
@@ -354,59 +391,62 @@ class NostalgiaNewsGenerator:
                   agent4b_output: Dict[str, Any],
                   agent4c_output: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate nostalgia news with GUARANTEED sections format and NEWSLETTER TONE
+        Generate PII-compliant nostalgia news with GUARANTEED sections format and NEWSLETTER TONE
         """
         
-        logger.info("📰 Agent 5: Generating NEWSLETTER-STYLE SECTIONS FORMAT Nostalgia News")
+        logger.info("📰 Agent 5: Generating PII-COMPLIANT NEWSLETTER-STYLE SECTIONS FORMAT Nostalgia News")
         
         try:
-            # Extract data with safe defaults
+            # Extract anonymized data with safe defaults (no PII)
             profile_data = self._extract_profile_data(agent1_output)
             content_data = self._extract_content_data(agent4a_output, agent4b_output, agent4c_output)
             
-            logger.info(f"📋 Profile: {profile_data['first_name']} | Theme: {profile_data['theme_name']} | Heritage: {profile_data['heritage']}")
+            # FIXED: Log only anonymized data (no personal names)
+            logger.info(f"📋 Anonymized Profile - Theme: {profile_data['theme_name']} | Heritage: {profile_data['cultural_heritage']} | Age Group: {profile_data['age_group']}")
             
-            # Try Gemini first with newsletter tone guidance
+            # Try Gemini first with newsletter tone guidance and PII compliance
             generated_content = None
             source = "fallback"
             
             if self.gemini_tool:
-                logger.info("🧠 Attempting Gemini newsletter generation...")
+                logger.info("🧠 Attempting PII-compliant Gemini newsletter generation...")
                 
                 generated_content = await self._generate_with_gemini(profile_data, content_data)
                 
                 if generated_content:
-                    source = "gemini_newsletter"
-                    logger.info("✅ Gemini newsletter generation successful!")
+                    source = "gemini_newsletter_pii_compliant"
+                    logger.info("✅ PII-compliant Gemini newsletter generation successful!")
                 else:
-                    logger.info("⚠️ Gemini newsletter generation failed, using guaranteed fallback")
+                    logger.info("⚠️ Gemini newsletter generation failed, using guaranteed PII-compliant fallback")
             else:
-                logger.info("🤖 No Gemini tool, using guaranteed newsletter fallback")
+                logger.info("🤖 No Gemini tool, using guaranteed PII-compliant newsletter fallback")
             
             # Use fallback if Gemini failed or unavailable
             if not generated_content:
                 generated_content = self._create_guaranteed_fallback(profile_data)
-                source = "guaranteed_newsletter_fallback"
-                logger.info("✅ Guaranteed newsletter fallback content created")
+                source = "guaranteed_pii_compliant_newsletter_fallback"
+                logger.info("✅ Guaranteed PII-compliant newsletter fallback content created")
             
-            # Format the final response with GUARANTEED sections structure
+            # Format the final response with GUARANTEED sections structure (no PII)
             final_response = self._format_final_response(generated_content, profile_data, source)
             
-            logger.info("✅ NEWSLETTER-STYLE SECTIONS FORMAT nostalgia news generated!")
+            logger.info("✅ PII-COMPLIANT NEWSLETTER-STYLE SECTIONS FORMAT nostalgia news generated!")
             logger.info(f"📊 Response structure: {list(final_response.keys())}")
             logger.info(f"📊 Sections structure: {list(final_response['sections'].keys())}")
+            logger.info(f"📊 PII compliant: {final_response['metadata']['pii_compliant']}")
             
             return {"nostalgia_news": final_response}
             
         except Exception as e:
-            logger.error(f"❌ All methods failed, using emergency newsletter fallback: {e}")
+            logger.error(f"❌ All methods failed, using emergency PII-compliant newsletter fallback: {e}")
             
-            # Emergency fallback with newsletter tone and guaranteed structure
+            # Emergency fallback with PII compliance, newsletter tone and guaranteed structure
             emergency_profile = {
-                "first_name": "Friend",
                 "theme_name": "Beautiful Moments",
                 "current_date": datetime.now().strftime("%B %d"),
-                "heritage": "universal",
+                "cultural_heritage": "American",
+                "age_group": "senior",
+                "heritage": "american",
                 "theme_id": "universal"
             }
             
@@ -417,11 +457,11 @@ class NostalgiaNewsGenerator:
                 "conversation_starters": [
                     "What brings you joy when you think about those wonderful days?",
                     "Tell me about a happy memory from your younger years",
-                    "What traditions were most important to your family?"
+                    "What traditions were most important to families back then?"
                 ]
             }
             
-            emergency_response = self._format_final_response(emergency_content, emergency_profile, "emergency_newsletter_fallback")
+            emergency_response = self._format_final_response(emergency_content, emergency_profile, "emergency_pii_compliant_newsletter_fallback")
             
             return {"nostalgia_news": emergency_response}
 

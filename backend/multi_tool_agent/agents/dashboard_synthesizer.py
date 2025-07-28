@@ -1,12 +1,14 @@
 """
-Agent 6: Dashboard Synthesizer - FIXED DATA FLOW  
+Agent 6: Dashboard Synthesizer - UPDATED FOR ANONYMIZED PROFILES
 File: backend/multi_tool_agent/agents/dashboard_synthesizer.py
 
-CRITICAL FIXES:
-1. Receives EXACT structure from Agent 5
-2. Passes it through without modification
-3. Proper validation and logging
-4. Safe fallbacks for missing data
+CRITICAL UPDATES FOR PII COMPLIANCE:
+1. Works with anonymized profile data (no names, no location)
+2. Receives exact structure from Agent 5 without modification
+3. Uses display_name instead of personal names
+4. Proper validation and logging without PII
+5. Safe fallbacks for missing data
+6. Compatible with Sequential Agent's final enhanced profile
 """
 
 import logging
@@ -19,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class DashboardSynthesizer:
     """
-    Agent 6: FIXED Dashboard Synthesizer - Perfect Data Flow from Agent 5
+    Agent 6: PII-COMPLIANT Dashboard Synthesizer - Perfect Data Flow from Agent 5
     """
     
     def __init__(self):
@@ -27,21 +29,31 @@ class DashboardSynthesizer:
             os.path.dirname(__file__), 
             "..", "..", "config", "recent_music.json"
         )
-        logger.info("🎨 Agent 6: Dashboard Synthesizer initialized")
+        logger.info("🎨 Agent 6: PII-Compliant Dashboard Synthesizer initialized")
     
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        FIXED: Final dashboard synthesis with perfect nostalgia news handling
+        UPDATED: Final dashboard synthesis with anonymized profile support
         """
         
         try:
-            logger.info("🎨 Agent 6: Synthesizing final dashboard")
+            logger.info("🎨 Agent 6: Synthesizing final dashboard (PII-compliant)")
             
-            # Extract basic info
-            patient_name = enhanced_profile.get("patient_info", {}).get("name", "Unknown")
+            # FIXED: Extract anonymized info only
+            patient_info = enhanced_profile.get("patient_info", {})
+            display_name = patient_info.get("display_name", "Friend")  # Generic display name
+            cultural_heritage = patient_info.get("cultural_heritage", "American")
+            age_group = patient_info.get("age_group", "senior")
             theme = enhanced_profile.get("daily_theme", "Universal")
             
-            logger.info(f"🎯 Synthesizing dashboard for: {patient_name} - {theme}")
+            # PII VALIDATION: Ensure no personal information is present
+            pii_detected = self._detect_pii_in_profile(patient_info)
+            if pii_detected:
+                logger.warning(f"🚨 PII detected in patient_info: {pii_detected} - using safe fallbacks")
+                display_name = "Friend"
+                cultural_heritage = "American"
+            
+            logger.info(f"🎯 Synthesizing dashboard - Theme: {theme}, Heritage: {cultural_heritage}, Age: {age_group}")
             
             # Extract content
             music_content = enhanced_profile.get("music_content", {})
@@ -49,37 +61,49 @@ class DashboardSynthesizer:
             photo_content = enhanced_profile.get("photo_content", {})
             nostalgia_news_raw = enhanced_profile.get("nostalgia_news", {})
             
-            # CRITICAL: Validate nostalgia news structure
-            logger.info(f"🔍 Raw nostalgia news type: {type(nostalgia_news_raw)}")
+            # VALIDATE nostalgia news structure (no PII logging)
+            logger.info(f"🔍 Nostalgia news validation:")
             if nostalgia_news_raw:
-                logger.info(f"🔍 Nostalgia keys: {list(nostalgia_news_raw.keys())}")
+                logger.info(f"   Structure type: {type(nostalgia_news_raw)}")
+                logger.info(f"   Top-level keys: {list(nostalgia_news_raw.keys())}")
+                
                 if "sections" in nostalgia_news_raw:
                     sections = nostalgia_news_raw["sections"]
-                    logger.info(f"🔍 Sections found: {list(sections.keys()) if isinstance(sections, dict) else 'Not a dict'}")
-                    
-                    # Log each section content length
+                    logger.info(f"   Sections type: {type(sections)}")
                     if isinstance(sections, dict):
+                        logger.info(f"   Section names: {list(sections.keys())}")
+                        
+                        # Log each section content length (no PII)
                         for section_name, section_data in sections.items():
                             if section_name == "conversation_starters":
-                                questions = section_data.get("questions", [])
+                                questions = section_data.get("questions", []) if isinstance(section_data, dict) else []
                                 logger.info(f"   {section_name}: {len(questions)} questions")
-                            else:
+                            elif isinstance(section_data, dict):
                                 content = section_data.get("content", "")
                                 logger.info(f"   {section_name}: {len(content)} characters")
+                else:
+                    logger.warning("   No 'sections' key found in nostalgia news")
+            else:
+                logger.warning("   No nostalgia news data received")
             
-            # Save recent music
+            # Save recent music (no PII)
             self._save_recent_music(music_content)
             
             # FIXED: Use nostalgia news exactly as received from Agent 5
             final_nostalgia_news = nostalgia_news_raw if nostalgia_news_raw else self._create_emergency_nostalgia()
             
-            # Create final dashboard
+            # FIXED: Create final dashboard with anonymized patient info
             final_dashboard = {
                 "patient_info": {
-                    "name": patient_name,
-                    "cultural_heritage": enhanced_profile.get("patient_info", {}).get("cultural_heritage", ""),
-                    "age": enhanced_profile.get("patient_info", {}).get("age", 0),
-                    "daily_theme": theme
+                    # FIXED: No personal names - use generic display name for UI
+                    "name": display_name,  # Generic "Friend" for UI compatibility
+                    "cultural_heritage": cultural_heritage,
+                    "age": patient_info.get("age", self._estimate_age_from_group(age_group)),
+                    "age_group": age_group,
+                    "daily_theme": theme,
+                    # Metadata for PII compliance
+                    "anonymized": True,
+                    "pii_compliant": True
                 },
                 "content": {
                     "music": {
@@ -102,7 +126,7 @@ class DashboardSynthesizer:
                         "cultural_context": photo_content.get("cultural_context", ""),
                         "conversation_starters": photo_content.get("conversation_starters", [])
                     },
-                    # CRITICAL: Direct passthrough from Agent 5
+                    # CRITICAL: Direct passthrough from Agent 5 (no modification)
                     "nostalgia_news": final_nostalgia_news
                 },
                 "metadata": {
@@ -110,26 +134,32 @@ class DashboardSynthesizer:
                     "personalization_level": self._assess_personalization(enhanced_profile),
                     "generation_timestamp": datetime.now().isoformat(),
                     "theme": theme,
-                    "agent_pipeline": "6_agent_enhanced"
+                    "agent_pipeline": "6_agent_enhanced_pii_compliant",
+                    "pii_compliant": True,
+                    "anonymized_profile": True,
+                    "cultural_heritage_used": cultural_heritage,
+                    "age_group_used": age_group
                 }
             }
             
-            # Enhanced logging
+            # Enhanced logging (no PII)
             sections_count = 0
             nostalgia_title = "No title"
             
             if final_nostalgia_news:
                 nostalgia_title = final_nostalgia_news.get("title", "No title")
                 if "sections" in final_nostalgia_news:
-                    sections_count = len(final_nostalgia_news["sections"])
+                    sections = final_nostalgia_news["sections"]
+                    if isinstance(sections, dict):
+                        sections_count = len(sections)
             
-            logger.info("✅ Agent 6: Final dashboard synthesized successfully")
-            logger.info("📊 Dashboard Summary:")
-            logger.info(f"   👤 Patient: {patient_name} ({enhanced_profile.get('patient_info', {}).get('cultural_heritage', '')})")
+            logger.info("✅ Agent 6: PII-compliant final dashboard synthesized successfully")
+            logger.info("📊 Dashboard Summary (anonymized):")
+            logger.info(f"   👤 Display: {display_name} (Heritage: {cultural_heritage}, Age group: {age_group})")
             logger.info(f"   🎯 Theme: {theme}")
-            logger.info(f"   🎵 Music: {music_content.get('artist', '')} - {music_content.get('piece_title', '')}")
-            logger.info(f"   🍽️ Recipe: {recipe_content.get('name', '')}")
-            logger.info(f"   📷 Photo: {photo_content.get('filename', '')}")
+            logger.info(f"   🎵 Music: {music_content.get('artist', 'N/A')} - {music_content.get('piece_title', 'N/A')}")
+            logger.info(f"   🍽️ Recipe: {recipe_content.get('name', 'N/A')}")
+            logger.info(f"   📷 Photo: {photo_content.get('filename', 'N/A')}")
             logger.info(f"   📰 Nostalgia News: {nostalgia_title} with {sections_count} sections")
             
             # Validate final structure for frontend
@@ -137,6 +167,13 @@ class DashboardSynthesizer:
                 logger.info("✅ Complete nostalgia news structure confirmed for frontend")
             else:
                 logger.warning(f"⚠️ Incomplete nostalgia news: only {sections_count} sections")
+            
+            # Final PII validation of output
+            if self._validate_output_pii_compliance(final_dashboard):
+                logger.info("✅ Final dashboard PII compliance validated")
+            else:
+                logger.error("🚨 Final dashboard contains PII - applying emergency cleanup")
+                final_dashboard = self._clean_pii_from_dashboard(final_dashboard)
             
             return final_dashboard
             
@@ -146,10 +183,86 @@ class DashboardSynthesizer:
             logger.error(traceback.format_exc())
             return self._emergency_fallback(enhanced_profile)
     
-    def _create_emergency_nostalgia(self) -> Dict[str, Any]:
-        """Create emergency nostalgia news when none received"""
+    def _detect_pii_in_profile(self, patient_info: Dict[str, Any]) -> List[str]:
+        """
+        Detect PII fields in patient info
+        """
         
-        logger.warning("🚨 Creating emergency nostalgia news")
+        pii_fields = ["first_name", "last_name", "full_name", "email", "phone", 
+                     "address", "city", "state", "zip_code", "ssn"]
+        
+        detected = [field for field in pii_fields if patient_info.get(field)]
+        return detected
+    
+    def _estimate_age_from_group(self, age_group: str) -> int:
+        """
+        Estimate age from age group for UI display
+        """
+        
+        age_estimates = {
+            "adult": 50,
+            "senior": 75,
+            "oldest_senior": 85
+        }
+        
+        return age_estimates.get(age_group, 75)
+    
+    def _validate_output_pii_compliance(self, dashboard: Dict[str, Any]) -> bool:
+        """
+        Validate that final dashboard output contains no PII
+        """
+        
+        # Check patient_info section
+        patient_info = dashboard.get("patient_info", {})
+        
+        # Allowed fields in patient_info
+        allowed_fields = ["name", "cultural_heritage", "age", "age_group", "daily_theme", 
+                         "anonymized", "pii_compliant"]
+        
+        # Check for unexpected fields that might contain PII
+        unexpected_fields = [field for field in patient_info.keys() 
+                           if field not in allowed_fields]
+        
+        if unexpected_fields:
+            logger.warning(f"⚠️ Unexpected fields in patient_info: {unexpected_fields}")
+        
+        # Check that name is generic
+        name = patient_info.get("name", "")
+        if name and name not in ["Friend", "Guest", "Unknown"]:
+            logger.warning(f"⚠️ Non-generic name detected: {name}")
+            return False
+        
+        return True
+    
+    def _clean_pii_from_dashboard(self, dashboard: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Emergency PII cleanup for dashboard
+        """
+        
+        logger.info("🧹 Applying emergency PII cleanup")
+        
+        # Clean patient_info
+        if "patient_info" in dashboard:
+            dashboard["patient_info"]["name"] = "Friend"
+            
+            # Remove any unexpected PII fields
+            safe_patient_info = {
+                "name": "Friend",
+                "cultural_heritage": dashboard["patient_info"].get("cultural_heritage", "American"),
+                "age": dashboard["patient_info"].get("age", 75),
+                "age_group": dashboard["patient_info"].get("age_group", "senior"),
+                "daily_theme": dashboard["patient_info"].get("daily_theme", "Universal"),
+                "anonymized": True,
+                "pii_compliant": True
+            }
+            dashboard["patient_info"] = safe_patient_info
+        
+        return dashboard
+    
+    def _create_emergency_nostalgia(self) -> Dict[str, Any]:
+        """Create emergency nostalgia news when none received - PII COMPLIANT"""
+        
+        logger.warning("🚨 Creating emergency PII-compliant nostalgia news")
         
         return {
             "title": f"Today's Special News",
@@ -183,12 +296,14 @@ class DashboardSynthesizer:
             "themes": ["Connection", "Joy", "Memories"],
             "metadata": {
                 "generated_by": "agent6_emergency",
-                "full_sections": True
+                "full_sections": True,
+                "pii_compliant": True,
+                "anonymized": True
             }
         }
     
     def _save_recent_music(self, music_content: Dict[str, Any]) -> None:
-        """Save recent music selection"""
+        """Save recent music selection (no PII)"""
         
         try:
             if not music_content or not music_content.get("artist"):
@@ -199,13 +314,14 @@ class DashboardSynthesizer:
             recent_music_data = {
                 "artist": music_content.get("artist", ""),
                 "piece_title": music_content.get("piece_title", ""),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "pii_compliant": True
             }
             
             with open(self.recent_music_file, 'w', encoding='utf-8') as f:
                 json.dump(recent_music_data, f, indent=2)
                 
-            logger.info(f"💾 Saved recent music: {recent_music_data['artist']} - {recent_music_data['piece_title']}")
+            logger.info(f"💾 Saved recent music (PII-compliant): {recent_music_data['artist']} - {recent_music_data['piece_title']}")
             
         except Exception as e:
             logger.error(f"❌ Failed to save recent music: {e}")
@@ -214,48 +330,91 @@ class DashboardSynthesizer:
         """Assess content quality"""
         
         score = 0
-        if enhanced_profile.get("music_content", {}).get("artist"): score += 1
-        if enhanced_profile.get("recipe_content", {}).get("name"): score += 1
-        if enhanced_profile.get("photo_content", {}).get("filename"): score += 1
-        if enhanced_profile.get("nostalgia_news", {}).get("sections"): score += 1
+        if enhanced_profile.get("music_content", {}).get("artist"): 
+            score += 1
+        if enhanced_profile.get("recipe_content", {}).get("name"): 
+            score += 1
+        if enhanced_profile.get("photo_content", {}).get("filename"): 
+            score += 1
+        if enhanced_profile.get("nostalgia_news", {}).get("sections"): 
+            score += 1
         
-        return "high" if score >= 3 else "medium" if score >= 2 else "low"
+        # Bonus for cultural heritage integration
+        if enhanced_profile.get("patient_info", {}).get("cultural_heritage"):
+            score += 0.5
+            
+        return "high" if score >= 3.5 else "medium" if score >= 2 else "low"
     
     def _assess_personalization(self, enhanced_profile: Dict[str, Any]) -> str:
-        """Assess personalization level"""
+        """Assess personalization level (using anonymized data only)"""
         
-        heritage = enhanced_profile.get("patient_info", {}).get("cultural_heritage")
+        patient_info = enhanced_profile.get("patient_info", {})
+        heritage = patient_info.get("cultural_heritage")
+        age_group = patient_info.get("age_group")
         theme = enhanced_profile.get("daily_theme")
         
-        if heritage and theme:
+        personalization_factors = 0
+        if heritage and heritage != "American":
+            personalization_factors += 1
+        if age_group and age_group != "senior":
+            personalization_factors += 1
+        if theme and theme != "Universal":
+            personalization_factors += 1
+        
+        if personalization_factors >= 2:
             return "highly_personalized"
-        elif heritage or theme:
+        elif personalization_factors >= 1:
             return "moderately_personalized"
         else:
             return "basic_personalized"
     
     def _emergency_fallback(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Emergency fallback dashboard"""
+        """Emergency fallback dashboard - PII COMPLIANT"""
         
-        logger.warning("🔄 Using emergency fallback dashboard")
+        logger.warning("🔄 Using PII-compliant emergency fallback dashboard")
+        
+        # Extract safe anonymized info
+        patient_info = enhanced_profile.get("patient_info", {})
+        cultural_heritage = patient_info.get("cultural_heritage", "American")
+        age_group = patient_info.get("age_group", "senior")
+        theme = enhanced_profile.get("daily_theme", "Universal")
         
         return {
             "patient_info": {
-                "name": enhanced_profile.get("patient_info", {}).get("name", "Unknown"),
-                "cultural_heritage": "",
-                "age": 0,
-                "daily_theme": "Universal"
+                "name": "Friend",  # Safe generic name
+                "cultural_heritage": cultural_heritage,
+                "age": self._estimate_age_from_group(age_group),
+                "age_group": age_group,
+                "daily_theme": theme,
+                "anonymized": True,
+                "pii_compliant": True
             },
             "content": {
-                "music": {"artist": "Classical Music", "piece_title": "Beautiful Melodies"},
-                "recipe": {"name": "Comfort Food"},
-                "photo": {"filename": "default.png", "description": "A peaceful scene"},
+                "music": {
+                    "artist": "Classical Music", 
+                    "piece_title": "Beautiful Melodies",
+                    "conversation_starters": ["What music brings you joy?"]
+                },
+                "recipe": {
+                    "name": "Comfort Food",
+                    "ingredients": ["Simple ingredients"],
+                    "instructions": ["Prepare with love"],
+                    "conversation_starters": ["What's your favorite comfort food?"]
+                },
+                "photo": {
+                    "filename": f"{theme.lower().replace(' ', '_')}.png", 
+                    "description": "A peaceful scene",
+                    "conversation_starters": ["What does this remind you of?"]
+                },
                 "nostalgia_news": self._create_emergency_nostalgia()
             },
             "metadata": {
                 "quality_score": "low",
                 "personalization_level": "basic",
-                "agent_pipeline": "emergency_fallback"
+                "agent_pipeline": "emergency_fallback_pii_compliant",
+                "pii_compliant": True,
+                "anonymized_profile": True,
+                "generation_timestamp": datetime.now().isoformat()
             }
         }
 

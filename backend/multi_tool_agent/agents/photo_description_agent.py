@@ -1,22 +1,14 @@
 """
-Agent 4C: Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
+Agent 4C: Cultural Photo Description Agent - UPDATED FOR ANONYMIZED PROFILES
 File: backend/multi_tool_agent/agents/photo_description_agent.py
 
-CORRECT FIXES APPLIED:
-- ✅ Fixed JSON file name (photo_analyses.json not photo_analysis.json)
-- ✅ Fixed JSON structure (photo_analyses array not photo_analysis_data dict)
-- ✅ Fixed theme matching logic for array structure
-- ✅ Fixed Gemini response handling (string not dict)
-- ✅ Improved error handling and fallbacks
-
-NEW FEATURE:
-- ✅ Added dementia-friendly photo descriptions using Gemini
-- ✅ Replaces technical descriptions with simple, warm language
-
-PURPOSE:
-Takes today's theme and patient cultural profile, selects appropriate photo
-and uses Gemini AI to create culturally-relevant conversation starters
-AND generate simple, warm, dementia-friendly photo descriptions.
+CRITICAL UPDATES FOR PII COMPLIANCE:
+- Removed all personal name usage and references
+- Works with anonymized profile data (cultural_heritage, age_group)
+- Updated Gemini tool calls to use new PII-compliant method signature
+- All logging now PII-free
+- Maintains dementia-friendly photo descriptions
+- Fixed JSON file handling and theme matching logic
 """
 
 import asyncio
@@ -29,16 +21,15 @@ logger = logging.getLogger(__name__)
 
 class PhotoDescriptionAgent:
     """
-    Agent 4C: Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
+    Agent 4C: PII-Compliant Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
     
-    CORRECT FIXES:
+    UPDATED FEATURES:
     - Fixed JSON file path (photo_analyses.json)
     - Fixed JSON structure handling (array not dict)
     - Fixed theme-based photo selection
     - Fixed Gemini response handling
     - Improved fallback mechanisms
-    
-    NEW FEATURE:
+    - Works with anonymized profiles only (no PII)
     - Generates simple, warm photo descriptions for dementia care
     """
     
@@ -48,24 +39,22 @@ class PhotoDescriptionAgent:
         # Load pre-analyzed photos from JSON file
         self.photo_database = self._load_photo_database()
         
-        logger.info("📷 Agent 4C: Cultural Photo Description initialized")
+        logger.info("📷 Agent 4C: PII-Compliant Cultural Photo Description initialized")
         logger.info(f"📊 Loaded {len(self.photo_database)} pre-analyzed photos")
         if self.gemini_tool:
-            logger.info("🤖 Gemini AI enabled for cultural enhancement AND dementia-friendly descriptions")
+            logger.info("🤖 Gemini AI enabled for cultural enhancement AND PII-compliant dementia-friendly descriptions")
         else:
             logger.info("📝 Using pre-written conversation starters (fallback mode)")
     
     def _load_photo_database(self) -> List[Dict[str, Any]]:
-        """Load photo analyses from the photo_analyses.json file - CORRECTLY FIXED"""
+        """Load photo analyses from the photo_analyses.json file"""
         
         try:
-            # CORRECT: Look for photo_analyses.json (with 's')
             photo_file = Path(__file__).parent.parent.parent / "config" / "photo_analyses.json"
             
             if photo_file.exists():
                 with open(photo_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    # CORRECT: Use photo_analyses key (array structure)
                     photos_list = data.get("photo_analyses", [])
                     logger.info(f"✅ Loaded {len(photos_list)} photos from {photo_file}")
                     return photos_list
@@ -78,7 +67,7 @@ class PhotoDescriptionAgent:
             return self._get_fallback_photos()
     
     def _get_fallback_photos(self) -> List[Dict[str, Any]]:
-        """Provide emergency fallback photos if JSON loading fails - CORRECTLY FIXED"""
+        """Provide emergency fallback photos if JSON loading fails"""
         
         return [
             {
@@ -121,33 +110,35 @@ class PhotoDescriptionAgent:
     
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Select and culturally enhance a photo based on patient profile and theme.
+        Select and culturally enhance a photo based on anonymized patient profile and theme.
         
         Args:
             enhanced_profile: Profile from previous agents containing patient_info, theme_info, qloo_intelligence
             
         Returns:
             Dict containing selected photo with culturally-enhanced conversation starters
-            AND dementia-friendly description
+            AND dementia-friendly description (PII-compliant)
         """
         
-        logger.info("📷 Agent 4C: Starting culturally-aware photo description")
+        logger.info("📷 Agent 4C: Starting PII-compliant culturally-aware photo description")
         
         try:
-            # Extract patient and theme information
+            # Extract anonymized patient and theme information
             patient_info = enhanced_profile.get("patient_info", {})
             theme_info = enhanced_profile.get("theme_info", {})
             qloo_intelligence = enhanced_profile.get("qloo_intelligence", {})
             
-            heritage = patient_info.get("cultural_heritage", "American").lower()
+            # FIXED: Extract only anonymized data (no personal names)
+            cultural_heritage = patient_info.get("cultural_heritage", "American")
+            age_group = patient_info.get("age_group", "senior")
             birth_year = patient_info.get("birth_year", 1945)
-            patient_name = patient_info.get("first_name", "Friend")
             theme_id = theme_info.get("id", "family")
             theme_name = theme_info.get("name", "Family")
             
-            logger.info(f"🎯 Selecting photo for {patient_name} (Heritage: {heritage}, Theme: {theme_name})")
+            # FIXED: Log only anonymized data (no personal names)
+            logger.info(f"🎯 Selecting photo - Theme: {theme_name}, Heritage: {cultural_heritage}, Age Group: {age_group}")
             
-            # Step 1: Find photo that matches today's theme - CORRECTLY FIXED
+            # Step 1: Find photo that matches today's theme
             selected_photo = self._find_photo_by_theme(theme_id)
             
             if not selected_photo:
@@ -165,14 +156,14 @@ class PhotoDescriptionAgent:
             )
             
             # Step 3: Format final output
-            return self._format_photo_output(enhanced_photo_data, heritage, theme_id)
+            return self._format_photo_output(enhanced_photo_data, cultural_heritage, theme_id)
             
         except Exception as e:
             logger.error(f"❌ Photo description failed: {e}")
             return await self._get_emergency_fallback(enhanced_profile)
     
     def _find_photo_by_theme(self, theme_id: str) -> Optional[Dict[str, Any]]:
-        """Find photo that matches the given theme - CORRECTLY FIXED for array structure"""
+        """Find photo that matches the given theme"""
         
         # Search through photo array for theme matches
         for photo in self.photo_database:
@@ -192,10 +183,11 @@ class PhotoDescriptionAgent:
     
     async def _enhance_with_cultural_context(self, photo_data: Dict[str, Any], patient_info: Dict[str, Any], 
                                            theme_info: Dict[str, Any], qloo_intelligence: Dict[str, Any]) -> Dict[str, Any]:
-        """Use Gemini AI to enhance photo conversation with cultural context AND generate dementia-friendly description"""
+        """Use Gemini AI to enhance photo conversation with cultural context AND generate PII-compliant dementia-friendly description"""
         
-        heritage = patient_info.get("cultural_heritage", "American")
-        patient_name = patient_info.get("first_name", "Friend")
+        # FIXED: Extract only anonymized data
+        cultural_heritage = patient_info.get("cultural_heritage", "American")
+        age_group = patient_info.get("age_group", "senior")
         birth_year = patient_info.get("birth_year", 1945)
         
         # Get original conversation starters and description
@@ -217,15 +209,17 @@ class PhotoDescriptionAgent:
             # Get Qloo artists for additional context
             qloo_artists = self._extract_qloo_artists(qloo_intelligence)
             
-            # Step 1: Generate dementia-friendly photo description using Gemini
-            logger.info("🤖 Generating dementia-friendly photo description...")
+            # Step 1: Generate PII-compliant dementia-friendly photo description using Gemini
+            logger.info("🤖 Generating PII-compliant dementia-friendly photo description...")
+            
+            # FIXED: Use updated method signature without patient_name (PII-compliant)
             dementia_friendly_description = await self.gemini_tool.generate_dementia_friendly_description(
-                original_description, patient_name, heritage
+                original_description, cultural_heritage, age_group
             )
             
-            # Step 2: Create culturally-aware prompt for conversation starters
+            # Step 2: Create culturally-aware prompt for conversation starters (PII-compliant)
             cultural_prompt = self._create_cultural_enhancement_prompt(
-                heritage, original_description, original_starters, qloo_artists, birth_year
+                cultural_heritage, original_description, original_starters, qloo_artists, birth_year, age_group
             )
             
             # Step 3: Get enhanced conversation starters from Gemini
@@ -235,8 +229,8 @@ class PhotoDescriptionAgent:
             if dementia_friendly_description:
                 enhanced_data["dementia_friendly_description"] = dementia_friendly_description
                 enhanced_data["description_enhanced"] = True
-                enhanced_data["description_source"] = "gemini_generated"
-                logger.info("✅ Generated dementia-friendly description with Gemini")
+                enhanced_data["description_source"] = "gemini_generated_pii_compliant"
+                logger.info("✅ Generated PII-compliant dementia-friendly description with Gemini")
             else:
                 enhanced_data["dementia_friendly_description"] = self._get_fallback_description(photo_data)
                 enhanced_data["description_enhanced"] = False
@@ -250,8 +244,8 @@ class PhotoDescriptionAgent:
                 if enhanced_starters:
                     enhanced_data["enhanced_conversation_starters"] = enhanced_starters
                     enhanced_data["cultural_enhancement"] = True
-                    enhanced_data["enhancement_heritage"] = heritage
-                    logger.info(f"🤖 ✅ Gemini enhanced conversation starters for {heritage} heritage")
+                    enhanced_data["enhancement_heritage"] = cultural_heritage
+                    logger.info(f"🤖 ✅ Gemini enhanced conversation starters for {cultural_heritage} heritage")
                 else:
                     enhanced_data["cultural_enhancement"] = False
                     logger.warning("⚠️ Could not parse Gemini conversation starters")
@@ -316,31 +310,39 @@ class PhotoDescriptionAgent:
         else:
             return "This is a beautiful, peaceful picture that brings back happy memories."
     
-    def _create_cultural_enhancement_prompt(self, heritage: str, visual_description: str, 
+    def _create_cultural_enhancement_prompt(self, cultural_heritage: str, visual_description: str, 
                                           original_starters: List[str], qloo_artists: List[str], 
-                                          birth_year: int) -> str:
-        """Create culturally-sensitive prompt for Gemini"""
+                                          birth_year: int, age_group: str) -> str:
+        """Create culturally-sensitive prompt for Gemini with PII compliance"""
         
-        age_context = f"born in {birth_year}" if birth_year else "senior"
+        age_context = f"born in {birth_year}" if birth_year else age_group
         
         prompt = f"""
         You are helping create conversation starters for a dementia care patient.
         
-        Patient Background:
-        - Heritage: {heritage}
+        ANONYMIZED Patient Background (NO PERSONAL INFORMATION):
+        - Cultural Heritage: {cultural_heritage}
         - Age context: {age_context}
+        - Age group: {age_group}
         - Cultural artists they might know: {', '.join(qloo_artists[:3]) if qloo_artists else 'None available'}
         
         Photo Description: {visual_description}
         
         Original conversation starters: {', '.join(original_starters)}
         
+        PII COMPLIANCE REQUIREMENTS:
+        - NEVER use personal names in conversation starters
+        - Use generic references like "families" or "people"
+        - Write for caregivers to read aloud to patients
+        - Address content generically, not personally
+        
         Please create 1-3 new conversation starters that:
-        1. Are culturally sensitive to {heritage} heritage
+        1. Are culturally sensitive to {cultural_heritage} heritage
         2. Are appropriate for someone with dementia (simple, positive, memory-focused)
         3. Connect to the photo content
         4. Avoid complex questions or negative themes
         5. Use warm, friendly language
+        6. Use inclusive language ("families enjoyed" rather than "you enjoyed")
         
         Format as a simple list, one starter per line.
         """
@@ -376,20 +378,23 @@ class PhotoDescriptionAgent:
         """Extract artist names from Qloo intelligence for context"""
         
         try:
-            artists_data = qloo_intelligence.get("qloo_results", {})
+            cultural_recs = qloo_intelligence.get("cultural_recommendations", {})
             
-            if artists_data.get("success"):
-                entities = artists_data.get("entities", [])
-                artist_names = [entity.get("name", "") for entity in entities if entity.get("name")]
-                return artist_names[:3]  # Limit to 3 artists
+            if isinstance(cultural_recs, dict) and "artists" in cultural_recs:
+                artists_data = cultural_recs["artists"]
                 
+                if isinstance(artists_data, dict) and artists_data.get("success"):
+                    entities = artists_data.get("entities", [])
+                    artist_names = [entity.get("name", "") for entity in entities if entity.get("name")]
+                    return artist_names[:3]  # Limit to 3 artists
+                    
         except Exception as e:
             logger.debug(f"Could not extract Qloo artists: {e}")
         
         return []
     
-    def _format_photo_output(self, photo_data: Dict[str, Any], heritage: str, theme_id: str) -> Dict[str, Any]:
-        """Format the final photo output for the dashboard with dementia-friendly description"""
+    def _format_photo_output(self, photo_data: Dict[str, Any], cultural_heritage: str, theme_id: str) -> Dict[str, Any]:
+        """Format the final photo output for the dashboard with PII-compliant dementia-friendly description"""
         
         # Use enhanced starters if available, otherwise use original
         conversation_starters = photo_data.get("enhanced_conversation_starters", 
@@ -405,35 +410,40 @@ class PhotoDescriptionAgent:
         return {
             "photo_content": {
                 "image_name": photo_data.get("image_name", "unknown.png"),
+                "filename": photo_data.get("image_name", "unknown.png"),  # Add both for compatibility
                 "theme": photo_data.get("theme", theme_id),
-                "description": description,  # NOW USES DEMENTIA-FRIENDLY DESCRIPTION
+                "description": description,  # NOW USES PII-COMPLIANT DEMENTIA-FRIENDLY DESCRIPTION
                 "conversation_starters": conversation_starters[:3],  # Limit to 3 starters
                 "emotional_tone": photo_data.get("emotional_tone", "warm, meaningful"),
                 "key_elements": photo_data.get("key_elements", []),
-                "heritage_connection": f"Enhanced for {heritage} heritage" if is_enhanced else "General photo description",
+                "heritage_connection": f"Enhanced for {cultural_heritage} heritage" if is_enhanced else "General photo description",
+                "cultural_context": f"Enhanced for {cultural_heritage} heritage" if is_enhanced else "General cultural context",
                 "theme_connection": f"Selected for {theme_id} theme"
             },
             "metadata": {
-                "agent": "4C_photo_description",
+                "agent": "4C_photo_description_pii_compliant",
                 "selection_method": "gemini_enhanced" if is_enhanced else "theme_based_fallback",
                 "theme_match": True,
                 "cultural_enhancement": is_enhanced,
                 "description_simplified": is_description_enhanced,
                 "description_source": description_source,
-                "heritage_target": heritage,
+                "heritage_target": cultural_heritage,
                 "safety_level": "positive_memories",
-                "dementia_friendly": True
+                "dementia_friendly": True,
+                "pii_compliant": True,
+                "anonymized_profile": True
             }
         }
     
     async def _get_emergency_fallback(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Emergency fallback when everything else fails"""
+        """Emergency fallback when everything else fails - PII COMPLIANT"""
         
-        logger.warning("⚠️ Using emergency fallback for photo description")
+        logger.warning("⚠️ Using PII-compliant emergency fallback for photo description")
         
         patient_info = enhanced_profile.get("patient_info", {})
         theme_info = enhanced_profile.get("theme_info", {})
-        heritage = patient_info.get("cultural_heritage", "American")
+        cultural_heritage = patient_info.get("cultural_heritage", "American")
+        age_group = patient_info.get("age_group", "senior")
         theme_id = theme_info.get("id", "family")
         
         fallback_photo_data = {
@@ -449,8 +459,11 @@ class PhotoDescriptionAgent:
             "emotional_tone": "warm, comforting",
             "key_elements": ["memories", "meaningful moments"],
             "description_enhanced": False,
-            "description_source": "emergency_fallback",
+            "description_source": "emergency_fallback_pii_compliant",
             "cultural_enhancement": False
         }
         
-        return self._format_photo_output(fallback_photo_data, heritage, theme_id)
+        return self._format_photo_output(fallback_photo_data, cultural_heritage, theme_id)
+
+# Export the main class
+__all__ = ["PhotoDescriptionAgent"]
