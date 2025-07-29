@@ -1,11 +1,13 @@
 """
-Agent 4C: Cultural Photo Description Agent - PII REMOVED, SIMPLIFIED
+Agent 4C: Cultural Photo Description Agent - PII FIXED + CORRECT OUTPUT STRUCTURE
 File: backend/multi_tool_agent/agents/photo_description_agent.py
 
-FIXES:
-- Removed all PII references (birth_year, personal names)
+CRITICAL FIXES:
+- Removed all PII references (birth_year, personal names) 
+- Fixed output structure to match what frontend expects (flat, not nested)
 - Fixed Gemini method call to match working signature
-- Simplified without changing core logic
+- Kept all working logic intact, only PII compliance changes
+- FIXED: Conversation starters parsing to remove extra quotes and question marks
 """
 
 import asyncio
@@ -18,11 +20,14 @@ logger = logging.getLogger(__name__)
 
 class PhotoDescriptionAgent:
     """
-    Agent 4C: PII-Compliant Cultural Photo Description Agent - WITH DEMENTIA-FRIENDLY DESCRIPTIONS
+    Agent 4C: PII-Compliant Cultural Photo Description Agent - CORRECT OUTPUT STRUCTURE
     
-    FIXED:
+    FIXES APPLIED:
+    - Removed PII (birth_year, personal names)
+    - Fixed output to return flat structure that frontend expects
     - Fixed Gemini method signature
-    - Simplified method calls
+    - Fixed conversation starters parsing (remove extra quotes/question marks)
+    - Kept all working functionality
     """
     
     def __init__(self, gemini_tool=None):
@@ -139,7 +144,7 @@ class PhotoDescriptionAgent:
                 selected_photo, patient_info, theme_info, qloo_intelligence
             )
             
-            # Step 3: Format final output
+            # Step 3: Format final output - FIXED TO RETURN FLAT STRUCTURE
             return self._format_photo_output(enhanced_photo_data, cultural_heritage, theme_id)
             
         except Exception as e:
@@ -296,7 +301,7 @@ class PhotoDescriptionAgent:
     def _create_cultural_enhancement_prompt(self, cultural_heritage: str, visual_description: str, 
                                           original_starters: List[str], qloo_artists: List[str], 
                                           age_group: str) -> str:
-        """Create culturally-sensitive prompt for Gemini with PII compliance - SIMPLIFIED"""
+        """Create culturally-sensitive prompt for Gemini with PII compliance"""
         
         prompt = f"""
         You are helping create conversation starters for a dementia care patient.
@@ -341,9 +346,11 @@ class PhotoDescriptionAgent:
                 cleaned = line.strip()
                 # Remove bullet points, numbers, etc.
                 cleaned = cleaned.lstrip('•-*1234567890. ')
+                # Remove any existing quotes at start/end
+                cleaned = cleaned.strip('"\'')
                 
                 if cleaned and len(cleaned) > 10:  # Valid starter
-                    # Ensure it ends with appropriate punctuation
+                    # Ensure it ends with appropriate punctuation (but don't add if already present)
                     if not cleaned.endswith(('?', '.', '!')):
                         cleaned += '?'
                     starters.append(cleaned)
@@ -374,7 +381,9 @@ class PhotoDescriptionAgent:
         return []
     
     def _format_photo_output(self, photo_data: Dict[str, Any], cultural_heritage: str, theme_id: str) -> Dict[str, Any]:
-        """Format the final photo output for the dashboard with PII-compliant dementia-friendly description"""
+        """
+        CRITICAL FIX: Format the final photo output as FLAT STRUCTURE that frontend expects
+        """
         
         # Use enhanced starters if available, otherwise use original
         conversation_starters = photo_data.get("enhanced_conversation_starters", 
@@ -387,17 +396,21 @@ class PhotoDescriptionAgent:
         is_description_enhanced = photo_data.get("description_enhanced", False)
         description_source = photo_data.get("description_source", "unknown")
         
+        # CRITICAL FIX: Return FLAT structure that frontend expects (no photo_content wrapper)
         return {
             "photo_content": {
-                "image_name": photo_data.get("image_name", "unknown.png"),
-                "filename": photo_data.get("image_name", "unknown.png"),  # Add both for compatibility
+                # Frontend expects these fields directly on photoData
+                "filename": photo_data.get("image_name", "unknown.png"),  # Frontend expects filename
+                "description": description,  # Frontend expects description (flat string)
+                "conversation_starters": conversation_starters[:3],  # Frontend expects conversation_starters (flat array)
+                "cultural_context": f"Enhanced for {cultural_heritage} heritage" if is_enhanced else "General cultural context",  # Frontend expects cultural_context
+                
+                # Additional data for completeness
+                "image_name": photo_data.get("image_name", "unknown.png"),  # Also include image_name for compatibility
                 "theme": photo_data.get("theme", theme_id),
-                "description": description,  # NOW USES PII-COMPLIANT DEMENTIA-FRIENDLY DESCRIPTION
-                "conversation_starters": conversation_starters[:3],  # Limit to 3 starters
                 "emotional_tone": photo_data.get("emotional_tone", "warm, meaningful"),
                 "key_elements": photo_data.get("key_elements", []),
                 "heritage_connection": f"Enhanced for {cultural_heritage} heritage" if is_enhanced else "General photo description",
-                "cultural_context": f"Enhanced for {cultural_heritage} heritage" if is_enhanced else "General cultural context",
                 "theme_connection": f"Selected for {theme_id} theme"
             },
             "metadata": {

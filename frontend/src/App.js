@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import apiService from './services/apiService'
-import { mapApiToUIData } from './utils/dataMappers'
 import feedbackManager from './utils/feedbackManager'
 
 // Import your existing components
@@ -210,11 +209,10 @@ const App = () => {
         currentFeedback,
       )
 
-      console.log('🔄 Transforming API response to UI data...')
+      console.log('🔄 Using API response directly...')
 
-      // Transform API response to UI format
-      const uiData = mapApiToUIData(apiResponse)
-      setDashboardData(uiData)
+      // Use API response directly without transformation
+      setDashboardData(apiResponse)
 
       // Store patient profile for display (use what we sent to API)
       setPatientProfile(currentProfile)

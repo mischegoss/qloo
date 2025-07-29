@@ -1,8 +1,18 @@
 import React from 'react'
 import FeedbackButtons from './FeedbackButtons'
+import dashboardDataStore from '../services/dashboardDataStore'
 
-const RecipeDetail = ({ data, onBack, onFeedback }) => {
-  const recipeData = data || {}
+const RecipeDetail = ({ onBack, onFeedback }) => {
+  // Get recipe data directly from global store instead of props
+  const recipeData = dashboardDataStore.getRecipeData()
+
+  // DEBUG: Log what data the component is actually receiving
+  console.log('🍽️ RecipeDetail received data from store:', recipeData)
+  console.log(
+    '🍽️ RecipeDetail conversation_starters:',
+    recipeData.conversation_starters,
+  )
+  console.log('🍽️ RecipeDetail ingredients:', recipeData.ingredients)
 
   // Emergency fallback recipe
   const fallbackRecipe = {
@@ -22,7 +32,7 @@ const RecipeDetail = ({ data, onBack, onFeedback }) => {
       'Stir gently and add cinnamon if you like',
       'Let cool for 1 minute before enjoying',
     ],
-    conversationQuestions: [
+    conversation_starters: [
       "What's your favorite type of apple?",
       'Do you remember making treats like this before?',
       'How does the warm apple smell?',
@@ -188,9 +198,9 @@ const RecipeDetail = ({ data, onBack, onFeedback }) => {
               💬 Optional Conversation Topics
             </h4>
             <ul className='space-y-4'>
-              {currentRecipe.conversationQuestions &&
-              currentRecipe.conversationQuestions.length > 0 ? (
-                currentRecipe.conversationQuestions.map((question, index) => (
+              {currentRecipe.conversation_starters &&
+              currentRecipe.conversation_starters.length > 0 ? (
+                currentRecipe.conversation_starters.map((question, index) => (
                   <li
                     key={index}
                     className='text-gray-700 text-lg p-6 rounded-lg border-2'

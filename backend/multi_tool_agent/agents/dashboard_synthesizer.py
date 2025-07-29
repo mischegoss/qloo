@@ -1,14 +1,16 @@
 """
-Agent 6: Dashboard Synthesizer - UPDATED FOR ANONYMIZED PROFILES
+Agent 6: Dashboard Synthesizer - UPDATED FOR ANONYMIZED PROFILES (NO NAME FIELD)
 File: backend/multi_tool_agent/agents/dashboard_synthesizer.py
 
 CRITICAL UPDATES FOR PII COMPLIANCE:
 1. Works with anonymized profile data (no names, no location)
 2. Receives exact structure from Agent 5 without modification
-3. Uses display_name instead of personal names
+3. NO name field anywhere - completely removed
 4. Proper validation and logging without PII
 5. Safe fallbacks for missing data
 6. Compatible with Sequential Agent's final enhanced profile
+7. FIXED: Removed age calculation to prevent PII exposure
+8. FIXED: Removed all name references
 """
 
 import logging
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class DashboardSynthesizer:
     """
-    Agent 6: PII-COMPLIANT Dashboard Synthesizer - Perfect Data Flow from Agent 5
+    Agent 6: PII-COMPLIANT Dashboard Synthesizer - Perfect Data Flow from Agent 5 (NO NAMES)
     """
     
     def __init__(self):
@@ -33,15 +35,14 @@ class DashboardSynthesizer:
     
     async def run(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
-        UPDATED: Final dashboard synthesis with anonymized profile support
+        UPDATED: Final dashboard synthesis with anonymized profile support (NO NAMES)
         """
         
         try:
-            logger.info("🎨 Agent 6: Synthesizing final dashboard (PII-compliant)")
+            logger.info("🎨 Agent 6: Synthesizing final dashboard (PII-compliant, no names)")
             
-            # FIXED: Extract anonymized info only
+            # FIXED: Extract anonymized info only (NO NAMES)
             patient_info = enhanced_profile.get("patient_info", {})
-            display_name = patient_info.get("display_name", "Friend")  # Generic display name
             cultural_heritage = patient_info.get("cultural_heritage", "American")
             age_group = patient_info.get("age_group", "senior")
             theme = enhanced_profile.get("daily_theme", "Universal")
@@ -50,7 +51,6 @@ class DashboardSynthesizer:
             pii_detected = self._detect_pii_in_profile(patient_info)
             if pii_detected:
                 logger.warning(f"🚨 PII detected in patient_info: {pii_detected} - using safe fallbacks")
-                display_name = "Friend"
                 cultural_heritage = "American"
             
             logger.info(f"🎯 Synthesizing dashboard - Theme: {theme}, Heritage: {cultural_heritage}, Age: {age_group}")
@@ -92,14 +92,12 @@ class DashboardSynthesizer:
             # FIXED: Use nostalgia news exactly as received from Agent 5
             final_nostalgia_news = nostalgia_news_raw if nostalgia_news_raw else self._create_emergency_nostalgia()
             
-            # FIXED: Create final dashboard with anonymized patient info
+            # FIXED: Create final dashboard with anonymized patient info - NO NAME FIELD
             final_dashboard = {
                 "patient_info": {
-                    # FIXED: No personal names - use generic display name for UI
-                    "name": display_name,  # Generic "Friend" for UI compatibility
+                    # FIXED: NO name field at all - completely removed
                     "cultural_heritage": cultural_heritage,
-                    "age": patient_info.get("age", self._estimate_age_from_group(age_group)),
-                    "age_group": age_group,
+                    "age_group": age_group,  # FIXED: Only age_group, no specific age
                     "daily_theme": theme,
                     # Metadata for PII compliance
                     "anonymized": True,
@@ -155,7 +153,7 @@ class DashboardSynthesizer:
             
             logger.info("✅ Agent 6: PII-compliant final dashboard synthesized successfully")
             logger.info("📊 Dashboard Summary (anonymized):")
-            logger.info(f"   👤 Display: {display_name} (Heritage: {cultural_heritage}, Age group: {age_group})")
+            logger.info(f"   👤 Profile: Heritage: {cultural_heritage}, Age group: {age_group}")
             logger.info(f"   🎯 Theme: {theme}")
             logger.info(f"   🎵 Music: {music_content.get('artist', 'N/A')} - {music_content.get('piece_title', 'N/A')}")
             logger.info(f"   🍽️ Recipe: {recipe_content.get('name', 'N/A')}")
@@ -188,24 +186,11 @@ class DashboardSynthesizer:
         Detect PII fields in patient info
         """
         
-        pii_fields = ["first_name", "last_name", "full_name", "email", "phone", 
+        pii_fields = ["first_name", "last_name", "full_name", "name", "email", "phone", 
                      "address", "city", "state", "zip_code", "ssn"]
         
         detected = [field for field in pii_fields if patient_info.get(field)]
         return detected
-    
-    def _estimate_age_from_group(self, age_group: str) -> int:
-        """
-        Estimate age from age group for UI display
-        """
-        
-        age_estimates = {
-            "adult": 50,
-            "senior": 75,
-            "oldest_senior": 85
-        }
-        
-        return age_estimates.get(age_group, 75)
     
     def _validate_output_pii_compliance(self, dashboard: Dict[str, Any]) -> bool:
         """
@@ -215,8 +200,8 @@ class DashboardSynthesizer:
         # Check patient_info section
         patient_info = dashboard.get("patient_info", {})
         
-        # Allowed fields in patient_info
-        allowed_fields = ["name", "cultural_heritage", "age", "age_group", "daily_theme", 
+        # Allowed fields in patient_info - REMOVED "name" from allowed fields
+        allowed_fields = ["cultural_heritage", "age_group", "daily_theme", 
                          "anonymized", "pii_compliant"]
         
         # Check for unexpected fields that might contain PII
@@ -225,11 +210,18 @@ class DashboardSynthesizer:
         
         if unexpected_fields:
             logger.warning(f"⚠️ Unexpected fields in patient_info: {unexpected_fields}")
+            return False
         
-        # Check that name is generic
-        name = patient_info.get("name", "")
-        if name and name not in ["Friend", "Guest", "Unknown"]:
-            logger.warning(f"⚠️ Non-generic name detected: {name}")
+        # FIXED: Check that no name fields are present
+        name_fields = ["name", "first_name", "last_name", "full_name"]
+        for name_field in name_fields:
+            if name_field in patient_info:
+                logger.warning(f"⚠️ Name field detected in output: {name_field}")
+                return False
+        
+        # FIXED: Check that no specific age is present
+        if "age" in patient_info:
+            logger.warning(f"⚠️ Specific age detected in output: {patient_info['age']}")
             return False
         
         return True
@@ -241,16 +233,12 @@ class DashboardSynthesizer:
         
         logger.info("🧹 Applying emergency PII cleanup")
         
-        # Clean patient_info
+        # Clean patient_info - REMOVE ALL NAME FIELDS
         if "patient_info" in dashboard:
-            dashboard["patient_info"]["name"] = "Friend"
-            
-            # Remove any unexpected PII fields
+            # Remove any unexpected PII fields - FIXED: Remove ALL name and age fields
             safe_patient_info = {
-                "name": "Friend",
                 "cultural_heritage": dashboard["patient_info"].get("cultural_heritage", "American"),
-                "age": dashboard["patient_info"].get("age", 75),
-                "age_group": dashboard["patient_info"].get("age_group", "senior"),
+                "age_group": dashboard["patient_info"].get("age_group", "senior"),  # FIXED: Only age_group
                 "daily_theme": dashboard["patient_info"].get("daily_theme", "Universal"),
                 "anonymized": True,
                 "pii_compliant": True
@@ -369,7 +357,7 @@ class DashboardSynthesizer:
             return "basic_personalized"
     
     def _emergency_fallback(self, enhanced_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """Emergency fallback dashboard - PII COMPLIANT"""
+        """Emergency fallback dashboard - PII COMPLIANT (NO NAMES)"""
         
         logger.warning("🔄 Using PII-compliant emergency fallback dashboard")
         
@@ -381,10 +369,9 @@ class DashboardSynthesizer:
         
         return {
             "patient_info": {
-                "name": "Friend",  # Safe generic name
+                # FIXED: NO name field - completely removed
                 "cultural_heritage": cultural_heritage,
-                "age": self._estimate_age_from_group(age_group),
-                "age_group": age_group,
+                "age_group": age_group,  # FIXED: Only age_group, no specific age
                 "daily_theme": theme,
                 "anonymized": True,
                 "pii_compliant": True

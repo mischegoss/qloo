@@ -99,10 +99,6 @@ const Dashboard = ({
                   musicData.piece_title ||
                   'Classical Music'}
             </h4>
-            <p className='text-base text-gray-600 leading-relaxed'>
-              {musicData.fun_fact ||
-                'A beautiful classical piece to inspire memories'}
-            </p>
           </div>
 
           {/* Recipe Card */}
@@ -142,14 +138,6 @@ const Dashboard = ({
             <h4 className='text-xl font-semibold text-gray-800 mb-2'>
               {recipeData.name || 'Comfort Food Recipe'}
             </h4>
-            <p className='text-base text-gray-600 leading-relaxed'>
-              {recipeData.cultural_context ||
-                `A ${
-                  patientProfile?.cultural_heritage ||
-                  patientInfo.cultural_heritage ||
-                  'traditional'
-                } dish to bring back memories`}
-            </p>
           </div>
 
           {/* Photo Card */}
@@ -188,13 +176,9 @@ const Dashboard = ({
             </div>
             <h4 className='text-xl font-semibold text-gray-800 mb-2'>
               {photoData.filename
-                ? `${currentTheme}'s Photo`
+                ? `${currentTheme} Photo`
                 : `A ${currentTheme}-Related Photo`}
             </h4>
-            <p className='text-base text-gray-600 leading-relaxed'>
-              {photoData.cultural_context ||
-                'An inspiring image to spark conversation and memories'}
-            </p>
           </div>
         </div>
 
@@ -240,12 +224,7 @@ const Dashboard = ({
             </h4>
             <p className='text-lg text-gray-600 leading-relaxed'>
               {nostalgiaData.content ||
-                `Today's special story connects your ${
-                  patientProfile?.cultural_heritage ||
-                  patientInfo.cultural_heritage ||
-                  'heritage'
-                } with 
-                the ${currentTheme.toLowerCase()} theme. Discover meaningful connections 
+                `Discover meaningful connections 
                 and memories that bring warmth to your day.`}
             </p>
           </div>

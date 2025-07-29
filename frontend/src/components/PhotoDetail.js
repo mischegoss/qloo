@@ -1,5 +1,6 @@
 import React from 'react'
 import FeedbackButtons from './FeedbackButtons'
+import dashboardDataStore from '../services/dashboardDataStore'
 
 // Import all images for safety
 import birthdayImage from '../static/images/birthday.png'
@@ -14,8 +15,17 @@ import seasonsImage from '../static/images/seasons.png'
 import travelImage from '../static/images/travel.png'
 import weatherImage from '../static/images/weather.png'
 
-const PhotoDetail = ({ data, onBack, onFeedback }) => {
-  const photoData = data || {}
+const PhotoDetail = ({ onBack, onFeedback }) => {
+  // Get photo data directly from global store instead of props
+  const photoData = dashboardDataStore.getPhotoData()
+
+  // DEBUG: Log what data the component is actually receiving
+  console.log('📸 PhotoDetail received data from store:', photoData)
+  console.log(
+    '📸 PhotoDetail conversation_starters:',
+    photoData.conversation_starters,
+  )
+  console.log('📸 PhotoDetail cultural_context:', photoData.cultural_context)
 
   // FIXED: More comprehensive image mapping with better fallback logic
   const imageMap = {
@@ -194,6 +204,10 @@ const PhotoDetail = ({ data, onBack, onFeedback }) => {
             <p className='text-center mt-4 text-gray-600 text-lg font-medium'>
               {currentImage.name}
             </p>
+            {/* Creative Commons License Attribution */}
+            <p className='text-center mt-2 text-gray-500 text-sm'>
+              This work is licensed under a Creative Commons license
+            </p>
           </div>
 
           {/* Dementia-Friendly Instructions */}
@@ -243,33 +257,12 @@ const PhotoDetail = ({ data, onBack, onFeedback }) => {
                       /Here's a description a caregiver could read to a senior with dementia[,:]?\s*/gi,
                       '',
                     )
-                    .replace(/^["']|["']$/g, '') // Remove quotes at start/end
+                    .replace(/^["']|["']$/g, '') // Remove quotes
                     .replace(/\\\"/g, '"') // Fix escaped quotes
                     .trim()
                 : currentImage.description}
             </div>
           </div>
-
-          {/* Cultural Context */}
-          {photoData.cultural_context && (
-            <div className='mb-8'>
-              <h4
-                className='text-2xl font-medium mb-6'
-                style={{ color: '#4A4A4A' }}
-              >
-                🏛️ About This Photo
-              </h4>
-              <p
-                className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
-                style={{ backgroundColor: '#F5F3FF', borderColor: '#8B7CB6' }}
-              >
-                {photoData.cultural_context
-                  .replace(/Enhanced for [a-zA-Z-]+ heritage/gi, '')
-                  .trim() ||
-                  'This photo has been selected for its cultural significance and meaningful content.'}
-              </p>
-            </div>
-          )}
 
           {/* Conversation Starters */}
           <div>

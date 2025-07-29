@@ -89,6 +89,9 @@ const MusicDetail = ({ onBack, onFeedback }) => {
                 </div>
               </div>
             )}
+            <p className='text-center mt-2 text-gray-500 text-sm'>
+              This work is licensed under a Creative Commons license
+            </p>
           </div>
 
           {/* Conversation Starters */}

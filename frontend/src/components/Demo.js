@@ -11,54 +11,77 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
     {
       id: 1,
       name: 'Information Consolidator',
-      description: 'Gathering patient profile and theme selection',
+      description:
+        'Anonymizing and validating patient data while selecting daily theme',
       details:
-        'Processing patient info: Maria, age 80, Italian-American heritage. Selecting daily theme: Travel.',
+        'Processing anonymized patient data with cultural heritage markers. No PII transmitted. Selecting personalized daily theme.',
       status: 'waiting',
       color: '#D4A574',
     },
     {
       id: 2,
       name: 'Photo Analysis',
-      description: 'Analyzing cultural context of selected images',
+      description: 'Analyzing cultural context using Google Vision AI',
       details:
-        'Analyzing travel.png - detecting coastal scene with cultural context enhancement.',
+        'Analyzing theme-based imagery - detecting visual elements with cultural context enhancement using Google Vision AI.',
       status: 'waiting',
       color: '#8B7CB6',
     },
     {
       id: 3,
       name: 'Qloo Cultural Intelligence',
-      description: 'Finding culturally relevant artists and places',
+      description: 'Finding preferences through cultural intelligence',
       details:
-        'Qloo API finding Italian-American cultural preferences. Discovering classical music preferences.',
+        'Qloo API discovering cultural preferences and affinities. Serves as grounding for all remaining content choices.',
       status: 'waiting',
       color: '#C4916B',
     },
     {
       id: 4,
-      name: 'Content Generation',
-      description: 'Curating music, recipes, and photo descriptions',
+      name: 'Music Curation',
+      description:
+        'Curating Creative Commons licensed music with YouTube integration',
       details:
-        '4A: Music (Puccini), 4B: Recipe (Microwave Clam Chowder), 4C: Photo Description (Cultural context)',
+        'Selecting familiar musical pieces with Creative Commons licensing and generating conversation starters.',
       status: 'waiting',
       color: '#A8B5A0',
     },
     {
       id: 5,
-      name: 'Nostalgia News Generator',
-      description: 'Creating personalized cultural storytelling',
+      name: 'Recipe Selection',
+      description:
+        'Choosing microwave-safe comfort foods with simplicity and safety in mind',
       details:
-        "Gemini AI generating personalized news story connecting Maria's heritage with today's theme.",
+        'Selecting culturally-appropriate safe preparation methods for dementia-friendly cooking experiences.',
       status: 'waiting',
       color: '#B8A9D9',
     },
     {
       id: 6,
-      name: 'Dashboard Synthesizer',
-      description: 'Assembling final personalized dashboard',
+      name: 'Photo Description',
+      description:
+        'Making images culturally relevant and appropriate using Google Gemini',
       details:
-        'Final assembly: All content ready for delivery with quality score and metadata.',
+        'Google Gemini creating culturally-connected image storytelling tailored to user context and daily theme.',
+      status: 'waiting',
+      color: '#C4916B',
+    },
+    {
+      id: 7,
+      name: 'Nostalgia News Generator',
+      description:
+        'Using Google Gemini to bring everything together with personalized stories',
+      details:
+        "Google Gemini generating personalized news story connecting cultural heritage with today's selected theme.",
+      status: 'waiting',
+      color: '#B8A9D9',
+    },
+    {
+      id: 8,
+      name: 'Dashboard Synthesizer',
+      description: 'Assembling all content and validating final dashboard',
+      details:
+        'Final assembly: All content ready for delivery with quality score validation and metadata generation.',
       status: 'waiting',
       color: '#4A4A4A',
     },
@@ -100,6 +123,7 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
 
           // If this is the last step, finish the demo
           if (index === agentSteps.length - 1) {
+            // Add delay before showing completion to let users see the final step
             setTimeout(async () => {
               // Wait for API call to complete
               try {
@@ -118,9 +142,12 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
                 setApiResponse(fallbackData)
               }
 
-              setIsRunning(false)
-              setCurrentStep(-1)
-            }, 1000)
+              // Add additional delay before resetting to show completion
+              setTimeout(() => {
+                setIsRunning(false)
+                setCurrentStep(-1)
+              }, 1500)
+            }, 2000)
           }
         }, 2000)
       }, index * 3000)
@@ -181,22 +208,31 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
         {/* Header */}
         <div className='text-center mb-12'>
           <h1 className='text-5xl font-light mb-4' style={{ color: '#4A4A4A' }}>
-            Agent Pipeline Demo
+            Live Agent Pipeline Demo
           </h1>
           <h2 className='text-2xl font-light mb-8' style={{ color: '#6B6B6B' }}>
             Watch AI agents create personalized content in real-time
           </h2>
 
-          <button
-            onClick={runDemo}
-            disabled={isRunning}
-            className={`px-8 py-4 rounded-full text-white text-lg font-medium transition-all ${
-              isRunning ? 'bg-gray-400 cursor-not-allowed' : 'hover:shadow-lg'
-            }`}
-            style={{ backgroundColor: isRunning ? '#9CA3AF' : '#8B7CB6' }}
-          >
-            {isRunning ? 'Running Demo...' : 'Start Demo'}
-          </button>
+          <div className='mb-6'>
+            <button
+              onClick={runDemo}
+              disabled={isRunning}
+              className={`px-8 py-4 rounded-full text-white text-lg font-medium transition-all ${
+                isRunning ? 'bg-gray-400 cursor-not-allowed' : 'hover:shadow-lg'
+              }`}
+              style={{ backgroundColor: isRunning ? '#9CA3AF' : '#8B7CB6' }}
+            >
+              {isRunning ? 'Running Live Demo...' : 'Start Live Demo'}
+            </button>
+          </div>
+
+          <div className='bg-green-100 border border-green-400 rounded-lg p-4 inline-block'>
+            <p className='text-green-800 font-medium text-lg'>
+              🔴 LIVE DEMO - This calls our actual backend API with real AI
+              agents
+            </p>
+          </div>
         </div>
 
         {/* Pipeline Overview */}
@@ -205,7 +241,7 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
             className='text-3xl font-light mb-8 text-center'
             style={{ color: '#4A4A4A' }}
           >
-            6-Agent Pipeline
+            8-Agent Pipeline
           </h3>
 
           {/* Progress Bar */}
@@ -221,8 +257,8 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
             </div>
             <p className='text-center mt-2 text-gray-600'>
               {isRunning
-                ? `Step ${currentStep + 1} of ${steps.length}`
-                : 'Ready to start'}
+                ? `Agent ${currentStep + 1} of ${steps.length} executing`
+                : 'Ready to start live demo'}
             </p>
           </div>
 
@@ -296,28 +332,28 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
             <div className='bg-green-50 border-2 border-green-200 rounded-xl p-8 text-center mb-8'>
               <div className='text-6xl mb-4'>🎉</div>
               <h3 className='text-3xl font-semibold text-green-800 mb-4'>
-                Demo Complete!
+                Live Demo Complete!
               </h3>
               <p className='text-lg text-green-700 mb-6'>
-                All 6 agents have successfully created personalized content for
-                Maria
+                All 8 agents have successfully executed and created personalized
+                content for Maria using real AI services
               </p>
               <div className='grid md:grid-cols-4 gap-4 text-sm'>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Music</div>
-                  <div className='text-green-600'>Puccini Selected</div>
+                  <div className='text-green-600'>Creative Commons</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Recipe</div>
-                  <div className='text-green-600'>Clam Chowder</div>
+                  <div className='text-green-600'>Microwave Safe</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>Photo</div>
-                  <div className='text-green-600'>Travel Scene</div>
+                  <div className='text-green-600'>Cultural Context</div>
                 </div>
                 <div className='bg-white p-4 rounded-lg border border-green-200'>
                   <div className='font-semibold text-green-800'>News</div>
-                  <div className='text-green-600'>Personal Story</div>
+                  <div className='text-green-600'>Gemini AI Story</div>
                 </div>
               </div>
             </div>
@@ -329,7 +365,7 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
                   className='text-3xl font-medium'
                   style={{ color: '#4A4A4A' }}
                 >
-                  📄 Real API Response
+                  📄 Live API Response
                 </h3>
                 <button
                   onClick={() => setShowJson(!showJson)}
@@ -342,7 +378,7 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
                     color: 'white',
                   }}
                 >
-                  {showJson ? 'Hide' : 'View'} JSON Response
+                  {showJson ? 'Hide' : 'View'} Live JSON Response
                 </button>
               </div>
 
@@ -350,7 +386,8 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
                 <div className='text-center p-8 text-gray-500'>
                   <div className='text-4xl mb-4'>📡</div>
                   <p className='text-lg'>
-                    API response will appear here after the demo completes...
+                    Live API response will appear here after the demo
+                    completes...
                   </p>
                 </div>
               )}
@@ -369,20 +406,20 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
             <div className='bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center mt-8'>
               <div className='text-4xl mb-4'>🔄</div>
               <h3 className='text-2xl font-semibold text-blue-800 mb-4'>
-                Dashboard Updated!
+                Live Dashboard Updated!
               </h3>
               <p className='text-lg text-blue-700 mb-6'>
-                The new personalized content from this API call is now cached
-                and will be reflected on the dashboard. The fresh data includes
-                updated music, recipes, photos, and nostalgia news tailored for
-                Maria.
+                The new personalized content from this live API call is now
+                cached and will be reflected on the dashboard. The fresh data
+                includes updated music, recipes, photos, and nostalgia news
+                tailored for Maria using real AI services.
               </p>
               <button
                 onClick={onReturnToDashboard}
                 className='px-8 py-4 rounded-xl text-xl font-medium transition-all shadow-sm hover:shadow-lg'
                 style={{ backgroundColor: '#8B7CB6', color: 'white' }}
               >
-                Return to Dashboard to See Changes
+                Return to Dashboard to See Live Changes
               </button>
             </div>
           </div>
@@ -394,7 +431,7 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
             className='text-2xl font-light mb-6 text-center'
             style={{ color: '#4A4A4A' }}
           >
-            Technical Architecture
+            Live Technical Architecture
           </h3>
           <div className='grid md:grid-cols-3 gap-6'>
             <div className='bg-white rounded-xl p-6 border-2 border-gray-100'>
@@ -421,9 +458,9 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
               </h4>
               <ul className='text-sm text-gray-600 space-y-1'>
                 <li>• Real-time processing</li>
-                <li>• Cultural personalization</li>
-                <li>• Feedback integration</li>
-                <li>• Quality scoring</li>
+                <li>• Anonymized data only</li>
+                <li>• Cultural intelligence</li>
+                <li>• LLM integration</li>
               </ul>
             </div>
 
@@ -432,13 +469,13 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
                 className='text-lg font-semibold mb-3'
                 style={{ color: '#A8B5A0' }}
               >
-                🎯 Outcomes
+                🎯 Live Outcomes
               </h4>
               <ul className='text-sm text-gray-600 space-y-1'>
                 <li>• Personalized content</li>
                 <li>• Cultural relevance</li>
-                <li>• Memory stimulation</li>
-                <li>• Conversation starters</li>
+                <li>• Creative Commons media</li>
+                <li>• Safety-first approach</li>
               </ul>
             </div>
           </div>

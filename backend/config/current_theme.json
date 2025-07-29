@@ -1,21 +1,21 @@
 {
-  "theme_id": "family",
-  "theme_name": "Family",
-  "theme_description": "Cherishing family bonds and togetherness",
-  "photo_filename": "family.png",
+  "theme_id": "travel",
+  "theme_name": "Travel",
+  "theme_description": "Adventures and places visited",
+  "photo_filename": "travel.png",
   "conversation_prompts": [
-    "Tell me about your family",
-    "What family traditions were special to you?",
-    "Who in your family made you laugh the most?",
-    "What did your family do together on weekends?"
+    "Where did you like to travel?",
+    "What places did you visit that were special?",
+    "Tell me about a memorable trip",
+    "What was the farthest place you ever went?"
   ],
-  "timestamp": "2025-07-28T18:54:34.128171",
-  "session_id": "test_session_003",
+  "timestamp": "2025-07-28T21:45:16.063801",
+  "session_id": "test-session-123",
   "written_by": "information_consolidator_agent",
   "selection_metadata": {
-    "date": "2025-07-28T18:54:34.128122",
-    "theme_index": 1,
-    "next_theme_index": 2,
+    "date": "2025-07-28T21:45:16.063748",
+    "theme_index": 4,
+    "next_theme_index": 5,
     "total_themes_available": 9,
     "selection_method": "true_rotation",
     "refresh_enabled": true

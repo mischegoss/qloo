@@ -202,9 +202,18 @@ const Profile = ({ onBack, patientProfile, onProfileUpdate }) => {
                 <p className='text-sm text-blue-700'>
                   LumiCue uses Qloo's advanced AI that creates personalized
                   recommendations without collecting or storing personal
-                  identifiable information (PII). Our technology focuses on
-                  cultural connections rather than personal data, ensuring
-                  privacy while delivering meaningful, personalized experiences.
+                  identifiable information (PII). Personal information stays
+                  completely private and safe. Details like names or birth years
+                  are only used on the device itself to create a better
+                  experience - this information never leaves the device or gets
+                  sent to any outside companies. Instead, we transform this into
+                  anonymous categories (like "Italian-American heritage" or
+                  "senior age group") to find the right music, recipes, and
+                  photos. Think of it like telling a librarian you enjoy mystery
+                  books without sharing your name - they can still recommend
+                  great books! Our technology focuses on cultural connections
+                  rather than personal details, keeping your information exactly
+                  where it belongs - private and secure on your device.
                 </p>
               </div>
             </div>
