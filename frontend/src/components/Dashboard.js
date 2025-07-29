@@ -43,7 +43,7 @@ const Dashboard = ({
         {/* Welcome Header */}
         <div className='text-center mb-12'>
           <h1 className='text-5xl font-light mb-6' style={{ color: '#4A4A4A' }}>
-            Welcome, {patientName || 'Friend'}!
+            Welcome to LumiCue! Curated Connections to Experience Together
           </h1>
           <div
             className='text-3xl font-light mb-2'
@@ -90,7 +90,7 @@ const Dashboard = ({
               className='text-base font-medium mb-4'
               style={{ color: '#6B6B6B' }}
             >
-              Engage through Sound
+              Engage through Music
             </div>
             <h4 className='text-xl font-semibold text-gray-800 mb-2'>
               {musicData.artist && musicData.piece_title
@@ -172,7 +172,7 @@ const Dashboard = ({
               className='text-base font-medium mb-4'
               style={{ color: '#6B6B6B' }}
             >
-              Stimulate through Sight
+              Connect with a Moment from the Past
             </div>
             <h4 className='text-xl font-semibold text-gray-800 mb-2'>
               {photoData.filename
@@ -215,7 +215,7 @@ const Dashboard = ({
               className='text-lg font-medium mb-4'
               style={{ color: '#6B6B6B' }}
             >
-              Explore through Stories
+              Engage through Stories
             </div>
             <h4 className='text-2xl font-semibold text-gray-800 mb-4'>
               {nostalgiaData.headline ||
