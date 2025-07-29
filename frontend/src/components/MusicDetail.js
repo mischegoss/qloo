@@ -6,14 +6,6 @@ const MusicDetail = ({ onBack, onFeedback }) => {
   // Get music data directly from global store instead of props
   const musicData = dashboardDataStore.getMusicData()
 
-  // DEBUG: Log what data the component is actually receiving
-  console.log('🎵 MusicDetail received data from store:', musicData)
-  console.log(
-    '🎵 MusicDetail conversation_starters:',
-    musicData.conversation_starters,
-  )
-  console.log('🎵 MusicDetail fun_fact:', musicData.fun_fact)
-
   return (
     <div className='min-h-screen' style={{ backgroundColor: '#F8F7ED' }}>
       <div className='max-w-4xl mx-auto p-6'>

@@ -1,70 +1,185 @@
-# Getting Started with Create React App
+# LumiCue Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## What the App Does
 
-## Available Scripts
+LumiCue is an AI-powered cultural intelligence solution designed to help those with memory loss or trouble communicating connect with their caregivers. The app creates culturally relevant, personalized curated conversation starters that engage the senses and feature music, recipes, photos, and stories tailored to the individual. A powerful feedback mechanism helps ensure that the recommendations improve over time.
 
-In the project directory, you can run:
+**Core Features:**
 
-### `npm start`
+- **Cultural Intelligence**: Uses Qloo's API to generate culturally relevant content recommendations
+- **AI-Powered Personalization**: Leverages Google Gemini AI for content generation and photo analysis
+- **Memory Care Focus**: Specifically designed to stimulate memories and provide conversation starters for elderly care
+- **Multi-Modal Content**: Combines music (with YouTube integration), recipes, photos, and nostalgia news
+- **Feedback System**: Collects user preferences to improve future recommendations
+- **Demo Mode**: Showcases the AI pipeline with real-time processing visualization
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Component Architecture
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Core Components
 
-### `npm test`
+#### **App.js** - Main Application Container
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Purpose**: Root component managing application state and routing
+- **Key Features**:
+  - State management for current page/view navigation
+  - Patient profile management with localStorage persistence
+  - Dashboard data loading with bulletproof fallback system
+  - Integration with API services and feedback collection
+  - Navigation between app and demo modes
 
-### `npm run build`
+#### **Dashboard.js** - Main Content Hub
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Purpose**: Primary interface displaying personalized content cards
+- **Features**:
+  - Grid layout with music, recipe, photo, and nostalgia news cards
+  - Interactive cards with hover effects and click navigation
+  - Patient profile integration for personalized greetings
+  - Refresh dashboard functionality
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### **Detail Components** - Content Pages
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **MusicDetail.js**: Displays personalized music with YouTube integration and conversation starters
+- **PhotoDetail.js**: Shows culturally analyzed photos with AI-generated descriptions
+- **RecipeDetail.js**: Features traditional recipes with cultural context and instructions
+- **NostalgiaDetail.js**: Presents personalized historical content and cultural stories
 
-### `npm run eject`
+#### **ProfileInfo.js** - User Profile Management
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Purpose**: Patient profile configuration and feedback review
+- **Features**:
+  - Locked/unlocked editing mode for safety
+  - Cultural heritage configuration (up to 3 backgrounds)
+  - Birth year, location, and interests management
+  - Feedback history display (likes/dislikes)
+  - Admin view for technical details
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### **Demo.js** - AI Pipeline Visualization
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- **Purpose**: Showcases the AI processing pipeline for demonstrations
+- **Features**:
+  - Real-time agent execution visualization (6-step process)
+  - Technical architecture display
+  - API response preview
+  - Return to dashboard integration
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#### **LoadingSpinner.js** - Professional Loading UI
 
-## Learn More
+- **Purpose**: Branded loading experience with LumiCue animations
+- **Features**:
+  - Custom animations with brand colors
+  - Progressive content loading visualization
+  - Responsive design
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Service Layer
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### **apiService.js** - API Integration
 
-### Code Splitting
+- **Purpose**: Handles all backend communication with bulletproof fallback
+- **Key Features**:
+  - Production API integration (`qloo-backend-225790768615.us-central1.run.app`)
+  - Intelligent caching system with localStorage
+  - Bulletproof fallback data when API is unavailable
+  - Session management and anonymized profile handling
+  - Error handling and retry logic
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### **dashboardDataStore.js** - Global State Management
 
-### Analyzing the Bundle Size
+- **Purpose**: Centralized data store for dashboard content
+- **Features**:
+  - Singleton pattern for consistent data access
+  - Bulletproof fallback integration
+  - Component subscription system for reactive updates
+  - Data validation and mapping
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Utility Layer
 
-### Making a Progressive Web App
+#### **feedbackManager.js** - User Preference Tracking
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- **Purpose**: Collects and manages user feedback (likes/dislikes)
+- **Features**:
+  - Local storage of preferences
+  - Category-based feedback (music, recipes, photos, nostalgia)
+  - API formatting for backend integration
+  - Feedback analytics and summary
 
-### Advanced Configuration
+#### **dataMappers.js** - Data Transformation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **Purpose**: Maps API responses to UI-friendly data structures
+- **Features**:
+  - Safe data extraction with fallbacks
+  - Type validation and conversion
+  - UI-specific data formatting
 
-### Deployment
+## Technology Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **Frontend**: React 18.2.0 with functional components and hooks
+- **Styling**: Tailwind CSS 3.3.0 with custom brand colors
+- **HTTP Client**: Axios 1.6.0 for API communication
+- **Icons**: Lucide React 0.263.1
+- **Testing**: React Testing Library with comprehensive test coverage
+- **Build Tool**: Create React App (react-scripts 5.0.1)
 
-### `npm run build` fails to minify
+## AI Integration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Google Gemini AI**: Content generation and photo analysis
+- **Qloo Cultural Intelligence API**: Cultural affinity recommendations
+- **YouTube Data API**: Music video integration
+- **Google Vision AI**: Image context analysis
+
+## How to Start the Application
+
+### Prerequisites
+
+- Node.js 16+ installed
+- npm or yarn package manager
+
+### Installation & Setup
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+The application will launch at `http://localhost:3000`
+
+### Available Scripts
+
+```bash
+# Development server
+npm start
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Eject configuration (not recommended)
+npm run eject
+```
+
+### Environment Configuration
+
+The app automatically connects to the production backend, but you can override with:
+
+```bash
+# Optional: Set custom API URL
+export REACT_APP_API_URL=https://your-backend-url.com
+npm start
+```
+
+### Production Deployment
+
+```bash
+# Build optimized production bundle
+npm run build
+
+# The build folder contains the production-ready application
+# Deploy the contents to your web hosting service
+```

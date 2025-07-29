@@ -19,15 +19,7 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
   // Get photo data directly from global store instead of props
   const photoData = dashboardDataStore.getPhotoData()
 
-  // DEBUG: Log what data the component is actually receiving
-  console.log('📸 PhotoDetail received data from store:', photoData)
-  console.log(
-    '📸 PhotoDetail conversation_starters:',
-    photoData.conversation_starters,
-  )
-  console.log('📸 PhotoDetail cultural_context:', photoData.cultural_context)
-
-  // FIXED: More comprehensive image mapping with better fallback logic
+  // More comprehensive image mapping with better fallback logic
   const imageMap = {
     // With .png extension
     'birthday.png': birthdayImage,
@@ -67,12 +59,9 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
     Weather: weatherImage,
   }
 
-  // FIXED: Improved getImage function with better matching logic
+  // Improved getImage function with better matching logic
   const getImage = filename => {
-    console.log('🔍 Looking for image with filename:', filename)
-
     if (!filename) {
-      console.log('⚠️ No filename provided, using fallback')
       return {
         src: weatherImage,
         name: 'Surprise Photo',
@@ -90,12 +79,9 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
       filename.charAt(0).toUpperCase() + filename.slice(1).toLowerCase(), // Title case: "Family"
     ]
 
-    console.log('🔍 Trying variations:', variations)
-
     // Try each variation
     for (const variation of variations) {
       if (imageMap[variation]) {
-        console.log('✅ Found image for variation:', variation)
         return {
           src: imageMap[variation],
           name:
@@ -107,10 +93,6 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
         }
       }
     }
-
-    // If no match found, log for debugging
-    console.log('❌ No image found for filename:', filename)
-    console.log('Available image keys:', Object.keys(imageMap))
 
     // Complete fallback
     return {
@@ -132,7 +114,7 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
     "Does this remind you of any places you've been?",
   ]
 
-  // FIXED: Use the correct field from the response object
+  // Use the correct field from the response object
   const conversationStarters =
     photoData.conversation_starters &&
     photoData.conversation_starters.length > 0
@@ -195,7 +177,6 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
                 alt={currentImage.name}
                 className='w-full h-full object-cover'
                 onError={e => {
-                  console.log('❌ Image failed to load:', currentImage.src)
                   // Fallback to weather image if the image fails to load
                   e.target.src = weatherImage
                 }}
@@ -238,7 +219,7 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
             </div>
           </div>
 
-          {/* FIXED: Photo Description Display */}
+          {/* Photo Description Display */}
           <div className='mb-8'>
             <h4
               className='text-2xl font-medium mb-6'
@@ -250,15 +231,15 @@ const PhotoDetail = ({ onBack, onFeedback }) => {
               className='text-gray-700 text-lg leading-relaxed p-6 rounded-lg border-2'
               style={{ backgroundColor: '#F8F6FF', borderColor: '#A8B5A0' }}
             >
-              {/* FIXED: Clean up the description by removing unwanted text */}
+              {/* Clean up the description by removing unwanted text */}
               {photoData.description
                 ? photoData.description
                     .replace(
                       /Here's a description a caregiver could read to a senior with dementia[,:]?\s*/gi,
                       '',
                     )
-                    .replace(/^["']|["']$/g, '') // Remove quotes
-                    .replace(/\\\"/g, '"') // Fix escaped quotes
+                    .replace(/^["']|["']$/g, '')
+                    .replace(/\\"/g, '"')
                     .trim()
                 : currentImage.description}
             </div>

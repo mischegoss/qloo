@@ -7,9 +7,6 @@ const NostalgiaDetail = ({ onBack, onFeedback }) => {
   const nostalgiaData = dashboardDataStore.getNostalgiaData()
   const patientInfo = dashboardDataStore.getPatientInfo()
 
-  // DEBUG: Log what data the component is actually receiving
-  console.log('📰 NostalgiaDetail received data from store:', nostalgiaData)
-
   // Extract sections from the complex nostalgia structure
   const sections = nostalgiaData.sections || {}
 

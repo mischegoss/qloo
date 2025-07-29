@@ -43,7 +43,7 @@ const Dashboard = ({
         {/* Welcome Header */}
         <div className='text-center mb-12'>
           <h1 className='text-5xl font-light mb-6' style={{ color: '#4A4A4A' }}>
-            Welcome to LumiCue! Curated Connections to Experience Together
+            Your Curated Connections to Share With {patientName}
           </h1>
           <div
             className='text-3xl font-light mb-2'

@@ -115,7 +115,7 @@ const Profile = ({ onBack, patientProfile, onProfileUpdate }) => {
     }
   }
 
-  // Mock feedback with real data from feedbackManager
+  // Mock feedback with real data from feedbackManager for Demo purposes
   const mockFeedback =
     feedback.likes.length > 0 || feedback.dislikes.length > 0
       ? feedback
