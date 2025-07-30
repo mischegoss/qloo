@@ -28,7 +28,7 @@ const LoadingSpinner = () => {
             className='text-3xl font-light tracking-wide animate-fade-in-delay-2'
             style={{ color: '#7F74A8', opacity: 0.8 }}
           >
-            Sparking meaningful conversations
+            Sparking Meaningful Conversations
           </p>
         </div>
 
@@ -55,7 +55,7 @@ const LoadingSpinner = () => {
             className='text-xl font-light animate-pulse-text'
             style={{ color: '#7F74A8', opacity: 0.7 }}
           >
-            Curating your personalized experience...
+            Curating your personalized experience
           </p>
         </div>
 

@@ -11,10 +11,9 @@ const Demo = ({ onDashboardUpdate, onReturnToDashboard }) => {
     {
       id: 1,
       name: 'Information Consolidator',
-      description:
-        'Anonymizing and validating patient data while selecting daily theme',
+      description: 'Validates anonymized data while selecting daily theme',
       details:
-        'Processing anonymized patient data with cultural heritage markers. No PII transmitted. Selecting personalized daily theme.',
+        'Processing anonymized data with cultural heritage markers. No PII transmitted. Selecting personalized daily theme.',
       status: 'waiting',
       color: '#D4A574',
     },
