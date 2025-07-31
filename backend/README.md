@@ -19,10 +19,10 @@ LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers th
 
 #### **Agent 1: Information Consolidator**
 
-- **Purpose**: Data anonymization and theme selection
+- **Purpose**: Verify data anonymization and theme selection (Data is anonymized in frontend)
 - **Key Features**:
-  - Patient data anonymization and PII removal
-  - Daily theme generation and selection using SimplifiedThemeManager
+  - Ensures patient data anonymization and PII removal
+  - Daily theme generation and selection
   - Profile data structuring for downstream agents
 
 #### **Agent 2: Simple Photo Analysis**
@@ -66,8 +66,7 @@ LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers th
 
 - **Purpose**: Relevant photo storytelling
 - **Features**:
-  - AI-generated photo descriptions with cultural context
-  - Theme-appropriate narrative creation
+  - Theme-appropriate narrative creation with Google Gemini AI
   - Conversation starter generation around images
   - Memory care appropriate content validation
 
@@ -76,7 +75,6 @@ LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers th
 - **Purpose**: Personalized historical and cultural story generation
 - **Features**:
   - Google Gemini AI integration for story generation
-  - Qloo preference grounding for cultural accuracy
   - Historical event personalization 
   - Cultural bridge creation between past and present
   - Memory-safe content generation with appropriate complexity
@@ -105,7 +103,7 @@ LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers th
 ## AI Integration
 
 - **Google Gemini AI (Flash)**: Content generation and storytelling
-- **Qloo Cultural Intelligence API**: Cultural preference mapping and recommendations
+- **Qloo Cultural Intelligence API**: Cultural preference mapping and recommendations that serve as grounding for content creation
 - **Google Vision AI**: Image analysis and cultural context extraction
 
 
