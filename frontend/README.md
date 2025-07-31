@@ -12,6 +12,7 @@ LumiCue is an AI-powered cultural intelligence solution designed to help those w
 - **Multi-Modal Content**: Combines music (with YouTube integration), recipes, photos, and nostalgia news
 - **Feedback System**: Collects user preferences to improve future recommendations
 - **Demo Mode**: Showcases the AI pipeline with real-time processing visualization
+- **Anonymized Data**: All data is anonymized before sending to the backend, ensuring privacy and PII compliance.
 
 ## Component Architecture
 
@@ -22,8 +23,8 @@ LumiCue is an AI-powered cultural intelligence solution designed to help those w
 - **Purpose**: Root component managing application state and routing
 - **Key Features**:
   - State management for current page/view navigation
-  - Patient profile management with localStorage persistence
-  - Dashboard data loading with bulletproof fallback system
+  - Profile management with localStorage persistence
+  - Dashboard data loading with fallback system
   - Integration with API services and feedback collection
   - Navigation between app and demo modes
 
@@ -74,11 +75,11 @@ LumiCue is an AI-powered cultural intelligence solution designed to help those w
 
 #### **apiService.js** - API Integration
 
-- **Purpose**: Handles all backend communication with bulletproof fallback
+- **Purpose**: Handles all backend communication with fallback
 - **Key Features**:
   - Production API integration (`qloo-backend-225790768615.us-central1.run.app`)
   - Intelligent caching system with localStorage
-  - Bulletproof fallback data when API is unavailable
+  - Fallback data when API is unavailable
   - Session management and anonymized profile handling
   - Error handling and retry logic
 
@@ -112,12 +113,9 @@ LumiCue is an AI-powered cultural intelligence solution designed to help those w
 
 ## Technology Stack
 
-- **Frontend**: React 18.2.0 with functional components and hooks
-- **Styling**: Tailwind CSS 3.3.0 with custom brand colors
-- **HTTP Client**: Axios 1.6.0 for API communication
-- **Icons**: Lucide React 0.263.1
-- **Testing**: React Testing Library with comprehensive test coverage
-- **Build Tool**: Create React App (react-scripts 5.0.1)
+- **Frontend**: React 18.2.0 
+- **Styling**: Tailwind CSS 3.3.0 
+- **HTTP Client**: Axios 1.6.0 
 
 ## AI Integration
 
@@ -130,7 +128,7 @@ LumiCue is an AI-powered cultural intelligence solution designed to help those w
 
 ### Prerequisites
 
-- Node.js 16+ installed
+- Node.js 18+ installed
 - npm or yarn package manager
 
 ### Installation & Setup
