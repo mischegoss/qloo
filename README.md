@@ -1,4 +1,4 @@
-# LumiCue - AI-Powered Cultural Intelligence for Memory Care
+# Spark Meaningful Connections with Those with Memory Loss with Qloo
 
 ## The Story of LumiCue
 
@@ -6,11 +6,9 @@ At the end of her life, finding meaningful connection with my Grandmother was di
 
 It turns out, I was not alone. In America, 12 million caregivers provide unpaid care for those with dementia at home (Alzheimer's Association, 2024). And that number is expected to grow. By 2050, the number of people living with dementia could exceed 152 million (Alzheimer's Association, 2024).
 
-The inspiration for LumiCue came from recognizing the power of a tool that can make personalized suggestions could help bridge the communication gap.
+The inspiration for LumiCue came from recognizing the power of a tool that can make personalized encounters with AI could help bridge the communication gap.
 
 **LumiCue is an AI-powered app that uses Qloo's Taste AI to help caregivers and those they care for spark meaningful encounters.** By combining cultural intelligence with personalized recommendations, LumiCue transforms everyday moments into sparks of connection.
-
-When AI works to improve all lives, technology is at its best. And that is the power of LumiCue.
 
 ## Project Architecture
 
@@ -22,25 +20,21 @@ LumiCue consists of two main components working together to deliver culturally i
 
 The LumiCue frontend is an AI-powered cultural intelligence solution designed to help those with memory loss or trouble communicating connect with their caregivers. The app creates culturally relevant, personalized curated conversation starters that engage the senses and feature music, recipes, photos, and stories tailored to the individual.
 
-**Repository**: [LumiCue Frontend](https://github.com/your-username/lumicue-frontend)
+**Frontend Information**: [LumiCue Frontend README](https://github.com/mischegoss/qloo/blob/main/frontend/README.md)
 
 **Core Features:**
 
-- **Cultural Intelligence**: Uses Qloo's API to generate culturally relevant content recommendations
-- **AI-Powered Personalization**: Leverages Google Gemini AI for content generation and photo analysis
-- **Memory Care Focus**: Specifically designed to stimulate memories and provide conversation starters for elderly care
-- **Multi-Modal Content**: Combines music (with YouTube integration), recipes, photos, and nostalgia news
+- **Memory Care Focus**: Specifically designed to engage senses and stimulate memories for those with memory loss
+- **Multi-Modal Content**: Combines music (with YouTube integration), recipes, photos, and nostalgia news to allow caregivers to choose which encounters works best
 - **Feedback System**: Collects user preferences to improve future recommendations
 - **Demo Mode**: Showcases the AI pipeline with real-time processing visualization
 
 **Technology Stack:**
 
-- React 18.2.0 with functional components and hooks
-- Tailwind CSS 3.3.0 with custom brand colors
-- Axios 1.6.0 for API communication
-- Lucide React 0.263.1 for icons
-- React Testing Library with comprehensive test coverage
-- Create React App (react-scripts 5.0.1) for build tooling
+- React 18.2.0 
+- Tailwind CSS 3.3.0 
+- Axios 1.6.0 
+- Lucide React 0.263.1
 
 ### 🤖 Backend API
 
@@ -48,7 +42,7 @@ The LumiCue frontend is an AI-powered cultural intelligence solution designed to
 
 LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers the cultural intelligence behind LumiCue's personalized memory care recommendations. The API orchestrates multiple AI services to generate culturally relevant, personalized content while maintaining strict data privacy and anonymization protocols.
 
-**Repository**: [LumiCue Backend](https://github.com/your-username/lumicue-backend)
+**Backend Information**: [Backend README](https://github.com/mischegoss/qloo/blob/main/backend/README.md)
 
 **Core Features:**
 
@@ -61,29 +55,29 @@ LumiCue Backend is a sophisticated 8-agent AI processing pipeline that powers th
 
 **Technology Stack:**
 
-- FastAPI with async/await support
+- FastAPI 
 - Python 3.9+
-- Google Gemini AI (Flash) for content generation
-- Qloo Cultural Intelligence API for cultural preference mapping
-- Google Vision AI for image analysis
-- YouTube Data API v3 for Creative Commons music discovery
+- Google Gemini AI (Flash) 
+- Qloo Taste API
+- Google Vision AI
+- YouTube Data API
 
 **8-Agent Pipeline:**
 
 1. **Information Consolidator** - Data anonymization and theme selection
 2. **Simple Photo Analysis** - Image processing with Google Vision AI
-3. **Qloo Cultural Intelligence** - Cultural preference grounding
-4. **Music Curation (4A)** - Creative Commons music discovery
-5. **Recipe Selection (4B)** - Safe, culturally relevant recipe curation
-6. **Photo Description (4C)** - Culturally relevant photo storytelling
-7. **Nostalgia News Generator (⭐ Star Feature)** - Personalized historical storytelling
+3. **Qloo Cultural Intelligence** - Cultural preference grounding used for content creation
+4. **Music Curation ** - Creative Commons music discovery
+5. **Recipe Selection ** - Safe, culturally relevant recipe curation
+6. **Photo Description ** - Culturally relevant photo storytelling
+7. **Nostalgia News Generator** - Personalized historical storytelling
 8. **Dashboard Synthesizer** - Final content assembly and formatting
 
 ## Complete Installation Instructions
 
 ### Prerequisites
 
-- **Node.js 16+** installed
+- **Node.js 18+** installed
 - **Python 3.9+** installed
 - **npm or yarn** package manager
 - **pip** package manager
@@ -124,15 +118,6 @@ npm test
 npm run eject
 ```
 
-#### Frontend Environment Configuration
-
-The app automatically connects to the production backend, but you can override with:
-
-```bash
-# Optional: Set custom API URL
-export REACT_APP_API_URL=https://your-backend-url.com
-npm start
-```
 
 #### Frontend Production Deployment
 
@@ -213,25 +198,6 @@ DEBUG=True
 ALLOWED_ORIGINS=http://localhost:3000,https://your-frontend-domain.com
 ```
 
-#### Backend Production Deployment
-
-```bash
-# Build for Google Cloud Run
-docker build -t lumicue-backend .
-
-# Deploy to Google Cloud Run
-gcloud run deploy lumicue-backend \
-  --image gcr.io/your-project/lumicue-backend \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 2Gi \
-  --cpu 2
-
-# The API will be deployed to:
-# https://qloo-backend-225790768615.us-central1.run.app
-```
-
 ## Full System Integration
 
 ### Running Both Frontend and Backend
@@ -262,8 +228,6 @@ The frontend automatically connects to the backend through the following endpoin
 
 - `POST /api/dashboard` - Generate personalized dashboard content
 - `GET /api/status` - Get system health and agent status
-- `GET /demo/patients` - Get list of demo patients
-- `GET /demo/patients/{patient_id}` - Get specific demo patient
 
 ## AI Services Required
 
@@ -283,7 +247,7 @@ LumiCue integrates with multiple AI services. You'll need API keys for:
 - **Safety-First**: All recommendations prioritize patient safety and dignity
 - **Conversation Starters**: Guided prompts to facilitate meaningful interactions
 
-### For Memory Care Patients
+### For Those with Memory Loss
 
 - **Multi-Sensory Engagement**: Music, recipes, photos, and stories
 - **Culturally Relevant**: Content tailored to personal heritage and preferences
