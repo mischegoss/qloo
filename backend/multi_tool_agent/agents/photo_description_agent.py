@@ -1,13 +1,10 @@
 """
-Agent 4C: Cultural Photo Description Agent - PII FIXED + CORRECT OUTPUT STRUCTURE
+Agent 6: Cultural Photo Description Agent 
 File: backend/multi_tool_agent/agents/photo_description_agent.py
 
-CRITICAL FIXES:
-- Removed all PII references (birth_year, personal names) 
-- Fixed output structure to match what frontend expects (flat, not nested)
-- Fixed Gemini method call to match working signature
-- Kept all working logic intact, only PII compliance changes
-- FIXED: Conversation starters parsing to remove extra quotes and question marks
+Features:
+- PII compliant
+- Uses Google Vision AI description + LLM to modify for audience
 """
 
 import asyncio

@@ -7,7 +7,7 @@ PII COMPLIANCE:
 - No personal information (names, locations, addresses) processed
 - All API calls use only demographic and cultural signals
 - Safe fallbacks ensure no PII exposure
-TIMEOUT FIX: Increased from 15 seconds to 60 seconds for all Qloo API calls
+
 """
 
 import asyncio

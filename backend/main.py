@@ -1,11 +1,7 @@
 """
-Updated main.py - FIXED: Theme Manager Import Issue
+Updated main.py 
 File: backend/main.py
 
-CRITICAL FIXES:
-- Added SimplifiedThemeManager import and initialization
-- Fixed theme manager being passed to Agent 1 properly
-- Ensured all agents get proper dependencies
 """
 
 import logging

@@ -1,8 +1,7 @@
 """
-Dynamic Theme Manager - FIXED with True Rotation
+Dynamic Theme Manager n
 File: backend/config/theme_config.py
 
-FIXED:
 - TRUE ROTATION: Themes cycle in order, never repeat consecutively
 - Persistent theme tracking across refreshes
 - Guaranteed variety for users

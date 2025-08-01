@@ -1,10 +1,10 @@
 """
-Information Consolidator Agent - Fixed Version with PII Safety
+Agent 1: Information Consolidator Agent
 File: backend/multi_tool_agent/agents/information_consolidator_agent.py
 
 FEATURES:
-- PII validation and safety checks (from original version)
-- Theme manager integration (from updated version)
+- PII validation and safety checks
+- Theme manager integration 
 - Theme file writing capability
 - Safe fallbacks for all API methods
 """

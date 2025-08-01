@@ -1,11 +1,11 @@
 """
-Agent 5: Nostalgia News Generator - RESTORED WORKING STRUCTURE + PII FIXES
+Agent 7: Nostalgia News Generator
 File: backend/multi_tool_agent/agents/nostalgia_news_generator.py
 
-CRITICAL FIX:
-- Restored original working flat content structure that frontend expects
-- Kept PII-compliant changes (no patient names, anonymized)
-- Returns sections format that Agent 6 and frontend expect
+Features:
+- Flat content structure that frontend expects
+- PII-compliant 
+- Returns sections format that Agent 8 and frontend expect
 - Newsletter-style content appropriate for caregivers to read aloud
 """
 

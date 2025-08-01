@@ -1,11 +1,11 @@
 """
-Step 2: Simple Photo Analysis Agent - FIXED PATH ISSUE
+Step 2: Simple Photo Analysis Agent
 File: backend/multi_tool_agent/agents/simple_photo_analysis_agent.py
 
-CRITICAL FIXES:
-- Fixed path to photo_analyses.json (standardized to config/photo_analyses.json)
-- Added fallback mechanisms for missing config file
-- Improved error handling and safe fallbacks
+Features:
+- Uses pre-analyzed photos first (to save build time)
+- Uses live Google Vision AI as fallback
+- Planned improvement: Upload photos to be analyzed with Google Vision to better personalize prefernes
 """
 
 import logging

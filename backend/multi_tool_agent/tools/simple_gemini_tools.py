@@ -1,10 +1,9 @@
 """
-Simple Gemini Tools - FIXED: PII-Compliant newsletter tone guidance
+Simple Gemini Tools 
 File: backend/multi_tool_agent/tools/simple_gemini_tools.py
 
-CRITICAL FIX:
+Features:
 - Enhanced generate_nostalgia_newsletter method with PII compliance
-- Ensures newsletter-style content that's appropriate for caregivers to read aloud
 - Clear guidelines for dementia care content without personal information
 - Returns FLAT content structure that frontend expects
 """

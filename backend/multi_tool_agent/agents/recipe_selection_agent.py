@@ -1,15 +1,11 @@
 """
-Agent 4B: Recipe Selection Agent - COMPLETE PII-COMPLIANT VERSION
+Agent 5: Recipe Selection Agent
 File: backend/multi_tool_agent/agents/recipe_selection_agent.py
 
-CRITICAL UPDATES FOR PII COMPLIANCE:
-- Removed all personal name usage and references
-- Works with anonymized profile data (cultural_heritage, age_group)
-- All logging now PII-free
-- Pure JSON-based system (no external API failures)
+Features:
+- PII compliant
 - Filters by theme first, then heritage
-- Uses pre-written conversation starters (no Gemini needed)
-- Perfect for dementia patients: microwave-safe, simple ingredients
+- Plans for expansion: Find API to increase recipes, better use LLM
 """
 
 import logging

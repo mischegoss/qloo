@@ -1,8 +1,7 @@
 """
-Agent 6: Dashboard Synthesizer - UPDATED FOR ANONYMIZED PROFILES (NO NAME FIELD)
-File: backend/multi_tool_agent/agents/dashboard_synthesizer.py
+Agent 8: Dashboard Synthesizer
 
-CRITICAL UPDATES FOR PII COMPLIANCE:
+ PII COMPLIANCE:
 1. Works with anonymized profile data (no names, no location)
 2. Receives exact structure from Agent 5 without modification
 3. NO name field anywhere - completely removed

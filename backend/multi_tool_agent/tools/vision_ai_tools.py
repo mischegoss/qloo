@@ -1,5 +1,5 @@
 """
-Fixed Google Vision AI Tools
+Google Vision AI Tools
 File: backend/multi_tool_agent/tools/vision_ai_tools.py
 
 Provides interface to Google Cloud Vision AI for photo cultural analysis

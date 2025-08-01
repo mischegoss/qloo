@@ -1,12 +1,12 @@
 """
-Enhanced YouTube API Tool - Cultural Heritage + American Search
+YouTube API Tool - Cultural Heritage + American Search
 File: backend/multi_tool_agent/tools/youtube_tools_enhanced.py
 
-ENHANCEMENT:
+FEATURES:
 - Searches for both assigned cultural heritage AND American classical music
 - Expands composer pool for better variety
 - Better fallback system with cultural + American options
-- More results for Creative Commons content
+- Filters for Creative Commons content
 """
 
 import requests

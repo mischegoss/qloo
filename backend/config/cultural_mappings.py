@@ -1,12 +1,6 @@
 """
 Cultural Heritage Mapping System - ANONYMIZED for Nostalgia & Dementia Care
 File: backend/config/cultural_mappings.py
-
-ANONYMIZED REDESIGN: Focuses on age-based nostalgia and dementia-friendly content.
-- Heritage used ONLY for cuisine (appropriate cultural connection)
-- Music & TV shows based on AGE/NOSTALGIA (not cultural stereotypes)
-- Dementia-friendly content selection
-- NO PII - works with anonymized patient profiles
 """
 
 from typing import Dict, Any, List

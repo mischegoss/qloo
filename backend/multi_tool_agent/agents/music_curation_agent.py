@@ -1,8 +1,8 @@
 """
-Agent 4A: Music Curation Agent - FIXED WITH RECENT MUSIC AVOIDANCE
+Agent 4: Music Curation Agent 
 File: backend/multi_tool_agent/agents/music_curation_agent.py
 
-CRITICAL FIXES:
+Features:
 - Reads recent_music.json to avoid repeating selections
 - Excludes recent artist/piece from next selection
 - Maintains all existing fallback mechanisms
